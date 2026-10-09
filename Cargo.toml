@@ -16,6 +16,7 @@ members = [
     "crates/caelum-cluster",
     "crates/caelum-core",
     "crates/caelum-test-equipment",
+    "src-tauri",
 ]
 
 [workspace.package]
@@ -39,6 +40,7 @@ caelum-ground = { path = "crates/caelum-ground" }
 caelum-mds = { path = "crates/caelum-mds" }
 caelum-security = { path = "crates/caelum-security" }
 caelum-cluster = { path = "crates/caelum-cluster" }
+caelum-core = { path = "crates/caelum-core" }
 caelum-test-equipment = { path = "crates/caelum-test-equipment" }
 
 [workspace.lints.rust]

@@ -7,6 +7,9 @@ tools/offline/loinc/
 # Rust
 /target/
 
+# Tauri editor schemas, regenerated on every build
+/src-tauri/gen/
+
 # Node / UI
 node_modules/
 /ui/dist/

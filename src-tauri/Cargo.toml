@@ -1,0 +1,38 @@
+[package]
+name = "caelum-desktop"
+description = "CAELUM Desktop: Tauri 2 application shell (thin commands, state, windows)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[lib]
+# Distinct from the binary name so the library and executable do not collide.
+name = "caelum_desktop_lib"
+
+[build-dependencies]
+tauri-build = { version = "2.7.1", features = [] }
+
+[dependencies]
+caelum-core.workspace = true
+# Default features minus `common-controls-v6`: CAELUM has no predefined `about` menu, and that
+# feature makes Windows test binaries fail to load (STATUS_ENTRYPOINT_NOT_FOUND).
+tauri = { version = "2.12.2", default-features = false, features = ["wry", "compression", "dynamic-acl", "x11", "dbus"] }
+serde = { version = "1", features = ["derive"] }
+# tauri-specta v2 exists only as release candidates: exact pins, used only in src/ipc.rs
+# (docs/third-party-risk.md).
+tauri-specta = { version = "=2.0.0-rc.25", features = ["derive", "typescript"] }
+specta = { version = "=2.0.0-rc.25", features = ["derive"] }
+specta-typescript = "=0.0.12"
+
+[dev-dependencies]
+serde_json = "1"
+
+[features]
+# Test equipment only. Release builds refuse to compile with it (src/lib.rs, CLAUDE.md rule 3).
+test-equipment = ["caelum-core/test-equipment"]
+
+[lints]
+workspace = true
