@@ -7,7 +7,9 @@
   "scripts": {
     "check:release-features": "node check-release-features.ts",
     "check:writes": "node check-writes.ts",
-    "check": "node check-release-features.ts && node check-writes.ts",
+    "check:npm-licenses": "node check-npm-licenses.ts",
+    "check": "node check-release-features.ts && node check-writes.ts && node check-npm-licenses.ts",
+    "sbom": "node sbom.ts",
     "typecheck": "tsc -p tsconfig.json",
     "test": "node --test \"test/*.test.ts\""
   },

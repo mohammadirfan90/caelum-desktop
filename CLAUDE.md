@@ -80,9 +80,10 @@ cargo clippy --workspace -- -D warnings
 pnpm -C ui typecheck && pnpm -C ui test
 pnpm tauri dev                     # run the desktop app
 pnpm tauri build                   # release installers (no test-equipment feature)
-cargo deny check && cargo audit
-pnpm -C tools/ci check             # release-feature guard + write-exception guard
+cargo deny check && cargo audit --deny warnings && pnpm audit   # online
+pnpm -C tools/ci check             # release-feature, write-exception and npm licence guards
 pnpm -C tools/ci test              # guard self-tests
+pnpm -C tools/ci sbom              # CycloneDX SBOMs into target/sbom/
 ```
 
 ## Definition of done (every task)

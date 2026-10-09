@@ -1,15 +1,69 @@
-# cargo-deny configuration (supply chain, docs/09_VV_PLAN.md §4).
-# M0 step 4: bans that enforce docs/03_ARCHITECTURE.md §5 (no shell, file system, HTTP or updater
-# access from the UI; no internet updater, F-SYS-06). Advisories, licences and sources: step 5.
+# cargo-deny configuration (supply chain, docs/09_VV_PLAN.md §4, CR-003 §4–5).
+# Run: cargo deny check   (advisories need the online database; air-gapped builds use the dated
+# snapshot from the tool cache, docs/OFFLINE_BUILD.md)
+
+[graph]
+# Check the graph for every target CAELUM ships on, not only the build host.
+all-features = false
+
+[advisories]
+# RustSec database. Vulnerabilities always fail; unmaintained and unsound crates fail too when
+# they are direct or transitive dependencies. Any ignore needs a reason and a SOUP register entry.
+yanked = "deny"
+unmaintained = "all"
+unsound = "all"
+# Accepted risks, each recorded in docs/third-party-risk.md and re-checked on every Tauri upgrade.
+# None can be fixed inside the locked stack (Tauri 2).
+ignore = [
+    { id = "RUSTSEC-2024-0429", reason = "glib 0.18 VariantStrIter unsoundness: Linux-only (Tauri 2 GTK backend), API not used by CAELUM; fix needs gtk-rs >= 0.20, not yet adopted by Tauri 2" },
+    { id = "RUSTSEC-2024-0370", reason = "proc-macro-error unmaintained: compile-time only, Linux-only via glib-macros (Tauri 2 GTK backend); no runtime code" },
+    { id = "RUSTSEC-2024-0436", reason = "paste unmaintained: compile-time macro used by specta (tauri-specta); no runtime code, no known vulnerability" },
+]
+
+[licenses]
+# Permissive licences compatible with distributing CAELUM under Apache-2.0 (CR-003 §4).
+# Only licences actually used are listed; anything new fails until reviewed.
+confidence-threshold = 0.93
+allow = [
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "MIT",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "Unicode-3.0",
+    "Zlib",
+]
+# MPL-2.0 is file-level copyleft: allowed only for these reviewed crates, which are unmodified
+# dependencies of Tauri. Obligation: tell recipients where the MPL source is available (recorded
+# in docs/third-party-risk.md; carried into NOTICE with the release SBOM).
+exceptions = [
+    { allow = ["MPL-2.0"], crate = "cssparser" },
+    { allow = ["MPL-2.0"], crate = "cssparser-macros" },
+    { allow = ["MPL-2.0"], crate = "selectors" },
+    { allow = ["MPL-2.0"], crate = "dtoa-short" },
+    { allow = ["MPL-2.0"], crate = "option-ext" },
+]
+
+[licenses.private]
+# Our own crates are Apache-2.0 too (checked by the architecture test); still checked here.
+ignore = false
 
 [bans]
 multiple-versions = "allow"
 wildcards = "deny"
 allow-wildcard-paths = true
 deny = [
+    # docs/03_ARCHITECTURE.md §5 and F-SYS-06 (M0 step 4).
     { crate = "tauri-plugin-shell", reason = "No shell access from the UI (docs/03 §5)" },
     { crate = "tauri-plugin-fs", reason = "No arbitrary file-system access from the UI (docs/03 §5)" },
     { crate = "tauri-plugin-http", reason = "No HTTP from the UI; network goes through the core (docs/03 §5)" },
     { crate = "tauri-plugin-updater", reason = "No internet updater; updates by uplink or media only (F-SYS-06)" },
     { crate = "tauri-plugin-opener", reason = "No launching external programs or URLs from the UI (docs/03 §5)" },
 ]
+
+[sources]
+# Only crates.io; no git or other registries (reproducible, reviewable supply chain).
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

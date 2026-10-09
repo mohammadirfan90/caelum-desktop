@@ -15,6 +15,18 @@ replacing a stack item or used in `caelum-alarms`, `caelum-ingest`, `caelum-secu
 | `serde_json` | `1` (`Cargo.lock`) | Dev-dependency of `caelum-desktop`: configuration test parses `tauri.conf.json` and capabilities | Test-only; low. MIT/Apache-2.0; actively maintained | Dev-dependency only | M0 |
 | `tauri` (stack item) | `2.12.2` with default features except `common-controls-v6` | Application shell | That default feature makes Windows test binaries fail to load (`STATUS_ENTRYPOINT_NOT_FOUND`); it only serves the predefined `about` menu item, which CAELUM does not use | Disabled in `src-tauri/Cargo.toml`; re-enabling it needs the test-manifest fix and a review | M0 |
 | `cargo_metadata` | `0.23.1` (`Cargo.lock`) | Dev-dependency of `caelum-core`: architecture test reads the workspace layout (`cargo metadata --no-deps`, offline) | Test-only; low. MIT licence; actively maintained | Dev-dependency only, never in a release build; no network or native downloads at build time | M0 |
+| `cssparser`, `cssparser-macros`, `selectors`, `dtoa-short`, `option-ext` (via `tauri`, `dirs`) | `Cargo.lock` | HTML/CSS handling in Tauri's build tooling and config; user directories | Licensed MPL-2.0 (file-level copyleft), outside the permissive allow-list | Allowed per crate in `deny.toml` (any new MPL crate fails until reviewed); used unmodified; obligation: state where the MPL source is available, carried into NOTICE with the release SBOM | M0 |
+
+## Accepted security advisories
+Each ID is ignored in both `deny.toml` and `.cargo/audit.toml` (kept equal by
+`tools/ci/test/supply-chain.test.ts`) and re-checked on every Tauri upgrade. None can be fixed
+inside the locked stack.
+
+| Advisory | Crate | Kind | Where it enters | Why accepted | Added |
+|---|---|---|---|---|---|
+| RUSTSEC-2024-0429 | `glib` 0.18 | Unsound `VariantStrIter` iterator impls | Linux only: Tauri 2 GTK backend (`gtk`, `wry`, `tao`) | CAELUM never uses that API; nothing of it on Windows; the fix needs gtk-rs ≥ 0.20, which Tauri 2 has not adopted | M0 |
+| RUSTSEC-2024-0370 | `proc-macro-error` | Unmaintained | Linux only, compile time: `glib-macros` | Procedural macro, no runtime code; no known vulnerability | M0 |
+| RUSTSEC-2024-0436 | `paste` | Unmaintained | Compile time: `specta` (via `tauri-specta`) | Procedural macro, no runtime code; no known vulnerability | M0 |
 
 ## Known risks to enter when the dependency is added
 - `cfdp-rs` 0.3 (M10): no inactivity handling, suspend, keep-alive/prompt or

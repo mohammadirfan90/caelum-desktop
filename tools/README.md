@@ -6,6 +6,8 @@ Command-line tools and build scripts (docs/03_ARCHITECTURE.md §2). Filled in by
 |---|---|
 | `ci/check-release-features.ts`: release dependency graph contains no test equipment (CLAUDE.md rule 3) | M0 |
 | `ci/check-writes.ts`: no unregistered device writes, no writes in `caelum-vehicle` (CLAUDE.md rule 5) | M0 |
+| `ci/check-npm-licenses.ts`: npm packages shipped in the UI use only allowed licences (CR-003 §4) | M0 |
+| `ci/sbom.ts`: CycloneDX SBOMs for the app (Rust, via cargo-cyclonedx) and the UI (npm) into `target/sbom/` | M0 |
 | `ci/`: trace generator | M0 |
 | `offline/`: tool-cache prepare / verify / offline build (`docs/OFFLINE_BUILD.md`) | M0 |
 | `offline/loinc/`: LOINC table placed by the product owner (git-ignored) | M1 |

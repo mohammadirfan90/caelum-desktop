@@ -1,0 +1,8 @@
+# cargo-audit configuration. The ignore list must equal the one in deny.toml; each entry is an
+# accepted risk recorded in docs/third-party-risk.md (checked by tools/ci/test/supply-chain.test.ts).
+[advisories]
+ignore = [
+    "RUSTSEC-2024-0429", # glib 0.18 VariantStrIter unsoundness (Linux-only, Tauri 2 GTK backend)
+    "RUSTSEC-2024-0370", # proc-macro-error unmaintained (compile-time, Linux-only)
+    "RUSTSEC-2024-0436", # paste unmaintained (compile-time, via specta)
+]
