@@ -4,10 +4,11 @@ Every interface gets an Interface Control Document (ICD) from `11_ICD_TEMPLATE.m
 built. Real NASA mission-control and vehicle interfaces are defined by NASA ICDs; CAELUM builds
 to the open standards those systems use and adapts to the ICD in configuration, not code.
 
-## 1. Medical and wearable devices (inbound only)
+## 1. Medical and wearable devices (inbound data; writes only through the register)
 | Interface | Standard / transport | Crate / approach | Data | Feature |
 |---|---|---|---|---|
-| Standard BLE health devices | Bluetooth SIG HRS 0x2A37, PLXS 0x2A5E/0x2A5F, BPS 0x2A35, HTS 0x2A1C, WSS, GLS | `btleplug`; decoders ported from prototype + new | HR, RR intervals, SpO₂, PR, BP, temperature, weight, glucose | F-ACQ-01/02 |
+| Standard BLE health devices | Bluetooth SIG HRS 0x2A37, PLXS 0x2A5E/0x2A5F, BPS 0x2A35, HTS 0x2A1C, WSS, GLS | `btleplug`; decoders ported from prototype + new | HR, RR intervals, SpO₂, PR, BP, measured body temperature with site, weight, glucose | F-ACQ-01/02 |
+| CAELUM wristband alert | Bluetooth Immediate Alert Service 0x1802, Alert Level 0x2A06 (write) | `btleplug`; write-exception register category (c) | Alert signal to the wearer, in addition to crew-station sound | F-ALM-04 |
 | Generic Health Sensor | Bluetooth GHS (IEEE 11073-10206 ACOM, -10101 codes) | `btleplug` + ACOM decoder | Any observation incl. ECG sample arrays | F-ACQ-03 |
 | CAELUM sensor kit | BLE custom service (documented in its ICD), 1 Hz features + on-demand raw | `btleplug` | ECG, RIP ×2, IMU, temps, PPG, EDA, battery, SQI | F-ACQ-05 |
 | USB / serial devices | CDC-ACM, HID; vendor protocols via decoders | `serialport`, `hidapi` | Device-specific | F-ACQ-04 |
@@ -17,37 +18,54 @@ to the open standards those systems use and adapts to the ICD in configuration, 
 | Monitors / defibrillators | IEEE 11073 SDC (read-only consumer) | isolated adapter process | Waveforms, numerics, device alarms | v1.1 |
 | Smart garments (Astroskin-class) | Vendor export / API | plug-in SDK | Garment signals | F-ACQ-13 |
 
-Rules: adapters are read-only (no write characteristics except those required for standard
-pairing, notifications and record-access control points defined by the SIG profiles); every
-reading carries device id, device time, received time and quality; unknown devices are listed but
-not trusted until registered by a CMO or administrator.
+Rules:
+- Adapters are read-only except for calls listed in `docs/write-exceptions.md`, limited to
+  (a) Bluetooth SIG control writes needed for acquisition (CCCD notification enable, Record Access
+  Control Point, standard measurement-interval writes), (b) serial poll requests defined in a
+  device ICD, (c) the wristband alert through the Immediate Alert Service (R-SEC-07).
+- Every reading carries device id, device time, received time and quality; unknown devices are
+  listed but not trusted until registered by a CMO or administrator.
+- Pairing and bonding use platform modules: Windows (WinRT DevicePairing via the `windows`
+  crate), Linux (BlueZ D-Bus via `bluer`), macOS (system pairing triggered by encrypted access).
+  A guided OS-pairing procedure in the protocol library is the fallback.
+- Readings a device flags as demonstration or test data (e.g. PLXS Measurement Status bits 10 and
+  11) are rejected in release builds (SR-017).
+- Thermometer readings go to `body_temp_measured` with their site code (`unknown` if the device
+  sends none), never to `core_temp`.
+- FHIR import: an Observation without a unit is rejected; codes map only through the parameter
+  catalog, and LOINC 2708-6 (arterial blood gas) is not mapped to SpO₂.
 
 ## 2. Vehicle (read-only data in, status telemetry out)
 | Interface | Standard / transport | Notes | Feature |
 |---|---|---|---|
-| cFS Software Bus | cFS message format (CCSDS primary + cFS secondary header) over Software Bus Network (SBN) or a configured UDP telemetry output | Subscribe to configured message IDs for CO₂, O₂, pressure, temperature, humidity, radiation, exercise devices, vehicle time | F-GND-11, F-ENV-01..03 |
-| Health status publication | cFS telemetry messages with a dedicated MID range | Only telemetry MIDs on an allow-list; no command MIDs can be constructed by the code | F-GND-11 |
-| Vehicle time | cFS time services / configured time source | MET and TAI/UTC correlation; drift monitoring | F-ACQ-11 |
-| Dosimeters | Via vehicle bridge or direct USB/BLE adapter | Dose rate, cumulative dose, SPE flags | F-ENV-02 |
+| cFS Software Bus | cFS message format (CCSDS primary + cFS secondary header) over Software Bus Network (SBN) or a configured UDP telemetry output | Subscribe only (`caelum-vehicle`, no write API) to configured message IDs for CO₂, O₂, pressure, temperature, humidity, radiation, exercise devices, vehicle time | F-GND-11, F-ENV-01..03 |
+| Health status publication | CCSDS telemetry packets with a dedicated APID/MID range, built by `caelum-ground` with a telemetry-only packet type. Entry into cFS per ICD-VEH (open item OI-1: SBN, CI_LAB or ground-link gateway); until agreed, sent to a configurable UDP endpoint | Only allow-listed telemetry MIDs; the packet type cannot set the telecommand bit | F-GND-11, F-GND-13 |
+| Vehicle time | cFS time services / configured time source | MET epoch from signed mission configuration; UTC from TAI with the bundled IERS leap-second table (signed updates); drift monitoring | F-ACQ-11, R-OPS-05 |
+| Dosimeters | Via vehicle bridge or direct USB/BLE adapter | Dose rate, cumulative dose, solar-particle-event state (`spe_state`) | F-ENV-02 |
+
+ICD: `docs/icd/ICD-VEH.md` (draft) to be agreed with the vehicle flight-software owner.
 
 ## 3. Mission control and ground
 | Interface | Standard / transport | Content | Feature |
 |---|---|---|---|
-| Telemetry packets | CCSDS 133.0-B-2 Space Packets, CUC time secondary header, APID plan per ICD | Crew status, alarm events, vitals summaries (per channel allow-list) | F-GND-01 |
+| Telemetry packets | CCSDS 133.0-B-2 Space Packets, CUC time secondary header (epoch 1958-01-01 TAI), APID plan per ICD | Crew status, alarm events, vitals summaries (per channel allow-list) | F-GND-01 |
 | Mission database | XTCE generated from the parameter catalog and APID plan | Lets any XTCE-capable ground system decode CAELUM packets | F-GND-02 |
 | Yamcs | UDP/TCP packet link into a Yamcs TM data link; XTCE loaded as MDB | Archive, alarms, displays in mission control | F-GND-03 |
 | Open MCT | Plugin package: telemetry provider (via Yamcs or CAELUM ground gateway), crew board, alert timeline, event-packet viewer | Flight-surgeon and BME consoles | F-GND-04 |
-| File delivery | CCSDS CFDP class 1 and 2 (`cfdp-rs`) over the vehicle's ground link | Event packets, daily reports, DICOM, ECG, exports | F-GND-06 |
+| File delivery | CCSDS CFDP class 1 and 2 (`cfdp-rs`) over the vehicle's ground link. Transactions run only during contact windows; loss of signal is handled by the store-and-forward queue, which suspends and resumes them | Event packets, daily reports, DICOM, ECG, exports | F-GND-06 |
 | Uplink | CFDP files with Ed25519 signatures | Rulesets, protocol library, models, config, software updates | F-GND-07 |
-| Store-and-forward | Persistent queue with priorities (CRITICAL / ROUTINE / RESEARCH) and per-channel allow-lists | Works through loss of signal | F-GND-05 |
+| Store-and-forward | Persistent queue with priorities (CRITICAL / ROUTINE / RESEARCH) and per-channel allow-lists | Works through loss of signal: holds every item and suspends/resumes CFDP transactions at contact-window boundaries | F-GND-05 |
 | Delay-tolerant networking | Bundle Protocol v7 adapter (to an onboard DTN node) | Deep-space operations | v1.1 |
 | ESA ground segments | PUS (ECSS-E-ST-70-41C) packet services via `spacepackets` | If required by an ESA ICD | config option |
 
-Routing: the `OPS` channel always uses path B (direct cFS). The `MEDICAL` channel uses path A
-(medical data system) or A' (direct CFDP) per mission configuration.
+Routing: the `OPS` channel always uses path B (direct to the vehicle, per ICD-VEH), including the
+ground escalation stage of every alarm. The `MEDICAL` channel uses path A (medical data system) or
+A' (direct CFDP) per mission configuration and carries the full alarm detail.
 
 Channels (allow-lists enforced in `caelum-ground`):
-- `OPS` (mission control): crew status level, alarm state, technical health. No raw physiology.
+- `OPS` (mission control): crew id, priority, alarm category (CARDIO / RESPIRATORY / THERMAL /
+  ENVIRONMENT / TECHNICAL), alarm state, escalation stage, timestamps, technical health. No
+  physiology: no measured value, parameter name, rule id or free text (R-SEC-06).
 - `MEDICAL` (flight surgeon, BME): full clinical detail, encrypted payloads, private medical data.
 - `RESEARCH`: de-identified, consented datasets only.
 
@@ -75,7 +93,9 @@ Open MCT for the wider control room.
 FHIR R4 export (Bundle of Patient, Observation, Device, DiagnosticReport, Media, Encounter,
 Provenance) for NASA's medical data systems (e.g. the Medical Data Architecture) or any FHIR
 server. Codes: LOINC for measurements, UCUM units, SNOMED CT for problems, IEEE 11073 for device
-metrics. Simulated or test-equipment data can never be exported (blocked by type).
+metrics. Every LOINC code comes from the parameter catalog and is verified against the LOINC
+table before use (LOINC version recorded). Simulated or test-equipment data can never be exported
+(blocked by type).
 
 ## 6. Crew LAN
 Other crew laptops/tablets connect to the primary as secondary stations (mutual TLS, role login),

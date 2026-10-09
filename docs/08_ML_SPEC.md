@@ -3,7 +3,11 @@
 ## 1. Rules
 - Models are **advisory**. They never raise high-priority alarms on their own and never suppress
   rules (SR-002). Output appears as notices with explanations and a validation status.
-- Runtime: ONNX via `ort`, CPU only, fixed thread count, per-inference time limit.
+- Runtime: ONNX via `ort` with `load-dynamic`, using a pinned, checksummed ONNX Runtime binary
+  from the tool cache (`docs/OFFLINE_BUILD.md`); CPU only, fixed thread count, per-inference time
+  limit.
+- Model M2 (AF) feeds rule `af.observe` as an observe-level notice ("record a 12-lead ECG") until
+  M2 is `VALIDATED`; promoting it to warning needs a CR (`06` §3).
 - Each model package: ONNX file, SHA-256, model card (data, metrics, limits), feature spec,
   signature from the model approver. Unverified packages are rejected.
 - Validation status shown in the UI: `VALIDATED`, `INVESTIGATIONAL`, `DISABLED`.

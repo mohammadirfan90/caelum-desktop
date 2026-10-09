@@ -1,6 +1,8 @@
 # 01. Feature lock: CAELUM Desktop v1.0
 
-**Status: LOCKED** (rev. 2: adds F-GND-12..14 via CR-001, onboard medical data system integration). Priority: **M** = must (v1.0 cannot ship without it), **S** = should (v1.0 target,
+**Status: LOCKED** (rev. 3 via CR-002: adds F-SYS-13; clarifies F-ACQ-01, F-ACQ-10, F-ALM-04,
+F-GND-11, F-GND-13, F-SYS-06 and the platforms. Rev. 2 via CR-001: adds F-GND-12..14, onboard
+medical data system integration). Priority: **M** = must (v1.0 cannot ship without it), **S** = should (v1.0 target,
 may slip to v1.1 only by change request), **v1.1 / v2** = explicitly not in v1.0.
 
 ## Change control
@@ -10,8 +12,11 @@ anything touching alarms or clinical content, the medical lead. Claude Code may 
 must never implement an unapproved one.
 
 ## Platforms and roles
-- **Platforms:** Windows 10/11 x64 (reference, matches NASA's stated host), Ubuntu 22.04+ x64,
-  macOS 13+ (development and ground use).
+- **Platforms:** Windows 11 x64 and Windows 10 LTSC x64 (reference; NASA host baseline),
+  Ubuntu 22.04+ x64, macOS 13+ (development and ground use). Supported Windows 10 LTSC editions
+  (checked 2026-10-09): IoT Enterprise LTSC 2021 (support until 2032-01-13), Enterprise LTSC
+  2019 and IoT Enterprise LTSC 2019 (until 2029-01-09). Enterprise LTSC 2021 (non-IoT) ends
+  2027-01-12 and is not supported.
 - **Roles:** Astronaut, Crew Medical Officer (CMO), Flight Surgeon (ground), Biomedical Engineer
   (BME, ground), Mission Control Operator (ground, operational status only), Administrator,
   Device Gateway (machine identity).
@@ -21,7 +26,7 @@ must never implement an unapproved one.
 ## F-ACQ: Device acquisition and integration
 | ID | Feature | Pri |
 |---|---|---|
-| F-ACQ-01 | Native BLE central: scan, pair, bond, reconnect automatically, continuous background acquisition | M |
+| F-ACQ-01 | Native BLE central: scan, pair and bond (platform pairing modules; guided OS pairing as fallback), reconnect automatically, continuous background acquisition | M |
 | F-ACQ-02 | Bluetooth SIG profiles: Heart Rate, Pulse Oximeter (spot + continuous), Blood Pressure, Health Thermometer, Weight Scale, Glucose | M |
 | F-ACQ-03 | Bluetooth Generic Health Sensor (GHS, IEEE 11073-10206 ACOM), including ECG waveform | M |
 | F-ACQ-04 | USB / serial adapter framework (CDC-ACM, HID) with per-device decoders | M |
@@ -30,7 +35,7 @@ must never implement an unapproved one.
 | F-ACQ-07 | ECG recording import: EDF/EDF+, HL7 aECG, DICOM waveform, SCP-ECG | M |
 | F-ACQ-08 | HL7 FHIR R4 import (Observation, Device, DiagnosticReport) | M |
 | F-ACQ-09 | Device registry: model, serial, firmware, accuracy class, calibration due, assignment to crew | M |
-| F-ACQ-10 | Device health: battery, signal quality, link state, clock offset, dropped-packet counters | M |
+| F-ACQ-10 | Device health: battery, signal quality, link state and link metrics (RSSI, packet loss %, reconnect count), clock offset, dropped-packet counters | M |
 | F-ACQ-11 | Time synchronisation of all devices to vehicle time (MET / TAI / UTC), offsets recorded | M |
 | F-ACQ-12 | Adapter plug-in SDK (versioned Rust trait, isolated process option, signed manifests) | S |
 | F-ACQ-13 | Smart-garment vendor adapters (Astroskin-class) via plug-in SDK | S |
@@ -53,7 +58,7 @@ must never implement an unapproved one.
 | F-ALM-01 | Deterministic rule engine: absolute limits, persistence, hysteresis, supersession, data-gap handling | M |
 | F-ALM-02 | Signed, versioned ruleset (TOML) with approver record; refuses to start on bad signature | M |
 | F-ALM-03 | Alarm priorities per IEC 60601-1-8 concepts (high / medium / low + advisory), shape-coded | M |
-| F-ALM-04 | Escalation: astronaut → CMO → wristband sound → whole crew → ground, with timers | M |
+| F-ALM-04 | Escalation: astronaut → CMO → sound (crew stations always; wristband Immediate Alert in addition) → whole crew → ground (OPS channel, path B), with timers | M |
 | F-ALM-05 | Acknowledge, silence (time-limited), escalate manually, resolve, with audit | M |
 | F-ALM-06 | Technical alarms: sensor off, low battery, device lost, stale data, clock drift, storage low | M |
 | F-ALM-07 | Crew-wide emergency view on every crew station, with location and protocol | M |
@@ -103,9 +108,9 @@ must never implement an unapproved one.
 | F-GND-08 | Ground console profile: flight-surgeon and BME views, private medical conference record | M |
 | F-GND-09 | HL7 FHIR R4 export / Bundle to medical record systems (incl. NASA Medical Data Architecture) | M |
 | F-GND-10 | Delay-tolerant networking (Bundle Protocol v7) adapter | v1.1 |
-| F-GND-11 | cFS Software Bus bridge: subscribe to vehicle telemetry; publish CAELUM health status packets | M |
+| F-GND-11 | cFS bridge: subscribe to vehicle telemetry (read-only, `caelum-vehicle`); publish CAELUM health status packets (telemetry only, `caelum-ground`; entry into cFS per ICD-VEH) | M |
 | F-GND-12 | Onboard medical data system connector (MDA-class): two-way FHIR R4 read/write, attachment hand-off, sync state, connection health | M |
-| F-GND-13 | Dual outbound routing: (A) medical-record path via the medical data system or direct CFDP fallback; (B) operational status/alert path always direct via cFS | M |
+| F-GND-13 | Dual outbound routing: (A) medical-record path via the medical data system or direct CFDP fallback; (B) operational status/alert path always direct to the vehicle (cFS per ICD-VEH), never via the medical data system | M |
 | F-GND-14 | Summary-first data policy: summaries, alerts, notes and event-linked files sent by default; raw waveforms only on event or ground request | M |
 
 ## F-SYS: Platform, security and operations
@@ -116,15 +121,17 @@ must never implement an unapproved one.
 | F-SYS-03 | Signed, hash-chained audit log covering every clinical and configuration action | M |
 | F-SYS-04 | Primary/standby fail-over over crew LAN, ≤ 10 s takeover, no acknowledged data loss | M |
 | F-SYS-05 | Crew-station LAN service: other laptops/tablets join as secondary displays | M |
-| F-SYS-06 | Offline install, signed updates delivered by uplink or media (no internet updater) | M |
+| F-SYS-06 | Offline install, signed updates delivered by uplink or media (no internet updater); release builds reproducible offline from a prepared, checksummed tool cache | M |
 | F-SYS-07 | Configuration as signed files (devices, crew, channels, APIDs) | M |
 | F-SYS-08 | Data retention, export (FHIR, CSV, EDF+), de-identified research export | M |
 | F-SYS-09 | Self-test at start and continuous watchdogs (storage, clock, tasks, devices) | M |
 | F-SYS-10 | Accessibility: glove mode, text up to 200 %, high contrast, keyboard only, screen reader | M |
 | F-SYS-11 | Localisation framework (English v1.0; Russian, Japanese, French, German strings v1.1) | S |
 | F-SYS-12 | Resource budget mode for constrained hosts | S |
+| F-SYS-13 | Kiosk mode for a wall-mounted crew display; multiple windows (e.g. waveform viewer on a second monitor) | S |
 
 ## Out of scope for v1.0 (explicit)
-Cloud services of any kind; commanding any vehicle system; controlling therapeutic devices;
+Cloud services of any kind; commanding any vehicle system (publishing CAELUM status telemetry per
+ICD-VEH is not commanding); controlling therapeutic devices;
 image or ultrasound diagnosis by AI; a mobile app; billing; social features; any data shown that
 did not come from a device, a crew entry or an approved import.

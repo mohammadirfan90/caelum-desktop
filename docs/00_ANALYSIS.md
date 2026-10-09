@@ -32,7 +32,7 @@ as **test equipment** for automated and hardware-in-the-loop testing, compiled o
 ## 3. What carries over from the prototype (`caelum-next` v3.1)
 | Asset | Carry over as | Notes |
 |---|---|---|
-| Design tokens (mint canvas, ink, signal green, warning amber, dark theme) | `ui/src/styles/tokens.css` unchanged | See `07_UI_SPEC.md` |
+| Design tokens (mint canvas, ink, signal green, warning amber, dark theme) | `ui/src/styles/tokens.css`, same look with the CR-002 accessibility fixes | See `07_UI_SPEC.md` §1 |
 | Shape-coded levels (circle, diamond, triangle, octagon) | UI primitive `LevelGlyph` | Keeps NASA-STD-3001 "not colour alone" principle |
 | Glove mode, text size, reduced motion | Accessibility settings | Extended to 200 % text and kiosk mode |
 | Screens: Home, Body, Alerts, Checks, Environment, Radiation, Baseline, Privacy, Sources, Mission Control | Reworked for desktop multi-pane layout | Module list locked in `01_FEATURE_LOCK.md` |
