@@ -9,7 +9,8 @@ Command-line tools and build scripts (docs/03_ARCHITECTURE.md §2). Filled in by
 | `ci/check-npm-licenses.ts`: npm packages shipped in the UI use only allowed licences (CR-003 §4) | M0 |
 | `ci/sbom.ts`: CycloneDX SBOMs for the app (Rust, via cargo-cyclonedx) and the UI (npm) into `target/sbom/` | M0 |
 | `ci/trace.ts`: runs all test suites, writes `docs/trace.csv`, enforces complete milestones (`docs/09_VV_PLAN.md` §3) | M0 |
-| `offline/`: tool-cache prepare / verify / offline build (`docs/OFFLINE_BUILD.md`) | M0 |
+| `ci/check-all.ts`: every check of `docs/09_VV_PLAN.md` §4 in CI order, with a summary (`--offline` for air-gapped machines) | M0 |
+| `offline/prepare.ts`, `verify.ts`, `build-offline.ts`: tool cache (`docs/OFFLINE_BUILD.md`); library and tests in `ci/` | M0 |
 | `offline/loinc/`: LOINC table placed by the product owner (git-ignored) | M1 |
 | Ruleset signer | M3 |
 | Config signer, XTCE export CLI, data export CLI | M10 |

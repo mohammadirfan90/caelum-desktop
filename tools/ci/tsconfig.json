@@ -17,5 +17,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["*.ts", "src", "test"]
+  "include": ["*.ts", "src", "test", "../offline/*.ts"]
 }

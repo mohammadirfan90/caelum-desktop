@@ -1,0 +1,212 @@
+# CAELUM CI (docs/09_VV_PLAN.md §4). Same checks as `node tools/ci/check-all.ts` locally.
+# Actions are pinned to full commit SHAs (supply chain); the tag is in the trailing comment.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  # Tauri 2 build dependencies on Ubuntu 22.04 (WebKitGTK 4.1, GTK, D-Bus, AppIndicator).
+  LINUX_DEPS: >-
+    build-essential pkg-config libssl-dev libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev
+    libayatana-appindicator3-dev libxdo-dev libdbus-1-dev
+
+jobs:
+  rust:
+    name: rust (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-22.04, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Linux build dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y $LINUX_DEPS
+      - name: Toolchain from rust-toolchain.toml
+        run: rustup show active-toolchain || rustup toolchain install
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
+        with:
+          tool: cargo-nextest@0.9.148
+      - name: rustfmt
+        if: runner.os == 'Linux'
+        run: cargo fmt --all --check
+      - name: clippy (-D warnings)
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: tests (nextest, JUnit)
+        run: cargo nextest run --workspace --profile ci
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: junit-rust-${{ matrix.os }}
+          path: target/nextest/ci/junit.xml
+
+  ui:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.11.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -C ui typecheck
+      - run: pnpm -C ui lint
+      - run: pnpm -C ui test
+      - name: build + offline bundle check
+        run: pnpm -C ui build
+
+  guards:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup show active-toolchain || rustup toolchain install
+      - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
+        with:
+          tool: cargo-cyclonedx@0.5.9
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.11.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -C tools/ci typecheck
+      - name: guard self-tests
+        run: pnpm -C tools/ci test
+      - name: release-feature, write-exception and npm licence guards
+        run: pnpm -C tools/ci check
+
+  supply-chain:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup show active-toolchain || rustup toolchain install
+      - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
+        with:
+          tool: cargo-deny@0.20.2,cargo-audit@0.22.2
+      - name: cargo deny (advisories, bans, licences, sources)
+        run: cargo deny check
+      - name: cargo audit
+        run: cargo audit --deny warnings
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.11.0
+      - name: pnpm audit
+        run: pnpm audit
+
+  coverage:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: sudo apt-get update && sudo apt-get install -y $LINUX_DEPS
+      - run: rustup show active-toolchain || rustup toolchain install
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
+        with:
+          tool: cargo-nextest@0.9.148,cargo-llvm-cov
+      # Gates (caelum-alarms >= 95 % region, other core crates >= 85 % line) apply to a crate from
+      # the milestone that implements it (docs/09 §4); M0 crates are empty, so this only reports.
+      - name: coverage report (stable)
+        run: cargo llvm-cov nextest --workspace --lcov --output-path target/lcov.info
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage-lcov
+          path: target/lcov.info
+
+  branch-coverage-nightly:
+    # Informational only (CR-002 D3): branch coverage needs the nightly toolchain.
+    runs-on: ubuntu-22.04
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install nightly --profile minimal --component llvm-tools-preview
+      - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
+        with:
+          tool: cargo-llvm-cov
+      - name: caelum-alarms branch coverage
+        run: cargo +nightly llvm-cov --branch -p caelum-alarms --summary-only
+
+  trace:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: sudo apt-get update && sudo apt-get install -y $LINUX_DEPS
+      - run: rustup show active-toolchain || rustup toolchain install
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
+        with:
+          tool: cargo-nextest@0.9.148,cargo-cyclonedx@0.5.9
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.11.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: all suites + docs/trace.csv up to date + milestone gate
+        run: pnpm -C tools/ci trace:check
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: trace
+          path: |
+            docs/trace.csv
+            target/junit/
+            target/nextest/ci/junit.xml
+
+  release-windows:
+    # Unsigned installers until M13. Builds online, prepares the tool cache, then rebuilds from the
+    # cache with offline settings. CI cannot disconnect the runner; the network-disabled run is
+    # demonstrated on the reference machine at each gate (docs/OFFLINE_BUILD.md).
+    needs: [rust, ui, guards, supply-chain, trace]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup show active-toolchain || rustup toolchain install
+      - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
+        with:
+          tool: cargo-nextest@0.9.148,cargo-deny@0.20.2,cargo-audit@0.22.2,cargo-cyclonedx@0.5.9
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.11.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: installers (online)
+        run: pnpm tauri build
+      - name: SBOMs
+        run: pnpm -C tools/ci sbom
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: installers-windows
+          path: |
+            target/release/bundle/msi/*.msi
+            target/release/bundle/nsis/*.exe
+            target/sbom/
+      - name: prepare tool cache
+        run: node tools/offline/prepare.ts --cache "${{ runner.temp }}/caelum-tool-cache"
+      - name: verify tool cache
+        run: node tools/offline/verify.ts --cache "${{ runner.temp }}/caelum-tool-cache"
+      - name: rebuild from the tool cache (offline settings)
+        shell: pwsh
+        run: |
+          Remove-Item -Recurse -Force target/release/bundle
+          node tools/offline/build-offline.ts --cache "${{ runner.temp }}/caelum-tool-cache"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: offline-build-report
+          path: target/offline/build-report.json

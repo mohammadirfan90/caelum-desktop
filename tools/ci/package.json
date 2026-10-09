@@ -12,6 +12,7 @@
     "sbom": "node sbom.ts",
     "trace": "node trace.ts",
     "trace:check": "node trace.ts --check",
+    "check-all": "node check-all.ts",
     "typecheck": "tsc -p tsconfig.json",
     "test": "node --test \"test/*.test.ts\""
   },

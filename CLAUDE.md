@@ -85,6 +85,9 @@ pnpm -C tools/ci check             # release-feature, write-exception and npm li
 pnpm -C tools/ci test              # guard self-tests
 pnpm -C tools/ci sbom              # CycloneDX SBOMs into target/sbom/
 pnpm -C tools/ci trace             # run all suites, write docs/trace.csv, enforce complete milestones
+pnpm -C tools/ci check-all         # every check above in CI order (add -- --offline when air-gapped)
+node tools/offline/verify.ts --cache <dir>         # tool cache intact (docs/OFFLINE_BUILD.md)
+node tools/offline/build-offline.ts --cache <dir>  # release build from the tool cache only
 ```
 
 ## Definition of done (every task)

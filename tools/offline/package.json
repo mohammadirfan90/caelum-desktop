@@ -1,0 +1,8 @@
+{
+  "name": "@caelum/tools-offline",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "description": "Offline tool cache scripts (docs/OFFLINE_BUILD.md); typechecked and tested from tools/ci"
+}
