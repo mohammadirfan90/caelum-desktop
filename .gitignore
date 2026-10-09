@@ -1,0 +1,13 @@
+# Prototype extraction: regenerate from reference/caelum-next-prototype-v3.1.zip (reference only, never shipped)
+reference/prototype/
+
+# Rust
+/target/
+
+# Node / UI
+node_modules/
+/ui/dist/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
