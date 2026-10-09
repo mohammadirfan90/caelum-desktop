@@ -1,0 +1,15 @@
+# cargo-deny configuration (supply chain, docs/09_VV_PLAN.md §4).
+# M0 step 4: bans that enforce docs/03_ARCHITECTURE.md §5 (no shell, file system, HTTP or updater
+# access from the UI; no internet updater, F-SYS-06). Advisories, licences and sources: step 5.
+
+[bans]
+multiple-versions = "allow"
+wildcards = "deny"
+allow-wildcard-paths = true
+deny = [
+    { crate = "tauri-plugin-shell", reason = "No shell access from the UI (docs/03 §5)" },
+    { crate = "tauri-plugin-fs", reason = "No arbitrary file-system access from the UI (docs/03 §5)" },
+    { crate = "tauri-plugin-http", reason = "No HTTP from the UI; network goes through the core (docs/03 §5)" },
+    { crate = "tauri-plugin-updater", reason = "No internet updater; updates by uplink or media only (F-SYS-06)" },
+    { crate = "tauri-plugin-opener", reason = "No launching external programs or URLs from the UI (docs/03 §5)" },
+]

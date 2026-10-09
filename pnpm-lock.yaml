@@ -12,6 +12,15 @@ importers:
         specifier: 2.12.1
         version: 2.12.1
 
+  tools/ci:
+    devDependencies:
+      '@types/node':
+        specifier: 24.19.1
+        version: 24.19.1
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+
   ui:
     dependencies:
       '@fontsource/outfit':

@@ -1,0 +1,18 @@
+{
+  "name": "@caelum/tools-ci",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "check:release-features": "node check-release-features.ts",
+    "check:writes": "node check-writes.ts",
+    "check": "node check-release-features.ts && node check-writes.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --test \"test/*.test.ts\""
+  },
+  "devDependencies": {
+    "@types/node": "24.19.1",
+    "typescript": "6.0.3"
+  }
+}

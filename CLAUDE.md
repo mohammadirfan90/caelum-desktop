@@ -81,6 +81,8 @@ pnpm -C ui typecheck && pnpm -C ui test
 pnpm tauri dev                     # run the desktop app
 pnpm tauri build                   # release installers (no test-equipment feature)
 cargo deny check && cargo audit
+pnpm -C tools/ci check             # release-feature guard + write-exception guard
+pnpm -C tools/ci test              # guard self-tests
 ```
 
 ## Definition of done (every task)
