@@ -40,7 +40,8 @@ Read before any work: `docs/01_FEATURE_LOCK.md` (scope), `docs/06_SAFETY_AND_ALA
 9. **Traceability.** Every requirement ID (e.g. `SR-012`, `F-ALM-03`) that a change implements
    is cited in the commit message and in a test name or doc comment.
 
-Licence: Apache-2.0 (`LICENSE`, `NOTICE`). Version starts at 0.1.0; 1.0.0 = every M-priority
+Licence: Apache-2.0 (`LICENSE`, `NOTICE`), copyright ChronoStrider. Bundle identifier
+`org.chronostrider.caelum` (changing it needs a CR). Version starts at 0.1.0; 1.0.0 = every M-priority
 feature complete and gated. Clinical content is DRAFT under a provisional medical lead (CR-003).
 
 ## Stack (do not substitute without a change request)
