@@ -1,0 +1,188 @@
+/*
+ * CAELUM design tokens: the single source of truth for UI colour and type (CLAUDE.md rule 7).
+ * Carried over from the prototype (reference/prototype/frontend/src/styles/tokens.css) with the
+ * accessibility fixes in docs/07_UI_SPEC.md §1 (CR-002 D5):
+ *   - Outfit only ('Google Sans' removed from every font stack);
+ *   - --ink-3 darkened; --warning is a fill only, amber text uses --warning-ink;
+ *   - high-contrast theme; DRAFT alarm tokens (CR-003); scrollbars visible.
+ * Every token pair used for text or UI elements is declared in contrast-pairs.ts and checked by
+ * ui/tests/contrast.test.ts (text >= 4.5:1, UI elements >= 3:1, every theme).
+ */
+
+:root {
+  --canvas: #D6E8E2;
+  --surface: #FFFFFF;
+  --raised: #FFFFFF;
+  --inset: #E6F3EF;
+  --border: #C2DFD6;
+  --border-strong: #90BDB0;
+  --ink: #141414;
+  --ink-2: #2B2B2B;
+  --ink-3: #4D665E; /* prototype #58736B was 4.0:1 on canvas */
+  --nav: #000000;
+  --on-nav: #FFFFFF;
+  --on-nav-2: #D6E8E2;
+  --signal: #006D58;
+  --signal-strong: #004D3E;
+  --signal-soft: #E6F5F1;
+  --warning: #D4A017; /* fill only, with --on-warning text */
+  --on-warning: #141414;
+  --warning-ink: #855600; /* amber text */
+  /* DRAFT alarm presentation tokens (CR-003), reviewed in the M5 usability evaluation. */
+  --alarm-high: #B42318;
+  --alarm-medium: #B54708;
+  --on-alarm: #FFFFFF;
+  --data-fill: var(--ink);
+  --data-muted: #90BDB0;
+  --baseline-band: rgba(20, 20, 20, .06);
+  --shadow-raised: 0 1px 2px 0 rgba(0, 0, 0, .05);
+  --r-card: 12px;
+  --accent: #006D58;
+  --accent-soft: #E6F5F1;
+}
+
+:root[data-theme="dark"] {
+  --canvas: #000000;
+  --surface: #141414;
+  --raised: #2B2B2B;
+  --inset: #1E1E1E;
+  --border: #2B2B2B;
+  --border-strong: #3D3D3D;
+  --ink: #FFFFFF;
+  --ink-2: #D6E8E2;
+  --ink-3: #759C90;
+  --nav: #141414;
+  --on-nav: #FFFFFF;
+  --on-nav-2: #D6E8E2;
+  --signal: #2DD4BF;
+  --signal-strong: #5EEAD4;
+  --signal-soft: #05211B;
+  --warning: #F5B800;
+  --on-warning: #141414;
+  --warning-ink: #F5B800;
+  --alarm-high: #FF6B5E;
+  --alarm-medium: #FDB022;
+  --on-alarm: #000000;
+  --data-fill: var(--ink);
+  --data-muted: #3D3D3D;
+  --baseline-band: rgba(255, 255, 255, .07);
+  --shadow-raised: 0 1px 2px 0 rgba(0, 0, 0, .35);
+  --r-card: 12px;
+  --accent: #2DD4BF;
+  --accent-soft: #05211B;
+}
+
+:root[data-theme="high-contrast"] {
+  --canvas: #000000;
+  --surface: #000000;
+  --raised: #000000;
+  --inset: #000000;
+  --border: #FFFFFF;
+  --border-strong: #FFFFFF;
+  --ink: #FFFFFF;
+  --ink-2: #FFFFFF;
+  --ink-3: #E6E6E6;
+  --nav: #000000;
+  --on-nav: #FFFFFF;
+  --on-nav-2: #FFFFFF;
+  --signal: #3DFFE0;
+  --signal-strong: #A6FFF2;
+  --signal-soft: #000000;
+  --warning: #FFD000;
+  --on-warning: #000000;
+  --warning-ink: #FFD000;
+  --alarm-high: #FF6B6B;
+  --alarm-medium: #FFB020;
+  --on-alarm: #000000;
+  --data-fill: var(--ink);
+  --data-muted: #BFBFBF;
+  --baseline-band: rgba(255, 255, 255, .16);
+  --shadow-raised: none;
+  --r-card: 12px;
+  --accent: #3DFFE0;
+  --accent-soft: #000000;
+}
+
+@theme {
+  --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --font-weight-semibold: 500;
+  --font-weight-bold: 600;
+  --font-dot: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-inset: var(--inset);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-nav: var(--nav);
+  --color-on-nav: var(--on-nav);
+  --color-on-nav-2: var(--on-nav-2);
+  --color-signal: var(--signal);
+  --color-signal-strong: var(--signal-strong);
+  --color-signal-soft: var(--signal-soft);
+  --color-warning: var(--warning);
+  --color-on-warning: var(--on-warning);
+  --color-warning-ink: var(--warning-ink);
+  --color-alarm-high: var(--alarm-high);
+  --color-alarm-medium: var(--alarm-medium);
+  --color-on-alarm: var(--on-alarm);
+  --color-data-fill: var(--data-fill);
+  --color-data-muted: var(--data-muted);
+  --color-baseline-band: var(--baseline-band);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+}
+
+@layer base {
+  html, body, #root { height: 100%; width: 100%; }
+  /* The page scrolls (e.g. at 200 % text); the prototype hid overflow and scrollbars. */
+  body {
+    margin: 0;
+    overflow: auto;
+    font-family: var(--font-sans);
+    font-optical-sizing: auto;
+    color: var(--ink);
+    background: var(--surface);
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.01em;
+    font-weight: 400;
+  }
+  button { font: inherit; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  ::selection { background: var(--ink); color: var(--canvas); }
+}
+
+@layer components {
+  .card { background: var(--raised); border-radius: var(--r-card); border: 1px solid var(--border); box-shadow: var(--shadow-raised); }
+  .icon-btn { background: var(--raised); border-radius: 999px; box-shadow: var(--shadow-raised); display: inline-flex; align-items: center; justify-content: center; transition: transform .25s cubic-bezier(.3,1.4,.5,1); }
+  .icon-btn:active { transform: scale(.94); }
+  .btn { font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 22px; border-radius: 999px; font-size: 15px; transition: transform .25s cubic-bezier(.3,1.4,.5,1), background .2s; }
+  .btn:active { transform: scale(.97); }
+  .btn-ink { background: var(--ink); color: var(--canvas); }
+  .btn-soft { background: var(--raised); color: var(--ink); box-shadow: var(--shadow-raised); }
+  .btn-lg { min-height: 64px; font-size: 17px; padding: 0 28px; }
+  .label { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); font-weight: 400; }
+  .dot-num { font-family: var(--font-dot); font-weight: 600; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums lining-nums; }
+  .crit-pulse { animation: crit 1.6s ease-in-out infinite; }
+  .live-pulse { animation: live 1.4s ease-in-out infinite; }
+  .chev { animation: chev 1.6s ease-in-out infinite; }
+}
+
+@keyframes crit { 0%,100% { box-shadow: 0 0 0 0 var(--signal-soft), 0 0 8px var(--signal-soft); } 50% { box-shadow: 0 0 0 7px rgba(255,26,26,0), 0 0 16px var(--signal-soft); } }
+@keyframes live { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
+@keyframes chev { 0%,100% { opacity: .25 } 50% { opacity: 1 } }
+
+@media (prefers-reduced-motion: reduce) {
+  .crit-pulse, .live-pulse, .chev { animation: none; }
+  * { scroll-behavior: auto !important; }
+}
+
+@media print {
+  body { background: var(--canvas); }
+  .no-print { display: none !important; }
+}
+
+.hatch { background-image: repeating-linear-gradient(135deg, var(--ink-3) 0 1.5px, transparent 1.5px 6px); background-color: var(--inset); opacity: 0.4; }
