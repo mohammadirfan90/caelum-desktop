@@ -1,0 +1,7 @@
+# cargo-nextest configuration. The `ci` profile writes JUnit XML that the trace generator reads
+# (tools/ci/trace.ts, docs/09_VV_PLAN.md §3).
+[profile.ci]
+fail-fast = false
+
+[profile.ci.junit]
+path = "junit.xml"

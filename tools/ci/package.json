@@ -10,6 +10,8 @@
     "check:npm-licenses": "node check-npm-licenses.ts",
     "check": "node check-release-features.ts && node check-writes.ts && node check-npm-licenses.ts",
     "sbom": "node sbom.ts",
+    "trace": "node trace.ts",
+    "trace:check": "node trace.ts --check",
     "typecheck": "tsc -p tsconfig.json",
     "test": "node --test \"test/*.test.ts\""
   },

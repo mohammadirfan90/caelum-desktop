@@ -84,6 +84,7 @@ cargo deny check && cargo audit --deny warnings && pnpm audit   # online
 pnpm -C tools/ci check             # release-feature, write-exception and npm licence guards
 pnpm -C tools/ci test              # guard self-tests
 pnpm -C tools/ci sbom              # CycloneDX SBOMs into target/sbom/
+pnpm -C tools/ci trace             # run all suites, write docs/trace.csv, enforce complete milestones
 ```
 
 ## Definition of done (every task)

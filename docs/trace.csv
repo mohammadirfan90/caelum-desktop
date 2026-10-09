@@ -1,0 +1,134 @@
+requirement_id,feature_id,milestone,code_module,test_names,result
+F-ACQ-01,F-ACQ-01,M2,crates/caelum-devices/src/lib.rs,,NO_TEST
+F-ACQ-02,F-ACQ-02,M2,crates/caelum-devices/src/lib.rs,,NO_TEST
+F-ACQ-03,F-ACQ-03,M7,crates/caelum-devices/src/lib.rs,,NO_TEST
+F-ACQ-04,F-ACQ-04,M2,crates/caelum-devices/src/lib.rs,,NO_TEST
+F-ACQ-05,F-ACQ-05,M7,crates/caelum-devices/src/lib.rs,,NO_TEST
+F-ACQ-06,F-ACQ-06,M8,crates/caelum-devices/src/lib.rs,,NO_TEST
+F-ACQ-07,F-ACQ-07,M8,crates/caelum-devices/src/lib.rs,,NO_TEST
+F-ACQ-08,F-ACQ-08,M8,crates/caelum-devices/src/lib.rs,,NO_TEST
+F-ACQ-09,F-ACQ-09,M2,crates/caelum-devices/src/lib.rs,,NO_TEST
+F-ACQ-10,F-ACQ-10,M2,crates/caelum-devices/src/lib.rs,,NO_TEST
+F-ACQ-11,F-ACQ-11,M2,crates/caelum-devices/src/lib.rs; crates/caelum-ingest/src/lib.rs,,NO_TEST
+F-ACQ-12,F-ACQ-12,M13,,,NO_TEST
+F-ACQ-13,F-ACQ-13,M13,,,NO_TEST
+F-ACQ-14,F-ACQ-14,,,,NO_TEST
+F-ALM-01,F-ALM-01,M3,crates/caelum-alarms/src/lib.rs,,NO_TEST
+F-ALM-02,F-ALM-02,M3,crates/caelum-alarms/src/lib.rs,,NO_TEST
+F-ALM-03,F-ALM-03,M3,crates/caelum-alarms/src/lib.rs,,NO_TEST
+F-ALM-04,F-ALM-04,M4,crates/caelum-alarms/src/lib.rs,,NO_TEST
+F-ALM-05,F-ALM-05,M4,crates/caelum-alarms/src/lib.rs,,NO_TEST
+F-ALM-06,F-ALM-06,M4,crates/caelum-alarms/src/lib.rs,,NO_TEST
+F-ALM-07,F-ALM-07,M4,crates/caelum-alarms/src/lib.rs,,NO_TEST
+F-ALM-08,F-ALM-08,M3,crates/caelum-alarms/src/lib.rs,,NO_TEST
+F-ALM-09,F-ALM-09,M6,,,NO_TEST
+F-CLN-01,F-CLN-01,M8,,,NO_TEST
+F-CLN-02,F-CLN-02,M8,,,NO_TEST
+F-CLN-03,F-CLN-03,M8,,,NO_TEST
+F-CLN-04,F-CLN-04,M8,,,NO_TEST
+F-CLN-05,F-CLN-05,M8,,,NO_TEST
+F-CLN-06,F-CLN-06,M8,,,NO_TEST
+F-CLN-07,F-CLN-07,M8,,,NO_TEST
+F-CLN-08,F-CLN-08,M8,,,NO_TEST
+F-CLN-09,F-CLN-09,,,,NO_TEST
+F-CLN-10,F-CLN-10,,,,NO_TEST
+F-ENV-01,F-ENV-01,M9,crates/caelum-vehicle/src/lib.rs,,NO_TEST
+F-ENV-02,F-ENV-02,M9,crates/caelum-vehicle/src/lib.rs,,NO_TEST
+F-ENV-03,F-ENV-03,M9,crates/caelum-vehicle/src/lib.rs,,NO_TEST
+F-ENV-04,F-ENV-04,M9,crates/caelum-vehicle/src/lib.rs,,NO_TEST
+F-GND-01,F-GND-01,M10,crates/caelum-ground/src/lib.rs,,NO_TEST
+F-GND-02,F-GND-02,M10,crates/caelum-ground/src/lib.rs,,NO_TEST
+F-GND-03,F-GND-03,M10,crates/caelum-ground/src/lib.rs,,NO_TEST
+F-GND-04,F-GND-04,M10,crates/caelum-ground/src/lib.rs,,NO_TEST
+F-GND-05,F-GND-05,M10,crates/caelum-ground/src/lib.rs,,NO_TEST
+F-GND-06,F-GND-06,M10,crates/caelum-ground/src/lib.rs,,NO_TEST
+F-GND-07,F-GND-07,M10,crates/caelum-ground/src/lib.rs,,NO_TEST
+F-GND-08,F-GND-08,M10,crates/caelum-ground/src/lib.rs,,NO_TEST
+F-GND-09,F-GND-09,M10,crates/caelum-ground/src/lib.rs,,NO_TEST
+F-GND-10,F-GND-10,,,,NO_TEST
+F-GND-11,F-GND-11,M9; M10,crates/caelum-ground/src/lib.rs; crates/caelum-vehicle/src/lib.rs,,NO_TEST
+F-GND-12,F-GND-12,M10,crates/caelum-mds/src/lib.rs,,NO_TEST
+F-GND-13,F-GND-13,M10,crates/caelum-ground/src/lib.rs; crates/caelum-mds/src/lib.rs,,NO_TEST
+F-GND-14,F-GND-14,M10,crates/caelum-mds/src/lib.rs,,NO_TEST
+F-ML-01,F-ML-01,M12,crates/caelum-ml/src/lib.rs,,NO_TEST
+F-ML-02,F-ML-02,M12,crates/caelum-ml/src/lib.rs,,NO_TEST
+F-ML-03,F-ML-03,M12,crates/caelum-ml/src/lib.rs,,NO_TEST
+F-ML-04,F-ML-04,M12,crates/caelum-ml/src/lib.rs,,NO_TEST
+F-SIG-01,F-SIG-01,M7,crates/caelum-signal/src/lib.rs,,NO_TEST
+F-SIG-02,F-SIG-02,M7,crates/caelum-signal/src/lib.rs,,NO_TEST
+F-SIG-03,F-SIG-03,M7,crates/caelum-signal/src/lib.rs,,NO_TEST
+F-SIG-04,F-SIG-04,M7,crates/caelum-signal/src/lib.rs,,NO_TEST
+F-SIG-05,F-SIG-05,M7,crates/caelum-signal/src/lib.rs,,NO_TEST
+F-SIG-06,F-SIG-06,M7,crates/caelum-signal/src/lib.rs,,NO_TEST
+F-SIG-07,F-SIG-07,M7,crates/caelum-signal/src/lib.rs,,NO_TEST
+F-SYS-01,F-SYS-01,M1,crates/caelum-security/src/lib.rs,,NO_TEST
+F-SYS-02,F-SYS-02,M1,crates/caelum-store/src/lib.rs,,NO_TEST
+F-SYS-03,F-SYS-03,M1,crates/caelum-security/src/lib.rs,,NO_TEST
+F-SYS-04,F-SYS-04,M11,crates/caelum-cluster/src/lib.rs,,NO_TEST
+F-SYS-05,F-SYS-05,M11,crates/caelum-cluster/src/lib.rs,,NO_TEST
+F-SYS-06,F-SYS-06,M0,src-tauri/src/commands.rs; src-tauri/src/lib.rs; ui/src/App.tsx,"caelum-desktop::app_info_reports_workspace_version_and_product_name; caelum-desktop::capabilities_grant_only_app_commands; caelum-desktop::identity_matches_cr_003; caelum-desktop::no_global_api_and_no_plugins; caelum-desktop::release_csp_allows_no_remote_content_and_no_inline_or_eval; caelum-desktop::version_is_not_overridden_in_tauri_conf; caelum-desktop::windows_installers_embed_webview2_offline_installer; ui/tests/App.test.tsx › reports non-Error rejections as text instead of crashing; ui/tests/App.test.tsx › shows a loading status until the core answers, with no version; ui/tests/App.test.tsx › shows the failure, and no version, when the IPC call fails; ui/tests/App.test.tsx › shows the product name and the version reported over IPC; ui/tests/App.test.tsx › uses a main landmark and a labelled section",PASS
+F-SYS-07,F-SYS-07,M1,crates/caelum-domain/src/lib.rs,,NO_TEST
+F-SYS-08,F-SYS-08,M8; M10,crates/caelum-store/src/lib.rs,,NO_TEST
+F-SYS-09,F-SYS-09,M4,crates/caelum-core/src/lib.rs,,NO_TEST
+F-SYS-10,F-SYS-10,M0; M5,ui/src/styles/contrast-pairs.ts,"ui/tests/contrast.test.ts › %s meets its threshold; ui/tests/contrast.test.ts › matches the WCAG reference values; ui/tests/contrast.test.ts › never uses --warning as a text colour (fill only, CR-002 D5); ui/tests/contrast.test.ts › rejects colours it cannot measure instead of guessing",PASS
+F-SYS-11,F-SYS-11,M5,ui/src/strings.ts,,NO_TEST
+F-SYS-12,F-SYS-12,M13,,,NO_TEST
+F-SYS-13,F-SYS-13,M11,,,NO_TEST
+R-ALM-01,,,,,NO_TEST
+R-ALM-02,,,,"ui/tests/contrast.test.ts › %s meets its threshold; ui/tests/contrast.test.ts › matches the WCAG reference values; ui/tests/contrast.test.ts › never uses --warning as a text colour (fill only, CR-002 D5); ui/tests/contrast.test.ts › rejects colours it cannot measure instead of guessing",PASS
+R-ALM-03,,,,,NO_TEST
+R-ALM-04,,,,,NO_TEST
+R-ALM-05,,,,,NO_TEST
+R-ALM-06,,,,,NO_TEST
+R-CLN-01,,,,,NO_TEST
+R-CLN-02,,M2,crates/caelum-domain/src/lib.rs; crates/caelum-ingest/src/lib.rs; src-tauri/src/lib.rs; tools/ci/src/release-features.ts,"caelum-core::domain_has_no_io_and_no_workspace_dependencies; caelum-core::every_crate_is_apache_2_and_inherits_workspace_lints; caelum-core::no_crate_depends_on_the_app_crate; caelum-core::no_default_feature_enables_test_equipment; caelum-core::test_equipment_only_as_dev_dependency_or_behind_its_feature; caelum-core::workspace_has_exactly_the_documented_crates; tools/ci/test/release-features.test.ts › enabling the test-equipment feature is caught; tools/ci/test/release-features.test.ts › flags the test-equipment crate and the feature; tools/ci/test/release-features.test.ts › parses package names and features; tools/ci/test/release-features.test.ts › passes a clean graph; tools/ci/test/release-features.test.ts › the release app graph contains no test equipment; ui/tests/App.test.tsx › reports non-Error rejections as text instead of crashing; ui/tests/App.test.tsx › shows a loading status until the core answers, with no version; ui/tests/App.test.tsx › shows the failure, and no version, when the IPC call fails; ui/tests/App.test.tsx › shows the product name and the version reported over IPC; ui/tests/App.test.tsx › uses a main landmark and a labelled section",PASS
+R-CLN-03,,,,,NO_TEST
+R-CLN-04,,,,,NO_TEST
+R-INT-01,,,,,NO_TEST
+R-INT-02,,,,,NO_TEST
+R-INT-03,,,,,NO_TEST
+R-INT-04,,M9,crates/caelum-vehicle/src/lib.rs,,NO_TEST
+R-INT-05,,,crates/caelum-mds/src/lib.rs,,NO_TEST
+R-INT-06,,,crates/caelum-mds/src/lib.rs,,NO_TEST
+R-INT-07,,,crates/caelum-mds/src/lib.rs,,NO_TEST
+R-OPS-01,,,,,NO_TEST
+R-OPS-02,,M11,crates/caelum-cluster/src/lib.rs,,NO_TEST
+R-OPS-03,,M0,src-tauri/src/lib.rs; ui/scripts/check-offline-bundle.ts,caelum-desktop::capabilities_grant_only_app_commands; caelum-desktop::identity_matches_cr_003; caelum-desktop::no_global_api_and_no_plugins; caelum-desktop::release_csp_allows_no_remote_content_and_no_inline_or_eval; caelum-desktop::version_is_not_overridden_in_tauri_conf; caelum-desktop::windows_installers_embed_webview2_offline_installer,PASS
+R-OPS-04,,,crates/caelum-ingest/src/lib.rs,,NO_TEST
+R-OPS-05,,M1,crates/caelum-domain/src/lib.rs,,NO_TEST
+R-SEC-01,,M1,crates/caelum-store/src/lib.rs,,NO_TEST
+R-SEC-02,,M1,crates/caelum-security/src/lib.rs,,NO_TEST
+R-SEC-03,,M1,crates/caelum-security/src/lib.rs,,NO_TEST
+R-SEC-04,,M0,crates/caelum-vehicle/src/lib.rs; tools/ci/src/writes.ts,caelum-core::domain_has_no_io_and_no_workspace_dependencies; caelum-core::every_crate_is_apache_2_and_inherits_workspace_lints; caelum-core::no_crate_depends_on_the_app_crate; caelum-core::no_default_feature_enables_test_equipment; caelum-core::test_equipment_only_as_dev_dependency_or_behind_its_feature; caelum-core::workspace_has_exactly_the_documented_crates,PASS
+R-SEC-05,,,,,NO_TEST
+R-SEC-06,,,crates/caelum-ground/src/lib.rs,,NO_TEST
+R-SEC-07,,M0; M2,crates/caelum-devices/src/lib.rs; tools/ci/src/writes.ts,"tools/ci/test/writes.test.ts › accepts a marker on the same line; tools/ci/test/writes.test.ts › accepts a write with a marker on the line above that matches a reviewed entry; tools/ci/test/writes.test.ts › catches ${rule.id} in caelum-devices without a marker; tools/ci/test/writes.test.ts › does not flag reads, lock guards, channel subscriptions or comments in caelum-devices; tools/ci/test/writes.test.ts › has an empty register (M0 ships with zero exceptions); tools/ci/test/writes.test.ts › has an example for every rule; tools/ci/test/writes.test.ts › has no unregistered writes in caelum-devices or caelum-vehicle; tools/ci/test/writes.test.ts › parses the register table; tools/ci/test/writes.test.ts › rejects ${rule.id} in caelum-vehicle even with a marker; tools/ci/test/writes.test.ts › rejects a marker whose ID is not registered; tools/ci/test/writes.test.ts › rejects a stale entry with no call site; tools/ci/test/writes.test.ts › rejects an entry with a category outside a, b, c; tools/ci/test/writes.test.ts › rejects an entry without a reviewer; tools/ci/test/writes.test.ts › rejects any register entry for caelum-vehicle",PASS
+SR-001,,M3,crates/caelum-alarms/src/lib.rs,,NO_TEST
+SR-002,,M3,crates/caelum-alarms/src/lib.rs; crates/caelum-ml/src/lib.rs,,NO_TEST
+SR-003,,M3,crates/caelum-alarms/src/lib.rs,,NO_TEST
+SR-004,,M3,crates/caelum-alarms/src/lib.rs,,NO_TEST
+SR-005,,M3,crates/caelum-alarms/src/lib.rs,,NO_TEST
+SR-006,,M3,crates/caelum-alarms/src/lib.rs,,NO_TEST
+SR-007,,M4,crates/caelum-alarms/src/lib.rs,,NO_TEST
+SR-008,,M4,crates/caelum-alarms/src/lib.rs,,NO_TEST
+SR-009,,M3,crates/caelum-alarms/src/lib.rs,,NO_TEST
+SR-010,,M3,crates/caelum-alarms/src/lib.rs,,NO_TEST
+SR-011,,M0,crates/caelum-alarms/src/lib.rs; crates/caelum-devices/src/lib.rs; crates/caelum-vehicle/src/lib.rs; tools/ci/src/writes.ts,"caelum-core::domain_has_no_io_and_no_workspace_dependencies; caelum-core::every_crate_is_apache_2_and_inherits_workspace_lints; caelum-core::no_crate_depends_on_the_app_crate; caelum-core::no_default_feature_enables_test_equipment; caelum-core::test_equipment_only_as_dev_dependency_or_behind_its_feature; caelum-core::workspace_has_exactly_the_documented_crates; tools/ci/test/writes.test.ts › accepts a marker on the same line; tools/ci/test/writes.test.ts › accepts a write with a marker on the line above that matches a reviewed entry; tools/ci/test/writes.test.ts › catches ${rule.id} in caelum-devices without a marker; tools/ci/test/writes.test.ts › does not flag reads, lock guards, channel subscriptions or comments in caelum-devices; tools/ci/test/writes.test.ts › has an empty register (M0 ships with zero exceptions); tools/ci/test/writes.test.ts › has an example for every rule; tools/ci/test/writes.test.ts › has no unregistered writes in caelum-devices or caelum-vehicle; tools/ci/test/writes.test.ts › parses the register table; tools/ci/test/writes.test.ts › rejects ${rule.id} in caelum-vehicle even with a marker; tools/ci/test/writes.test.ts › rejects a marker whose ID is not registered; tools/ci/test/writes.test.ts › rejects a stale entry with no call site; tools/ci/test/writes.test.ts › rejects an entry with a category outside a, b, c; tools/ci/test/writes.test.ts › rejects an entry without a reviewer; tools/ci/test/writes.test.ts › rejects any register entry for caelum-vehicle",PASS
+SR-012,,M4,crates/caelum-alarms/src/lib.rs,,NO_TEST
+SR-013,,,crates/caelum-alarms/src/lib.rs,,NO_TEST
+SR-014,,M4,crates/caelum-alarms/src/lib.rs,,NO_TEST
+SR-015,,M4; M10,crates/caelum-alarms/src/lib.rs; crates/caelum-mds/src/lib.rs,,NO_TEST
+SR-016,,M10,crates/caelum-alarms/src/lib.rs; crates/caelum-mds/src/lib.rs,,NO_TEST
+SR-017,,M2,crates/caelum-alarms/src/lib.rs; crates/caelum-ingest/src/lib.rs,,NO_TEST
+SR-018,,M3,crates/caelum-alarms/src/lib.rs; crates/caelum-domain/src/lib.rs; crates/caelum-ingest/src/lib.rs,,NO_TEST
+SR-019,,,crates/caelum-alarms/src/lib.rs,,NO_TEST
+N-01,,,,,NO_TEST
+N-02,F-ACQ-01; F-ACQ-02; F-ACQ-03; F-ACQ-04; F-ACQ-05,,,,NO_TEST
+N-03,F-SYS-12,,,,NO_TEST
+N-04,,,,,NO_TEST
+N-05,F-SYS-08,,,,NO_TEST
+N-06,F-ACQ-12; F-SYS-07; F-GND-07,,,,NO_TEST
+N-07,F-SYS-04,,,,NO_TEST
+N-08,F-SYS-06,,,,NO_TEST
+N-09,,,,,NO_TEST
+N-10,F-ACQ-02; F-ACQ-03; F-ACQ-06; F-ACQ-07; F-CLN-03; F-CLN-04; F-GND-05,,,,NO_TEST
