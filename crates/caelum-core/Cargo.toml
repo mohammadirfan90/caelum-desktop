@@ -1,0 +1,35 @@
+[package]
+name = "caelum-core"
+description = "Wiring: task supervisor, event bus, configuration, self-test"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+caelum-domain.workspace = true
+caelum-store.workspace = true
+caelum-ingest.workspace = true
+caelum-signal.workspace = true
+caelum-alarms.workspace = true
+caelum-ml.workspace = true
+caelum-devices.workspace = true
+caelum-vehicle.workspace = true
+caelum-ground.workspace = true
+caelum-mds.workspace = true
+caelum-security.workspace = true
+caelum-cluster.workspace = true
+
+caelum-test-equipment = { workspace = true, optional = true }
+
+[features]
+# Test equipment only; release builds must not enable it (CLAUDE.md rule 3).
+test-equipment = ["dep:caelum-test-equipment", "caelum-domain/test-equipment"]
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+cargo_metadata = "0.23.1"

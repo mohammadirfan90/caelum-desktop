@@ -12,7 +12,7 @@ marked `complete` (`09` §3).
 ## Milestone status
 | Milestone | Status | Date | Commit |
 |---|---|---|---|
-| M0 | not started | | |
+| M0 | in progress | 2026-10-09 | |
 | M1 | not started | | |
 | M2 | not started | | |
 | M3 | not started | | |

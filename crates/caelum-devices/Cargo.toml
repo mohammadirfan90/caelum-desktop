@@ -1,0 +1,15 @@
+[package]
+name = "caelum-devices"
+description = "Device adapters: BLE, pairing, USB/serial, GHS, SIG profiles, DICOM, ECG, FHIR import"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+caelum-domain.workspace = true
+
+[lints]
+workspace = true

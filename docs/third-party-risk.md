@@ -11,6 +11,7 @@ replacing a stack item or used in `caelum-alarms`, `caelum-ingest`, `caelum-secu
 | Name | Version | Purpose | Risk | Mitigation | Added |
 |---|---|---|---|---|---|
 | `tauri-specta` | `2.0.0-rc.25`, exact `=` pin (newest on crates.io, 2026-05-08); compatibility confirmed when it is added in M0 | Generates typed TypeScript bindings for IPC commands (CLAUDE.md stack) | v2 has only been published as release candidates; the API may change between them; release cadence is irregular (rc.21 January 2025, rc.24 March 2026) | Exact pin; used only through a thin wrapper module in `src-tauri`, so it can be replaced; generated bindings committed and checked for drift in CI; upgrades only as a reviewed change with the bindings diff | M0 |
+| `cargo_metadata` | `0.23.1` (`Cargo.lock`) | Dev-dependency of `caelum-core`: architecture test reads the workspace layout (`cargo metadata --no-deps`, offline) | Test-only; low. MIT licence; actively maintained | Dev-dependency only, never in a release build; no network or native downloads at build time | M0 |
 
 ## Known risks to enter when the dependency is added
 - `cfdp-rs` 0.3 (M10): no inactivity handling, suspend, keep-alive/prompt or

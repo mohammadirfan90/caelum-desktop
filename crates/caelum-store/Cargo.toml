@@ -1,0 +1,15 @@
+[package]
+name = "caelum-store"
+description = "Encrypted storage (SQLCipher), migrations, repositories, retention and export"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+caelum-domain.workspace = true
+
+[lints]
+workspace = true

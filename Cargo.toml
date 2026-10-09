@@ -1,0 +1,57 @@
+# CAELUM Desktop Cargo workspace. Crate layout: docs/03_ARCHITECTURE.md §2.
+[workspace]
+resolver = "2"
+members = [
+    "crates/caelum-domain",
+    "crates/caelum-store",
+    "crates/caelum-ingest",
+    "crates/caelum-signal",
+    "crates/caelum-alarms",
+    "crates/caelum-ml",
+    "crates/caelum-devices",
+    "crates/caelum-vehicle",
+    "crates/caelum-ground",
+    "crates/caelum-mds",
+    "crates/caelum-security",
+    "crates/caelum-cluster",
+    "crates/caelum-core",
+    "crates/caelum-test-equipment",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.99"
+license = "Apache-2.0"
+authors = ["ChronoStrider"]
+publish = false
+
+[workspace.dependencies]
+caelum-domain = { path = "crates/caelum-domain" }
+caelum-store = { path = "crates/caelum-store" }
+caelum-ingest = { path = "crates/caelum-ingest" }
+caelum-signal = { path = "crates/caelum-signal" }
+caelum-alarms = { path = "crates/caelum-alarms" }
+caelum-ml = { path = "crates/caelum-ml" }
+caelum-devices = { path = "crates/caelum-devices" }
+caelum-vehicle = { path = "crates/caelum-vehicle" }
+caelum-ground = { path = "crates/caelum-ground" }
+caelum-mds = { path = "crates/caelum-mds" }
+caelum-security = { path = "crates/caelum-security" }
+caelum-cluster = { path = "crates/caelum-cluster" }
+caelum-test-equipment = { path = "crates/caelum-test-equipment" }
+
+[workspace.lints.rust]
+# Unsafe needs an explicit, reviewed #[allow(unsafe_code)] plus a SAFETY: comment (CLAUDE.md).
+unsafe_code = "deny"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+# CLAUDE.md definition of done; test code is exempted in clippy.toml.
+unwrap_used = "deny"
+expect_used = "deny"
+undocumented_unsafe_blocks = "deny"
+# No placeholder code paths (CLAUDE.md rule 2).
+todo = "deny"
+unimplemented = "deny"
+dbg_macro = "deny"

@@ -1,0 +1,15 @@
+[package]
+name = "caelum-signal"
+description = "Deterministic signal processing: ECG, HRV, SQI, respiration, SpO2, core temperature"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+caelum-domain.workspace = true
+
+[lints]
+workspace = true

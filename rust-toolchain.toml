@@ -1,0 +1,5 @@
+# Pinned toolchain for reproducible builds (R-OPS-03, docs/OFFLINE_BUILD.md).
+[toolchain]
+channel = "1.99.0"
+components = ["clippy", "rustfmt", "llvm-tools-preview"]
+profile = "minimal"
