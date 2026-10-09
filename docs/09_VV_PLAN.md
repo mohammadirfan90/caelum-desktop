@@ -4,7 +4,7 @@
 | Level | What | Tools |
 |---|---|---|
 | Unit | Every decoder, rule, filter, parser, repository | `cargo nextest`, `proptest` (property tests for parsers and rule timing) |
-| Rule engine | Every rule: fire, not-fire, persistence edge, gap restart (per-rule `max_gap_s`), hysteresis, supersession, multi-crew, unknown context (SR-018); absence-of-event rules with synthetic event streams | Exhaustive table-driven tests and property tests per rule, plus recorded corpora. Coverage gate: `caelum-alarms` ≥ 95 % region coverage. Nightly branch-coverage report (informational). Documented independent review of `caelum-alarms` |
+| Rule engine | Every rule: fire, not-fire, persistence edge, gap restart (per-rule `max_gap_s`), hysteresis, supersession, multi-crew, unknown context (SR-018); absence-of-event rules with synthetic event streams; spot mode (SR-019): confirm, timeout and not-confirmed branches, n-of-m spot baselines, per-site and unknown-site temperature thresholds, THERMAL supersession | Exhaustive table-driven tests and property tests per rule, plus recorded corpora. Coverage gate: `caelum-alarms` ≥ 95 % region coverage. Nightly branch-coverage report (informational). Documented independent review of `caelum-alarms` |
 | Golden files | XTCE output, CCSDS packets, FHIR bundles, audit entries | `insta` snapshots |
 | Integration | Device emulator → ingest → alarm → escalation → downlink → ground profile decode | `caelum-test-equipment` |
 | Interoperability | Real Yamcs instance decodes packets with generated XTCE; Open MCT plugin displays; FHIR validator accepts bundles; DICOM files open in reference viewer; CFDP transfers complete across contact windows | containers in CI |

@@ -18,7 +18,8 @@ battery_level, device_clock_offset, rssi, packet_loss_pct, reconnect_count.
 Notes (CR-002):
 - `core_temp` is the F-SIG-05 estimate only. `body_temp_measured` is a thermometer reading with
   its site code (Bluetooth HTS Temperature Type; `unknown` when the device sends none).
-  Thermometer readings never go to `core_temp`.
+  Thermometer readings never go to `core_temp`. Sites are classed core-equivalent or peripheral
+  for the temperature rules (`06` §3).
 - `pulse_rate` uses LOINC 8889-8 (heart rate by pulse oximetry), distinct from `heart_rate`
   (8867-4). Both are verified against the LOINC table like every other code.
 - `spe_state` is an enum; its values come from `docs/icd/ICD-VEH.md` (open item OI-2).
@@ -35,10 +36,10 @@ OS keystore. Attachment file store: AES-256-GCM.
 | crew_member | id, name, role, mission, active, photo hash |
 | user | id, role, crew_member_id?, credential (argon2), key id, disabled |
 | device | id, adapter, model, vendor, serial, firmware, accuracy_class, calibration_due, crew_member_id, status, last_seen, clock_offset_ms |
-| observation | id, crew_member_id, device_id, parameter, value, unit, measured_at (TAI ns), received_at, quality, classification (measured/derived/entered/imported), algorithm_version?, context JSON |
+| observation | id, crew_member_id, device_id, parameter, value, unit, measured_at (TAI ns), received_at, quality, classification (measured/derived/entered/imported), measurement_mode (continuous/spot, from the device profile), algorithm_version?, context JSON |
 | waveform_chunk | id, crew_member_id, device_id, signal, start_tai, sample_rate, encoding, data (compressed), quality |
 | baseline | crew_member_id, parameter, median, mad, n, window, status, method_version |
-| alarm | id, crew_member_id?, kind (physiological/technical), category (CARDIO/RESPIRATORY/THERMAL/ENVIRONMENT/TECHNICAL), rule_id, ruleset_version, priority, state, latched, trigger_value, why JSON, action, created_at, acknowledged_by/at, silenced_until, resolved_at, escalation_stage |
+| alarm | id, crew_member_id?, kind (physiological/technical), category (CARDIO/RESPIRATORY/THERMAL/ENVIRONMENT/TECHNICAL), rule_id, ruleset_version, priority, state (incl. CONFIRMING for spot readings, SR-019), confirming_readings JSON?, latched, trigger_value, why JSON, action, created_at, acknowledged_by/at, silenced_until, resolved_at, escalation_stage |
 | alarm_notification | alarm_id, audience, stage, at, delivered_to |
 | encounter | id, crew_member_id, author, SOAP fields, signed_at, attachments |
 | attachment | id, kind (dicom/ecg/file), content_hash, metadata JSON |

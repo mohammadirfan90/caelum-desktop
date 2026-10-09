@@ -1,6 +1,9 @@
 # Prototype extraction: regenerate from reference/caelum-next-prototype-v3.1.zip (reference only, never shipped)
 reference/prototype/
 
+# LOINC table (licensed download; only the used subset is committed elsewhere)
+tools/offline/loinc/
+
 # Rust
 /target/
 

@@ -27,7 +27,12 @@ marked `complete` (`09` §3).
 | M12 | not started | | |
 | M13 | not started | | |
 
-Items marked ⚕ in CR-002 need medical-lead approval before they are implemented.
+Items marked ⚕ in CR-002/CR-003 are DRAFT clinical content approved by the provisional medical
+lead; rulesets stay development-signed (with the DEVELOPMENT RULESET banner) until a licensed
+clinician advisor countersigns.
+
+Versioning: the workspace starts at 0.1.0. Version 1.0.0 means every M-priority feature of the
+feature lock is complete and gated.
 
 ---
 
@@ -39,8 +44,9 @@ workspace, CI workflow per docs/09_VV_PLAN.md §4 (including the release-feature
 write-exception guard for caelum-vehicle and caelum-devices against an empty
 docs/write-exceptions.md, and the trace script with a milestone column), cargo-deny config, the
 offline tool cache and its scripts per docs/OFFLINE_BUILD.md, and a minimal window that shows the
-app version. Bring over the prototype's tokens.css with the accessibility fixes in docs/07 §1, the
-Outfit font via @fontsource, and the automated contrast test."
+app version. Bring over the prototype's tokens.css with the accessibility fixes in docs/07 §1
+(alarm tokens as DRAFT), the Outfit font via @fontsource, and the automated contrast test. Add
+LICENSE (Apache-2.0) and NOTICE attributions for bundled third-party assets."
 **Gate:** a release installer is built from the checksummed tool cache with the network disabled
 and installs with no network; CI green; empty crates compile; every guard fails on a planted
 violation; the contrast test passes for the light, dark and high-contrast themes.
@@ -52,7 +58,9 @@ data quality, clinical values read-only; mission control = status only; administ
 configuration, no clinical content (separation of duties); device gateway = ingest only. Check-in
 tiers: Private (astronaut only), Medical (CMO + flight surgeon), Status (operational level only).
 After approval, implement caelum-domain (parameter catalog per docs/05_DATA_MODEL.md §1 including
-stale_after_s and the CR-002 parameters, every LOINC code verified against the LOINC table, units
+stale_after_s and the CR-002 parameters, every LOINC code verified against the LOINC table in
+tools/offline/loinc/ (git-ignored; commit only the subset of codes used, with the LOINC copyright
+notice and licence attribution), units
 with conversions, TAI/UTC/MET time types with the bundled IERS leap-second table and the CCSDS
 1958 epoch, typed IDs), caelum-store (SQLCipher via rusqlite with key from the OS keystore,
 refinery migrations for all tables in §2), and caelum-security (users, roles, argon2, sessions with
@@ -84,12 +92,15 @@ signed TOML (rules, categories and per-rule max_gap_s from docs/06 §3), signatu
 verification at load with safe fallback (development keys only in development builds with the
 DEVELOPMENT RULESET banner; release builds accept only flight keys with a medical approver
 signature), per-crew/per-rule state, persistence, hysteresis, data-gap restart, supersession,
-threshold and absence-of-event rule types (absence tested with synthetic event streams), unknown
-context handled per SR-018, baseline notices (median/MAD, observe only, parameters in docs/06 §3),
-the AF rule as an observe notice, and a structured 'why'. Engine runs synchronously in the ingest
+threshold and absence-of-event rule types (absence tested with synthetic event streams), the spot
+evaluation mode per SR-019 (CONFIRMING, confirm_window_s, recheck_timeout_s, not-confirmed) with
+n-of-m spot baselines, the measured-temperature rules with per-site thresholds and the THERMAL
+supersession group, unknown context handled per SR-018, baseline notices (median/MAD, observe
+only, parameters in docs/06 §3), the AF rule as an observe notice, and a structured 'why'. Engine runs synchronously in the ingest
 path. Build a tools/ruleset-signer CLI."
 **Gate:** caelum-alarms ≥ 95 % region coverage; exhaustive table-driven and property tests for
-every rule; every SR-001..006 and SR-018 has named tests; a tampered ruleset is rejected and a
+every rule; table-driven tests for every spot-mode branch; every SR-001..006, SR-018 and SR-019
+has named tests; a tampered ruleset is rejected and a
 technical alarm raised; a release build rejects a development-signed ruleset; nightly
 branch-coverage report attached; independent review of caelum-alarms documented.
 

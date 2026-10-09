@@ -37,3 +37,5 @@ Tauri 2 + Rust desktop application.
 | `docs/third-party-risk.md` | SOUP register: third-party dependencies with known risks and mitigations |
 | `docs/change-requests/CR-001.md` | Approved change adding the medical data system integration (feature lock rev. 2) |
 | `docs/change-requests/CR-002.md` | Decisions from the first-session review (feature lock rev. 3) |
+| `docs/change-requests/CR-003.md` | Medical lead, spot-check evaluation, measured fever, licence and dependency policy |
+| `LICENSE`, `NOTICE` | Apache-2.0 licence and attribution notice |

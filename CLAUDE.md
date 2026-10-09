@@ -40,7 +40,15 @@ Read before any work: `docs/01_FEATURE_LOCK.md` (scope), `docs/06_SAFETY_AND_ALA
 9. **Traceability.** Every requirement ID (e.g. `SR-012`, `F-ALM-03`) that a change implements
    is cited in the commit message and in a test name or doc comment.
 
+Licence: Apache-2.0 (`LICENSE`, `NOTICE`). Version starts at 0.1.0; 1.0.0 = every M-priority
+feature complete and gated. Clinical content is DRAFT under a provisional medical lead (CR-003).
+
 ## Stack (do not substitute without a change request)
+Supporting crates not listed below may be added without a CR only if they have a permissive
+licence that passes cargo-deny, are actively maintained, do no network access or native downloads
+at build time, and are recorded in `docs/third-party-risk.md`. A CR is required for any crate that
+replaces a stack item, or that is used in `caelum-alarms`, `caelum-ingest`, `caelum-security`,
+`caelum-cluster`, crypto code or network code (CR-003 §5).
 - Shell: Tauri 2 (`tauri`, `tauri-plugin-*` v2), WebView UI.
 - UI: React 19 + TypeScript (strict) + Vite + Tailwind CSS v4, design tokens from the prototype.
   Type-safe IPC bindings generated with `tauri-specta` (no hand-written command types), pinned to

@@ -5,10 +5,10 @@
 |---|---|
 | SR-001 | Absolute-limit rules are evaluated for every valid observation; nothing can disable them except a signed ruleset change. |
 | SR-002 | Baselines and models can add lower-priority notices but can never suppress, delay or downgrade an absolute-limit alarm. |
-| SR-003 | A rule fires only after its persistence window; it resolves only after its clear threshold holds for its clear window (hysteresis). |
+| SR-003 | For continuous readings, a rule fires only after its persistence window; it resolves only after its clear threshold holds for its clear window (hysteresis). Spot readings follow SR-019. |
 | SR-004 | A data gap longer than the rule's `max_gap_s` restarts persistence timing. A value older than its parameter's `stale_after_s` is STALE and raises a technical alarm, never a "normal" state. |
 | SR-005 | Observations with quality POOR/UNUSABLE pause physiological rules for that signal and raise a technical alarm. |
-| SR-006 | Alarm state is per crew member and per rule; a higher-priority alarm supersedes lower ones for the same parameter. |
+| SR-006 | Alarm state is per crew member and per rule; a higher-priority alarm supersedes lower ones for the same parameter, or within a declared supersession group (the temperature rules on `core_temp` and `body_temp_measured` form the THERMAL group). |
 | SR-007 | High-priority alarms escalate on timers until acknowledged; escalation state survives restart and fail-over. |
 | SR-008 | Silencing is time-limited (max 2 min high, 10 min medium), never removes the visual alarm, and is audited. |
 | SR-009 | The ruleset is loaded only if its signature and approver record verify; otherwise the app starts in a safe state that shows a technical alarm and uses the last verified ruleset. Development signing keys are accepted only by development builds, which then show a "DEVELOPMENT RULESET" banner; release builds accept only flight keys with a medical approver signature. |
@@ -21,6 +21,7 @@
 | SR-016 | Observations read from the medical data system go through the same ingest validation and alarm evaluation as direct device data, with duplicates removed by source id. |
 | SR-017 | Readings that a device flags as demonstration or test data (e.g. PLXS Measurement Status bits 10 and 11) are rejected in release builds. |
 | SR-018 | Missing context is `unknown`, never a default. A rule conditioned on context (e.g. "at rest") is evaluated when the context is unknown, and the alarm's why states it (e.g. "activity unknown"). |
+| SR-019 | A breaching spot reading is never ignored. It opens a `CONFIRMING` alarm at the rule's priority (shown as an alarm, immediate re-measure prompt, CMO notified). A second breaching reading within `confirm_window_s`, or no repeat reading within `recheck_timeout_s`, raises the full alarm; a non-breaching repeat closes it as "not confirmed", logged with both values. |
 
 ## 2. Priorities and presentation
 | CAELUM level | IEC 60601-1-8 priority | Shape | Sound | Latching |
@@ -31,12 +32,26 @@
 | Advisory (technical) | Low / technical | Square with "!" | Technical tone | Clears when cause clears |
 | Normal | — | Circle | — | — |
 
-## 3. Initial ruleset (DRAFT, revised by CR-002; needs flight-surgeon approval before use)
-Ported from the prototype's tested engine; times in seconds.
+## 3. Initial ruleset (DRAFT, revised by CR-002 and CR-003; needs flight-surgeon approval before use)
+Ported from the prototype's tested engine; times in seconds. All clinical values are DRAFT,
+approved only by the provisional medical lead (CR-003 §1). Until a licensed clinician advisor
+countersigns, rulesets are signed with development keys only and the "DEVELOPMENT RULESET" banner
+shows.
+
+Evaluation modes (CR-003 §2). Every observation carries `measurement_mode`, set from the device
+profile: `spot` for PLX spot-check, BPS, HTS, WSS, glucose and manual entry; `continuous` for the
+rest.
+- **Continuous:** persistence, clear windows and `max_gap_s` (SR-003, SR-004).
+- **Spot:** reading confirmation (SR-019). States: `CONFIRMING` → full alarm, or "not confirmed".
+  Draft values: `confirm_window_s` 300; `recheck_timeout_s` 120 (critical) and 600 (warning).
+  Proposed, medical lead to confirm: a confirmed spot alarm clears on one reading that meets the
+  clear threshold; latching rules still need acknowledgement.
+- **Spot baselines:** n-of-m: deviation in k of the last n readings (draft 3 of 4).
 
 Rule types:
-- **Threshold** (absolute limit): fire and clear thresholds with persistence and clear windows,
-  `max_gap_s`, an optional context condition (SR-018).
+- **Threshold** (absolute limit): fire and clear thresholds; continuous mode uses persistence and
+  clear windows and `max_gap_s`, spot mode uses the confirmation parameters; an optional context
+  condition (SR-018).
 - **Absence-of-event:** fires when an expected event (e.g. a QRS complex) is absent for a window
   while its gating signal is valid (good SQI). Evaluated on each gating input and on the 4 Hz tick.
   The M3 engine tests it with synthetic event streams; `asystole.critical` is wired to real QRS
@@ -58,16 +73,25 @@ value) until the flight-surgeon review sets per-rule values.
 | rr.warning.high | RESPIRATORY | resp. rate > 30 for 120 | ≤ 25 for 120 |
 | temp.warning | THERMAL | core temp > 38.0 for 600 | ≤ 37.7 for 600 |
 | temp.critical | THERMAL | core temp > 39.5 for 300 | ≤ 39.0 for 300 |
+| bodytemp.warning | THERMAL | measured temp (spot) > site threshold: core-equivalent 38.0; peripheral and unknown 37.5 | ≤ 37.7 / ≤ 37.2 |
+| bodytemp.critical | THERMAL | measured temp (spot) > site threshold: core-equivalent 39.5; peripheral and unknown 39.0 | ≤ 39.0 / ≤ 38.5 |
 | af.observe | CARDIO | AF probability (model M2) > 0.8 for 300 → observe notice "record a 12-lead ECG" | ≤ 0.5 for 600 |
 | asystole.critical | CARDIO | Absence-of-event: no QRS for 6 s with good ECG SQI | QRS detected for 10 s |
 | co2.warning | ENVIRONMENT | cabin CO₂ > 4 mmHg for 900 | ≤ 3.5 for 900 |
 | o2.critical | ENVIRONMENT | cabin ppO₂ < 16 kPa for 30 | ≥ 17 for 60 |
 | baseline.* | per parameter | robust z ≥ 4 for 600 (observe only) | z ≤ 2.5 for 600 |
 
-Baseline rules apply to: heart_rate (at rest), hrv_rmssd, respiration_rate, core_temp, spo2 (at
-rest), weight. `af.observe` stays at observe level until model M2 is `VALIDATED`; promoting it to
-warning needs a CR. Open items for the medical lead (CR-002 §6): persistence for spot-check
-readings (OI-A) and rules for `body_temp_measured` (OI-B).
+Threshold rules on spot-capable parameters (e.g. `spo2` from a spot-check oximeter) evaluate each
+reading in the mode it carries. Baseline rules apply to: heart_rate (at rest), hrv_rmssd,
+respiration_rate, core_temp, spo2 (at rest), weight (spot, n-of-m). `af.observe` stays at observe
+level until model M2 is `VALIDATED`; promoting it to warning needs a CR.
+
+Measured temperature sites (HTS Temperature Type; CR-003 §3, proposed by Claude, medical lead to
+confirm): core-equivalent = body (general), ear, GI tract, mouth, rectum, tympanum; peripheral =
+armpit, finger, toe. Peripheral thresholds are engineering placeholders (core minus 0.5 °C), not
+clinical values, until the medical lead sets them. An unknown site uses the lowest threshold.
+`core_temp` (estimate) rules are unchanged; both can alarm and supersede within the THERMAL group
+(SR-006).
 
 Escalation (seconds after creation, stops on acknowledge): critical: astronaut 0, CMO 0, sound 15
 (crew stations sound; wristband Immediate Alert in addition), crew 30, ground 60 (OPS channel,
@@ -81,7 +105,7 @@ name, rule id or free text; it never goes on OPS. Full detail follows on MEDICAL
 ## 4. Hazard log (initial; maintained in `docs/hazards/` per ISO 14971)
 | ID | Hazard | Cause examples | Controls |
 |---|---|---|---|
-| H-01 | Missed life-threatening event | Rule bug, data loss, suppressed alarm, app crash, wristband out of range | SR-001/002/007, crew stations always sound (SR-015), fail-over, watchdog, test corpus |
+| H-01 | Missed life-threatening event | Rule bug, data loss, suppressed alarm, app crash, wristband out of range, single spot reading never persisting | SR-001/002/007, spot confirmation (SR-019), crew stations always sound (SR-015), fail-over, watchdog, test corpus |
 | H-02 | False reassurance from wrong/old value | Stale, fabricated or device-demonstration data; defaulted context | SR-004, SR-017, SR-018, R-CLN-02, staleness UI |
 | H-03 | Alarm fatigue | Flicker, artefacts | SR-003/005, alarm statistics (F-ALM-09) |
 | H-04 | Wrong crew member | Device mis-assignment | Registry assignment by CMO, pairing check, name on every alarm |

@@ -2,7 +2,11 @@
 
 IEC 62304 SOUP register for dependencies whose maturity or behaviour needs a recorded risk and
 mitigation. The full dependency list with exact versions is the CycloneDX SBOM that CI produces;
-this register covers the dependencies that need more than an SBOM line.
+this register covers the dependencies that need more than an SBOM line, plus every supporting
+crate added under the CR-003 dependency policy (permissive licence passing cargo-deny, actively
+maintained, no network access or native downloads at build time; a CR is still needed for crates
+replacing a stack item or used in `caelum-alarms`, `caelum-ingest`, `caelum-security`,
+`caelum-cluster`, crypto or network code).
 
 | Name | Version | Purpose | Risk | Mitigation | Added |
 |---|---|---|---|---|---|

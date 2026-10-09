@@ -23,8 +23,10 @@ Rules:
   (a) Bluetooth SIG control writes needed for acquisition (CCCD notification enable, Record Access
   Control Point, standard measurement-interval writes), (b) serial poll requests defined in a
   device ICD, (c) the wristband alert through the Immediate Alert Service (R-SEC-07).
-- Every reading carries device id, device time, received time and quality; unknown devices are
-  listed but not trusted until registered by a CMO or administrator.
+- Every reading carries device id, device time, received time, quality and `measurement_mode`
+  (`spot` for PLX spot-check, BPS, HTS, WSS, glucose and manual entry; `continuous` otherwise,
+  set from the device profile); unknown devices are listed but not trusted until registered by a
+  CMO or administrator.
 - Pairing and bonding use platform modules: Windows (WinRT DevicePairing via the `windows`
   crate), Linux (BlueZ D-Bus via `bluer`), macOS (system pairing triggered by encrypted access).
   A guided OS-pairing procedure in the protocol library is the fallback.

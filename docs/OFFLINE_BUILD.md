@@ -16,6 +16,7 @@ the M0 gate.
 | ONNX Runtime (M12) | `ort` downloads binaries at build time | `ort` with `load-dynamic`; a pinned, checksummed ONNX Runtime binary from the cache, shipped with the app |
 | Advisory databases | cargo-deny, cargo-audit and pnpm audit download them | Online CI job on every run; a dated offline snapshot in the cache for air-gapped builds, whose reports state the snapshot date |
 | Fonts | — | Outfit from `@fontsource/outfit`, bundled at build time; nothing fetched at runtime |
+| LOINC table (M1) | Downloaded from loinc.org with an account | Placed by the product owner in `tools/offline/loinc/` (git-ignored); only the subset of codes used is committed, with the LOINC copyright notice and licence attribution |
 
 ## 2. Tool cache rules
 - Lives outside the repository; its path is given by the environment variable `CAELUM_TOOL_CACHE`.

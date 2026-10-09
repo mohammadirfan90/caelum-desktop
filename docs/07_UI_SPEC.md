@@ -19,7 +19,8 @@ Accessibility fixes (CR-002 D5); the prototype's look is otherwise kept:
 - `--ink-3` is darkened until it meets 4.5:1 on every surface it is used on.
 - New high-contrast theme alongside light and dark.
 - Alarm tokens `--alarm-high` and `--alarm-medium` are defined per theme (light starts from
-  `#B42318` / `#B54708`) and used only together with shapes and text.
+  `#B42318` / `#B54708`) and used only together with shapes and text. They are DRAFT
+  presentation tokens (CR-003), reviewed in the M5 usability evaluation.
 - Scrollbars are visible (the prototype hid them).
 
 ## 2. Primitives (port from prototype, then extend)
@@ -67,6 +68,8 @@ Role visibility in this document is superseded by `docs/ROLE_MATRIX.md` once it 
 
 ## 5. Interaction and accessibility rules
 - Every value shows status: LIVE (no badge), STALE (age), NO DATA, SIGNAL UNUSABLE.
+- A `CONFIRMING` alarm (spot reading, SR-019) is shown in the alarm bar at its priority with the
+  text "Re-measure now" and the time left before it becomes a full alarm; it is never hidden.
 - Glove mode: targets ≥ 56 px, spacing ≥ 12 px, no hover-only actions, no drag-only actions.
 - Text scaling to 200 % without loss; high-contrast theme; contrast thresholds in §1; full
   keyboard operation; screen reader labels.

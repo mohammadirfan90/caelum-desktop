@@ -9,7 +9,9 @@ may slip to v1.1 only by change request), **v1.1 / v2** = explicitly not in v1.0
 A change request (`docs/change-requests/CR-NNN.md`) states the feature, reason, affected
 requirements, safety impact and test impact. It needs approval from the product owner and, for
 anything touching alarms or clinical content, the medical lead. Claude Code may draft a CR but
-must never implement an unapproved one.
+must never implement an unapproved one. Until a licensed clinician advisor countersigns, the
+medical lead (Abdur Rahman FahAd) is provisional (CR-003): clinical items they approve are DRAFT,
+rulesets are signed with development keys only, and the "DEVELOPMENT RULESET" banner shows.
 
 ## Platforms and roles
 - **Platforms:** Windows 11 x64 and Windows 10 LTSC x64 (reference; NASA host baseline),
