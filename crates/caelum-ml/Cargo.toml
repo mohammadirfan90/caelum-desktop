@@ -8,8 +8,30 @@ license.workspace = true
 authors.workspace = true
 publish.workspace = true
 
+[features]
+# CR-018: the ONNX Runtime backend. Loads a pinned, checksummed ONNX Runtime library at run time
+# (`load-dynamic`); nothing is downloaded or linked at build time. Default builds and CI do not
+# need the binary; without this feature (or without the library) every model is UNAVAILABLE.
+onnx = ["dep:ort"]
+
 [dependencies]
 caelum-domain.workspace = true
+# SR-002: advisory outputs reach the rule engine only through the observe-only gate, which reads
+# the ruleset; model packages use the configuration-bundle signatures (kind "model", CR-018 §3).
+caelum-alarms.workspace = true
+serde = { version = "1.0.229", features = ["derive"] }
+sha2 = "0.11"
+thiserror = "2.0.21"
+toml = "1"
+# CR-018 §2: exact release-candidate pin; default features off (no download-binaries, no
+# copy-dylibs, no TLS); `load-dynamic` only, with the ONNX Runtime 1.22 C API (api-22) as the floor.
+ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "load-dynamic", "api-22"], optional = true }
+
+[dev-dependencies]
+ed25519-dalek = "3"
+proptest = "1.11"
+serde_json = "1.0.151"
+uuid = "1.28.0"
 
 [lints]
 workspace = true
