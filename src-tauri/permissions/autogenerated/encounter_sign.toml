@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-encounter-sign"
+description = "Enables the encounter_sign command without any pre-configured scope."
+commands.allow = ["encounter_sign"]
+
+[[permission]]
+identifier = "deny-encounter-sign"
+description = "Denies the encounter_sign command without any pre-configured scope."
+commands.deny = ["encounter_sign"]

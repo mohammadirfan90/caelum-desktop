@@ -34,6 +34,23 @@ fn main() {
             "device_unassign",
             "device_scan",
             "device_pair",
+            "crew_overview",
+            "encounter_list",
+            "encounter_save",
+            "encounter_sign",
+            "checkin_submit",
+            "checkin_list",
+            "pvt_submit",
+            "medication_log",
+            "medication_add",
+            "protocol_list",
+            "config_apply_protocols",
+            "checklist_start",
+            "checklist_update",
+            "checklist_list",
+            "attachment_import",
+            "attachment_list",
+            "attachment_get",
         ]));
     if let Err(error) = tauri_build::try_build(attributes) {
         panic!("tauri-build failed: {error:#}");

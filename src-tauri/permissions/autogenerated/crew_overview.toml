@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-crew-overview"
+description = "Enables the crew_overview command without any pre-configured scope."
+commands.allow = ["crew_overview"]
+
+[[permission]]
+identifier = "deny-crew-overview"
+description = "Denies the crew_overview command without any pre-configured scope."
+commands.deny = ["crew_overview"]

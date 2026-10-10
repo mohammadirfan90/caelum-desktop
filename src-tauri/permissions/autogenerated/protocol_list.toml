@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-protocol-list"
+description = "Enables the protocol_list command without any pre-configured scope."
+commands.allow = ["protocol_list"]
+
+[[permission]]
+identifier = "deny-protocol-list"
+description = "Denies the protocol_list command without any pre-configured scope."
+commands.deny = ["protocol_list"]

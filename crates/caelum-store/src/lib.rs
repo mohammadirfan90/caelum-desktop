@@ -10,6 +10,7 @@ mod db;
 mod key;
 mod repo;
 mod repo_acquisition;
+mod repo_clinical;
 mod repo_crew;
 mod repo_reads;
 
@@ -17,5 +18,8 @@ pub use db::{Database, StoreError};
 pub use key::DbKey;
 pub use repo::{AuditRecord, ChainHead, UserRecord};
 pub use repo_acquisition::{AlarmRecord, DeviceRecord, ObservationRecord, OpenAlarmRecord};
+pub use repo_clinical::{
+    AttachmentRecord, CheckinRecord, ChecklistRunRecord, EncounterRecord, MedicationRecord,
+};
 pub use repo_crew::CrewMemberRecord;
 pub use repo_reads::{AlarmView, BaselineRecord, NotificationRecord, WaveformChunkRecord};

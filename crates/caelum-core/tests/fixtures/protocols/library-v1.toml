@@ -1,0 +1,11 @@
+# Test fixture (CR-019 §4): a protocol library signed with the development key. Its steps are
+# fixture text for tests, not clinical guidance.
+[library]
+version = "1"
+
+[[protocol]]
+id = "fixture.desaturation"
+version = "1"
+title = "Fixture protocol for low oxygen alarms"
+rules = ["spo2.*"]
+steps = ["Fixture step one", "Fixture step two", "Fixture step three"]

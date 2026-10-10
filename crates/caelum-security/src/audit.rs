@@ -87,11 +87,29 @@ pub enum AuditAction {
     DeviceAssigned,
     /// Device assignment removed (F-ACQ-09).
     DeviceUnassigned,
+    /// Encounter created or updated before sign-off (F-CLN-05).
+    EncounterSaved,
+    /// Encounter signed (F-CLN-05).
+    EncounterSigned,
+    /// Daily check-in submitted; content never audited (F-CLN-07).
+    CheckinSubmitted,
+    /// PVT result stored (F-CLN-06).
+    PvtRecorded,
+    /// Medication or kit entry (F-CLN-08).
+    MedicationLogged,
+    /// Protocol checklist started (F-CLN-02).
+    ChecklistStarted,
+    /// Checklist step marked (F-CLN-02).
+    ChecklistStep,
+    /// Checklist completed (F-CLN-02).
+    ChecklistCompleted,
+    /// Attachment imported (F-CLN-04).
+    AttachmentImported,
 }
 
 impl AuditAction {
     /// Every action.
-    pub const ALL: [AuditAction; 18] = [
+    pub const ALL: [AuditAction; 27] = [
         AuditAction::Login,
         AuditAction::LoginFailed,
         AuditAction::Logout,
@@ -110,6 +128,15 @@ impl AuditAction {
         AuditAction::DevicePaired,
         AuditAction::DeviceAssigned,
         AuditAction::DeviceUnassigned,
+        AuditAction::EncounterSaved,
+        AuditAction::EncounterSigned,
+        AuditAction::CheckinSubmitted,
+        AuditAction::PvtRecorded,
+        AuditAction::MedicationLogged,
+        AuditAction::ChecklistStarted,
+        AuditAction::ChecklistStep,
+        AuditAction::ChecklistCompleted,
+        AuditAction::AttachmentImported,
     ];
 
     /// Stored name.
@@ -133,6 +160,15 @@ impl AuditAction {
             AuditAction::DevicePaired => "device.pair",
             AuditAction::DeviceAssigned => "device.assign",
             AuditAction::DeviceUnassigned => "device.unassign",
+            AuditAction::EncounterSaved => "encounter.save",
+            AuditAction::EncounterSigned => "encounter.sign",
+            AuditAction::CheckinSubmitted => "checkin.submit",
+            AuditAction::PvtRecorded => "pvt.record",
+            AuditAction::MedicationLogged => "medication.log",
+            AuditAction::ChecklistStarted => "checklist.start",
+            AuditAction::ChecklistStep => "checklist.step",
+            AuditAction::ChecklistCompleted => "checklist.complete",
+            AuditAction::AttachmentImported => "attachment.import",
         }
     }
 
@@ -162,7 +198,16 @@ impl AuditAction {
             AuditAction::AlarmAcknowledged
             | AuditAction::AlarmGroundAcknowledged
             | AuditAction::AlarmSilenced
-            | AuditAction::AlarmEscalated => AuditCategory::Clinical,
+            | AuditAction::AlarmEscalated
+            | AuditAction::EncounterSaved
+            | AuditAction::EncounterSigned
+            | AuditAction::CheckinSubmitted
+            | AuditAction::PvtRecorded
+            | AuditAction::MedicationLogged
+            | AuditAction::ChecklistStarted
+            | AuditAction::ChecklistStep
+            | AuditAction::ChecklistCompleted
+            | AuditAction::AttachmentImported => AuditCategory::Clinical,
         }
     }
 }

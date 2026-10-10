@@ -3,6 +3,7 @@
 //!
 //! Implemented in M1: F-SYS-01, F-SYS-02 (keys), F-SYS-03, R-SEC-01, R-SEC-02, R-SEC-03.
 
+pub mod attachments;
 pub mod audit;
 pub mod clock;
 pub mod credential;

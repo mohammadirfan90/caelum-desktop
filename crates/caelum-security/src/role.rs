@@ -203,6 +203,40 @@ pub enum Command {
     DeviceScan,
     /// Pair and register a device (F-ACQ-01).
     DevicePair,
+    /// Every active crew member's top alarm and key vitals (F-CLN-01).
+    CrewOverview,
+    /// A crew member's encounters.
+    EncounterList,
+    /// Create or update an unsigned encounter.
+    EncounterSave,
+    /// Sign an encounter; re-authentication required.
+    EncounterSign,
+    /// Submit the own daily check-in.
+    CheckinSubmit,
+    /// Check-ins by privacy tier.
+    CheckinList,
+    /// Store a PVT run's result.
+    PvtSubmit,
+    /// The medication and medical-kit log.
+    MedicationLog,
+    /// Record a dose or kit use or restock.
+    MedicationAdd,
+    /// The signed protocol library (public, SR-014).
+    ProtocolList,
+    /// Apply a signed protocol library; re-authentication required.
+    ConfigApplyProtocols,
+    /// Start a protocol checklist.
+    ChecklistStart,
+    /// Mark a checklist step or complete the run.
+    ChecklistUpdate,
+    /// Checklist runs in scope.
+    ChecklistList,
+    /// Import a file into the encrypted attachment store.
+    AttachmentImport,
+    /// Attachment metadata.
+    AttachmentList,
+    /// One decrypted, integrity-checked attachment.
+    AttachmentGet,
 }
 
 /// Who may call a command.
@@ -218,7 +252,7 @@ pub enum Access {
 
 impl Command {
     /// Every command.
-    pub const ALL: [Command; 30] = [
+    pub const ALL: [Command; 47] = [
         Command::AppInfo,
         Command::AuthLogin,
         Command::AuthLogout,
@@ -249,6 +283,23 @@ impl Command {
         Command::DeviceUnassign,
         Command::DeviceScan,
         Command::DevicePair,
+        Command::CrewOverview,
+        Command::EncounterList,
+        Command::EncounterSave,
+        Command::EncounterSign,
+        Command::CheckinSubmit,
+        Command::CheckinList,
+        Command::PvtSubmit,
+        Command::MedicationLog,
+        Command::MedicationAdd,
+        Command::ProtocolList,
+        Command::ConfigApplyProtocols,
+        Command::ChecklistStart,
+        Command::ChecklistUpdate,
+        Command::ChecklistList,
+        Command::AttachmentImport,
+        Command::AttachmentList,
+        Command::AttachmentGet,
     ];
 
     /// The IPC command name.
@@ -284,6 +335,23 @@ impl Command {
             Command::DeviceUnassign => "device_unassign",
             Command::DeviceScan => "device_scan",
             Command::DevicePair => "device_pair",
+            Command::CrewOverview => "crew_overview",
+            Command::EncounterList => "encounter_list",
+            Command::EncounterSave => "encounter_save",
+            Command::EncounterSign => "encounter_sign",
+            Command::CheckinSubmit => "checkin_submit",
+            Command::CheckinList => "checkin_list",
+            Command::PvtSubmit => "pvt_submit",
+            Command::MedicationLog => "medication_log",
+            Command::MedicationAdd => "medication_add",
+            Command::ProtocolList => "protocol_list",
+            Command::ConfigApplyProtocols => "config_apply_protocols",
+            Command::ChecklistStart => "checklist_start",
+            Command::ChecklistUpdate => "checklist_update",
+            Command::ChecklistList => "checklist_list",
+            Command::AttachmentImport => "attachment_import",
+            Command::AttachmentList => "attachment_list",
+            Command::AttachmentGet => "attachment_get",
         }
     }
 
@@ -352,6 +420,23 @@ impl Command {
             Command::DeviceUnassign => Access::Roles(&[Role::Cmo, Role::Bme, Role::Administrator]),
             Command::DeviceScan => Access::Roles(&[Role::Cmo, Role::Bme, Role::Administrator]),
             Command::DevicePair => Access::Roles(&[Role::Cmo, Role::Bme, Role::Administrator]),
+            Command::CrewOverview => Access::Roles(&[Role::Cmo, Role::FlightSurgeon]),
+            Command::EncounterList => Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon]),
+            Command::EncounterSave => Access::Roles(&[Role::Cmo, Role::FlightSurgeon]),
+            Command::EncounterSign => Access::Roles(&[Role::Cmo, Role::FlightSurgeon]),
+            Command::CheckinSubmit => Access::Roles(&[Role::Astronaut]),
+            Command::CheckinList => Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon]),
+            Command::PvtSubmit => Access::Roles(&[Role::Astronaut]),
+            Command::MedicationLog => Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon]),
+            Command::MedicationAdd => Access::Roles(&[Role::Cmo]),
+            Command::ProtocolList => Access::Public,
+            Command::ConfigApplyProtocols => Access::Roles(&[Role::Administrator]),
+            Command::ChecklistStart => Access::Roles(&[Role::Astronaut, Role::Cmo]),
+            Command::ChecklistUpdate => Access::Roles(&[Role::Astronaut, Role::Cmo]),
+            Command::ChecklistList => Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon]),
+            Command::AttachmentImport => Access::Roles(&[Role::Cmo, Role::FlightSurgeon]),
+            Command::AttachmentList => Access::Roles(&[Role::Cmo, Role::FlightSurgeon]),
+            Command::AttachmentGet => Access::Roles(&[Role::Cmo, Role::FlightSurgeon]),
         }
     }
 

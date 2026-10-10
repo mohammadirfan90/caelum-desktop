@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-medication-log"
+description = "Enables the medication_log command without any pre-configured scope."
+commands.allow = ["medication_log"]
+
+[[permission]]
+identifier = "deny-medication-log"
+description = "Denies the medication_log command without any pre-configured scope."
+commands.deny = ["medication_log"]

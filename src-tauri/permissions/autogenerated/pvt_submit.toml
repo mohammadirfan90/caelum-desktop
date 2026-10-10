@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-pvt-submit"
+description = "Enables the pvt_submit command without any pre-configured scope."
+commands.allow = ["pvt_submit"]
+
+[[permission]]
+identifier = "deny-pvt-submit"
+description = "Denies the pvt_submit command without any pre-configured scope."
+commands.deny = ["pvt_submit"]

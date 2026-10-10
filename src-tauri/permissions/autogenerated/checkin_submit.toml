@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-checkin-submit"
+description = "Enables the checkin_submit command without any pre-configured scope."
+commands.allow = ["checkin_submit"]
+
+[[permission]]
+identifier = "deny-checkin-submit"
+description = "Denies the checkin_submit command without any pre-configured scope."
+commands.deny = ["checkin_submit"]

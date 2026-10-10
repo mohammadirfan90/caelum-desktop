@@ -32,6 +32,23 @@
     "allow-device-assign",
     "allow-device-unassign",
     "allow-device-scan",
-    "allow-device-pair"
+    "allow-device-pair",
+    "allow-crew-overview",
+    "allow-encounter-list",
+    "allow-encounter-save",
+    "allow-encounter-sign",
+    "allow-checkin-submit",
+    "allow-checkin-list",
+    "allow-pvt-submit",
+    "allow-medication-log",
+    "allow-medication-add",
+    "allow-protocol-list",
+    "allow-config-apply-protocols",
+    "allow-checklist-start",
+    "allow-checklist-update",
+    "allow-checklist-list",
+    "allow-attachment-import",
+    "allow-attachment-list",
+    "allow-attachment-get"
   ]
 }

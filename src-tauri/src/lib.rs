@@ -14,6 +14,7 @@ compile_error!(
 use tauri::Manager;
 
 pub mod admin;
+pub mod clinical;
 pub mod commands;
 pub mod devices;
 pub mod events;

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-encounter-save"
+description = "Enables the encounter_save command without any pre-configured scope."
+commands.allow = ["encounter_save"]
+
+[[permission]]
+identifier = "deny-encounter-save"
+description = "Denies the encounter_save command without any pre-configured scope."
+commands.deny = ["encounter_save"]

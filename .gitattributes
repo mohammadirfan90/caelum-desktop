@@ -6,3 +6,4 @@
 # Signed content: exact bytes, never normalised (CR-009 digest).
 crates/caelum-alarms/rules/** -text
 crates/caelum-core/tests/fixtures/roster/** -text
+crates/caelum-core/tests/fixtures/protocols/** -text

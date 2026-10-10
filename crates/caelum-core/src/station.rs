@@ -24,6 +24,8 @@ use serde_json::json;
 use crate::alarms::{AlarmService, AlarmServiceError, Output, RulesetStatus};
 
 mod admin;
+pub mod clinical;
+pub use clinical::{CrewOverviewItem, PvtResult, PROTOCOLS_KIND};
 pub mod reads;
 mod runtime;
 pub use admin::{RosterApplied, UserSummary, CREW_KIND};
@@ -92,6 +94,7 @@ pub struct Station {
     monitor: caelum_alarms::technical::Monitor,
     watch: Watch,
     acquisition: crate::acquisition::Acquisition,
+    attachments: caelum_security::attachments::AttachmentStore,
 }
 
 /// Watchdog state between ticks (F-SYS-09).
@@ -161,6 +164,11 @@ impl Station {
                 caelum_alarms::technical::Limits::DEFAULT,
             ),
             watch: Watch::default(),
+            attachments: caelum_security::attachments::AttachmentStore::open(
+                &data_dir.join("attachments"),
+                caelum_security::attachments::attachment_key(keystore)?,
+            )
+            .map_err(|e| StationError::Rejected(e.to_string()))?,
             acquisition: crate::acquisition::Acquisition::new()
                 .map_err(|e| StationError::Rejected(format!("leap-second table: {e}")))?,
         };

@@ -32,6 +32,7 @@ lead (CR-003) until a licensed clinician advisor countersigns; it does not block
 | Daily check-in: Private tier | R/W own | — | — | — | — | — | — |
 | Daily check-in: Medical tier | R/W own | R all | R all | — | — | — | — |
 | Daily check-in: Status tier | R/W own | R all | R all | — | R (level only) | — | — |
+| Medication and medical-kit log (CR-019 §5) | R own doses | R/W all | R all | — | — | — | — |
 | Device registry, assignment, calibration | R own devices | R/W | R | R/W | — | R/W | — |
 | Configuration bundles (signed) | — | — | — | — | — | R/W (apply needs re-auth) | — |
 | Users and roles | R self | R | R | R | R self | R/W (re-auth) | — |
@@ -72,6 +73,23 @@ lead (CR-003) until a licensed clinician advisor countersigns; it does not block
 | `device_unassign` | CMO, BME, Admin | Re-authentication (§4); audited |
 | `device_scan` | CMO, BME, Admin | Bluetooth scan for health services (F-ACQ-01) |
 | `device_pair` | CMO, BME, Admin | Pairs and registers a device; audited |
+| `crew_overview` | CMO, Flight Surgeon | F-CLN-01; values with freshness (SR-004) |
+| `encounter_list` | Astronaut (own signed); CMO, Flight Surgeon (all) | §2 encounters (F-CLN-05) |
+| `encounter_save` | CMO, Flight Surgeon | Author only until signed; vitals snapshot at creation; audited (CR-019 §1) |
+| `encounter_sign` | CMO, Flight Surgeon | Author only; re-authentication (§4); immutable afterwards; audited |
+| `checkin_submit` | Astronaut | Own check-in in the chosen tier (F-CLN-07); content never audited |
+| `checkin_list` | Astronaut (own); CMO, Flight Surgeon (medical and status tiers) | §2 check-in tiers; the private tier only for the astronaut |
+| `pvt_submit` | Astronaut | Own PVT run (F-CLN-06, CR-019 §3); audited |
+| `medication_log` | Astronaut (own doses); CMO, Flight Surgeon (all) | F-CLN-08 |
+| `medication_add` | CMO | F-CLN-08; audited |
+| `protocol_list` | public | Break-glass access to protocols never requires a sign-in (SR-014) |
+| `config_apply_protocols` | Admin | Signed bundle kind protocols (CR-019 §4); re-authentication (§4); audited |
+| `checklist_start` | Astronaut (own); CMO (all) | Optionally linked to an alarm (F-CLN-02); audited |
+| `checklist_update` | Astronaut (own runs); CMO (all) | Audited |
+| `checklist_list` | Astronaut (own); CMO, Flight Surgeon (all) | F-CLN-02 |
+| `attachment_import` | CMO, Flight Surgeon | AES-256-GCM store (CR-019 §6); audited |
+| `attachment_list` | CMO, Flight Surgeon | §2 attachments |
+| `attachment_get` | CMO, Flight Surgeon | Tag and hash checked; never partial data |
 
 ## 4. Sessions
 - Onboard: PIN plus device-bound key; auto-lock after 10 minutes (configurable). Ground: password

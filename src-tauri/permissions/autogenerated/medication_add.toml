@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-medication-add"
+description = "Enables the medication_add command without any pre-configured scope."
+commands.allow = ["medication_add"]
+
+[[permission]]
+identifier = "deny-medication-add"
+description = "Denies the medication_add command without any pre-configured scope."
+commands.deny = ["medication_add"]

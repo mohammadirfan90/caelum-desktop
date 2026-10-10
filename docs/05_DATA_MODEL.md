@@ -39,11 +39,12 @@ OS keystore. Attachment file store: AES-256-GCM.
 | observation | id, crew_member_id, device_id, parameter, value, unit, measured_at (TAI ns), received_at, quality, classification (measured/derived/entered/imported), measurement_mode (continuous/spot, from the device profile), algorithm_version?, context JSON |
 | waveform_chunk | id, crew_member_id, device_id, signal, start_tai, sample_rate, encoding, data (compressed), quality |
 | baseline | crew_member_id, parameter, median, mad, n, window, status, method_version |
-| alarm | id, crew_member_id?, kind (physiological/technical), category (CARDIO/RESPIRATORY/THERMAL/ENVIRONMENT/TECHNICAL), rule_id, ruleset_version, priority, state (incl. CONFIRMING for spot readings, SR-019), confirming_readings JSON?, latched, trigger_value, why JSON, action, created_at, acknowledged_by/at, ground_acknowledged_by/at (ground stage only, ROLE_MATRIX §5.4), silenced_until, resolved_at, escalation_stage |
+| alarm | id, crew_member_id?, kind (physiological/technical), category (CARDIO/RESPIRATORY/THERMAL/ENVIRONMENT/TECHNICAL), rule_id, ruleset_version, priority, state (incl. CONFIRMING for spot readings, SR-019), confirming_readings JSON?, latched, trigger_value, why JSON, action, created_at, acknowledged_by/at, ground_acknowledged_by/at (ground stage only, ROLE_MATRIX §5.4), silenced_until, resolved_at, escalation_stage, title (ruleset title, physiological alarms; CR-012) |
 | alarm_notification | alarm_id, audience, stage, at, delivered_to |
-| encounter | id, crew_member_id, author, SOAP fields, signed_at, attachments |
-| attachment | id, kind (dicom/ecg/file), content_hash, metadata JSON |
-| checklist_run | id, protocol_id, protocol_version, alarm_id?, steps JSON, started/completed |
+| encounter | id, crew_member_id, author, SOAP fields, vitals snapshot (CR-019), created_at, signed_at (immutable after), attachments |
+| attachment | id, kind (dicom/ecg/file), content_hash, metadata JSON, crew_member_id, filename, created_at (file: AES-256-GCM, CR-019 §6) |
+| checklist_run | id, protocol_id, protocol_version, alarm_id?, crew_member_id?, started_by, steps JSON, started/completed |
+| medication_entry | id, crew_member_id (doses only), kind (dose/kit_use/kit_restock), item, amount, unit, note, by_user, at (F-CLN-08, CR-019 §5) |
 | checkin | id, crew_member_id, answers JSON, privacy_tier (Private / Medical / Status) |
 | model_output | id, model_id, model_hash, crew_member_id, output JSON, explanation JSON, at |
 | downlink_item | id, seq, channel, priority, payload (signed), status, created_at, sent_at, ack_at |
