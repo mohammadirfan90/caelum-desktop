@@ -57,6 +57,7 @@ struct Times {
 struct TestClock(Arc<Times>);
 
 impl TestClock {
+    #[allow(clippy::cast_possible_wrap)]
     fn advance_s(&self, s: u64) {
         self.0.mono.fetch_add(s * 1_000_000_000, Ordering::SeqCst);
         self.0
@@ -560,4 +561,53 @@ fn f_sys_09_an_invalid_clock_fails_the_self_test() {
         "TAI 0 (1958) predates the leap-second table: {clock:?}"
     );
     assert!(open_technical(&station).contains(&"technical.self_test.clock".to_owned()));
+}
+
+/// docs/03 §3, F-SYS-09: the station tick escalates (sound on every crew station at 15 s), and its
+/// watchdogs raise a clock fault when time goes backwards (SR-012) and stale data (SR-004).
+#[test]
+fn the_station_tick_escalates_and_watches_clock_and_staleness() {
+    use caelum_alarms::escalation::{Notice, SoundScope};
+    let dir = DataDir::new();
+    let keys = MemoryKeyStore::default();
+    let clock = TestClock::default();
+    let t0 = 2_100_000_000_000_000_000;
+    clock.0.tai.store(t0, Ordering::SeqCst);
+    let mut station = open(&dir, &keys, &clock).unwrap();
+    add_user(&station, "astro.a", Role::Astronaut);
+    let crew = crew_of_user(&station, "astro.a");
+    let alarm = critical_alarm(&mut station, crew, t0);
+    // Created at t0 + 15 s; the sound stage is due 15 s later.
+    clock.advance_s(30);
+    let out = station.tick().unwrap();
+    assert!(
+        out.notices.iter().any(|n| matches!(n, Notice::SoundOn { alarm: a, scope: SoundScope::AllCrewStations, wristband: true, .. } if *a == alarm)),
+        "{:?}",
+        out.notices
+    );
+    // SpO2 last measured at t0 + 15 s; stale_after_s later the value is stale.
+    clock.advance_s(i64::from(
+        caelum_domain::parameters::Parameter::Spo2
+            .spec()
+            .stale_after_s,
+    ) as u64);
+    station.tick().unwrap();
+    assert!(
+        open_technical(&station).contains(&"technical.stale.spo2".to_owned()),
+        "{:?}",
+        open_technical(&station)
+    );
+    // The wall clock steps back an hour: clock fault (SR-012).
+    clock
+        .0
+        .tai
+        .fetch_sub(3_600 * 1_000_000_000, Ordering::SeqCst);
+    station.tick().unwrap();
+    assert!(open_technical(&station).contains(&"technical.clock.station".to_owned()));
+    clock.advance_s(1);
+    station.tick().unwrap();
+    assert!(
+        !open_technical(&station).contains(&"technical.clock.station".to_owned()),
+        "clears when time moves forward again"
+    );
 }

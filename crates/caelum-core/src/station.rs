@@ -80,7 +80,21 @@ pub struct Station {
     alarms: AlarmService,
     data_dir: PathBuf,
     self_test: Vec<Check>,
+    monitor: caelum_alarms::technical::Monitor,
+    watch: Watch,
 }
+
+/// Watchdog state between ticks (F-SYS-09).
+#[derive(Debug, Default)]
+struct Watch {
+    /// Last (TAI, monotonic) seen, to detect the wall clock going backwards (SR-012).
+    last: Option<(i64, u64)>,
+    /// Monotonic time of the last storage check.
+    storage_checked: Option<u64>,
+}
+
+/// Seconds between storage watchdog checks.
+pub const STORAGE_CHECK_S: u64 = 10;
 
 /// One self-test check (F-SYS-09).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -133,6 +147,10 @@ impl Station {
             alarms,
             data_dir: data_dir.to_path_buf(),
             self_test: Vec::new(),
+            monitor: caelum_alarms::technical::Monitor::new(
+                caelum_alarms::technical::Limits::DEFAULT,
+            ),
+            watch: Watch::default(),
         };
         let key_id = station.key.verifying_key().key_id();
         for (created, entry) in [
@@ -347,9 +365,59 @@ impl Station {
         Ok(out)
     }
 
-    /// Evaluates a stored observation in the ingest path (docs/03 §3 step 5).
+    /// Evaluates a stored observation in the ingest path (docs/03 §3 step 5) and refreshes the
+    /// technical monitor (staleness, battery).
     pub fn observe(&mut self, obs: &caelum_ingest::Observation) -> Result<Output, StationError> {
+        let value = match obs.value {
+            caelum_ingest::Value::Number(v) => Some(v),
+            caelum_ingest::Value::State(_) => None,
+        };
+        let changes = self.monitor.observation(
+            obs.crew_member_id,
+            Some(obs.device_id),
+            obs.parameter,
+            value,
+            obs.measured_at,
+        );
+        self.apply_technical(changes, obs.measured_at)?;
         Ok(self.alarms.observe(&self.db, obs, None)?)
+    }
+
+    fn apply_technical(
+        &mut self,
+        changes: Vec<caelum_alarms::technical::Change>,
+        now: caelum_domain::time::TaiNs,
+    ) -> Result<(), StationError> {
+        for c in changes {
+            self.alarms
+                .technical(&self.db, &c.rule_id, c.crew, c.raise, now)?;
+        }
+        Ok(())
+    }
+
+    /// The 4 Hz tick (docs/03 §3): alarm engine and escalation, technical monitor, and the
+    /// watchdogs (F-SYS-09): clock going backwards (SR-012) and free storage every
+    /// [`STORAGE_CHECK_S`] seconds. Alarms never depend on sign-in, so nothing here is authorised.
+    pub fn tick(&mut self) -> Result<Output, StationError> {
+        let now = self.now()?;
+        let mono = self.clock.monotonic_ns();
+        let backwards = self.watch.last.is_some_and(|(t, _)| now.0 < t);
+        self.watch.last = Some((now.0, mono));
+        let mut changes = self.monitor.clock(None, None, backwards);
+        changes.extend(self.monitor.tick(now));
+        let storage_due = self
+            .watch
+            .storage_checked
+            .is_none_or(|m| mono.saturating_sub(m) >= STORAGE_CHECK_S * 1_000_000_000);
+        if storage_due {
+            self.watch.storage_checked = Some(mono);
+            match fs4::available_space(&self.data_dir) {
+                Ok(free) => changes.extend(self.monitor.storage(free)),
+                Err(_) => changes.extend(self.monitor.storage(0)),
+            }
+        }
+        self.apply_technical(changes, now)?;
+        Ok(self.alarms.tick(&self.db, now)?)
     }
 
     /// `ruleset_status` (public): the ruleset in force, for the SR-009 banner.
