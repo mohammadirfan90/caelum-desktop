@@ -8,6 +8,7 @@ pub mod engine;
 pub mod escalation;
 pub mod ruleset;
 pub mod signing;
+pub mod technical;
 
 /// The bundled ruleset and its signatures (CLAUDE.md rule 7: single source of truth).
 pub const BUNDLED_RULESET: &str = include_str!("../rules/ruleset.toml");

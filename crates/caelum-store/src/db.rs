@@ -81,6 +81,24 @@ impl Database {
         &self.conn
     }
 
+    /// SQLite integrity check (`PRAGMA quick_check`): `Ok(())` or the problems found (F-SYS-09).
+    pub fn quick_check(&self) -> Result<(), String> {
+        let mut stmt = self
+            .conn
+            .prepare("PRAGMA quick_check")
+            .map_err(|e| e.to_string())?;
+        let rows: Vec<String> = stmt
+            .query_map([], |r| r.get::<_, String>(0))
+            .map_err(|e| e.to_string())?
+            .collect::<Result<_, _>>()
+            .map_err(|e| e.to_string())?;
+        if rows == ["ok"] {
+            Ok(())
+        } else {
+            Err(rows.join("; "))
+        }
+    }
+
     /// Names of all user tables, sorted.
     pub fn table_names(&self) -> Result<Vec<String>, StoreError> {
         let mut stmt = self.conn.prepare(

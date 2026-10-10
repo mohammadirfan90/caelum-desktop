@@ -491,3 +491,73 @@ fn alarm_actions_follow_the_role_matrix_and_are_audited() {
         Some(DeniedReason::SignInRequired)
     );
 }
+
+fn open_technical(station: &Station) -> Vec<String> {
+    station
+        .db()
+        .open_alarm_records()
+        .unwrap()
+        .into_iter()
+        .filter(|r| r.kind == "technical")
+        .map(|r| r.rule_id)
+        .collect()
+}
+
+/// M4 gate, F-SYS-09: a failed self-test raises a technical alarm; passing again clears it.
+#[test]
+fn f_sys_09_a_failed_self_test_raises_a_technical_alarm() {
+    let dir = DataDir::new();
+    let keys = MemoryKeyStore::default();
+    let clock = TestClock::default();
+    clock.0.tai.store(
+        2_100_000_000_000_000_000,
+        std::sync::atomic::Ordering::SeqCst,
+    );
+    let mut station = open(&dir, &keys, &clock).unwrap();
+    let report = station.self_test_report().to_vec();
+    assert!(report.iter().all(|c| c.ok), "{report:?}");
+    assert!(open_technical(&station).is_empty());
+
+    // Storage below the limit (limit raised for the test) fails the storage check.
+    let checks = station.run_self_test(u64::MAX).unwrap();
+    assert!(!checks.iter().find(|c| c.name == "storage").unwrap().ok);
+    assert_eq!(open_technical(&station), ["technical.self_test.storage"]);
+    station.run_self_test(0).unwrap();
+    assert!(
+        open_technical(&station).is_empty(),
+        "cleared when the check passes"
+    );
+
+    // A tampered audit chain fails the audit check.
+    station
+        .db()
+        .connection()
+        .execute_batch(
+            "DROP TRIGGER audit_entry_no_update; UPDATE audit_entry SET actor = 'x' WHERE seq = 1;",
+        )
+        .unwrap();
+    station.run_self_test(0).unwrap();
+    assert_eq!(
+        open_technical(&station),
+        ["technical.self_test.audit_chain"]
+    );
+}
+
+/// F-SYS-09: a clock that cannot give TAI fails the clock check (time marked unknown).
+#[test]
+fn f_sys_09_an_invalid_clock_fails_the_self_test() {
+    let dir = DataDir::new();
+    let keys = MemoryKeyStore::default();
+    let station = open(&dir, &keys, &TestClock::default()).unwrap();
+    let clock = station
+        .self_test_report()
+        .iter()
+        .find(|c| c.name == "clock")
+        .unwrap()
+        .clone();
+    assert!(
+        !clock.ok,
+        "TAI 0 (1958) predates the leap-second table: {clock:?}"
+    );
+    assert!(open_technical(&station).contains(&"technical.self_test.clock".to_owned()));
+}

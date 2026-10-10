@@ -11,7 +11,7 @@ picture). Last updated: 2026-10-10 (M3 independent review recorded; CI runs no l
 | M1 Domain, storage, security core | **complete** (13292b4) | `docs/gates/M1.md` | First-administrator enrolment arrives with the M3/M6 login screen (CR-007 §4) |
 | M2 Ingest pipeline and device framework | code complete; closes on the next all-green CI run | `docs/gates/M2.md` | Physical devices on the hardware-in-the-loop bench (docs/09) |
 | M3 Alarm engine | gate items met; closes on the next all-green CI run | `docs/gates/M3.md` (independent review: Mohammad Irfan, 2026-10-10) | ⚕ clinical content stays DRAFT |
-| M4 Escalation, technical alarms, notifications, self-test | **in progress**: escalation, acknowledgement, silence and restart persistence done | | Wristband alert needs a reviewed write-exception entry (category c) |
+| M4 Escalation, technical alarms, notifications, self-test | **in progress**: escalation, acknowledgement, silence, restart, technical alarms and self-test done; next: watchdog loop and event bus, sounds, wristband (WX-002) | | Wristband alert needs a reviewed write-exception entry (category c) |
 | M5–M13 | not started | | |
 
 Status of record: the table in `docs/10_BUILD_PLAN.md` (the trace enforces milestones marked
@@ -44,6 +44,7 @@ Status of record: the table in `docs/10_BUILD_PLAN.md` (the trace enforces miles
 | CR-008 | Quality and flags from Bluetooth SIG profiles (⚕ glucose out-of-range pending) |
 | CR-009 | Ruleset format, signing, dependencies; ⚕ draft values and the SR-019 interpretation |
 | CR-010 | Escalation audiences, sound and silence semantics (⚕) |
+| CR-011 | Technical-alarm limits and the self-test (engineering values) |
 
 Write exceptions: `docs/write-exceptions.md` (WX-001 CCCD enable, reviewed by the product owner
 2026-10-10). Third-party risks: `docs/third-party-risk.md`.
@@ -80,3 +81,4 @@ Write exceptions: `docs/write-exceptions.md` (WX-001 CCCD enable, reviewed by th
 | 2026-10-10 | (this push) | M4 step 1: escalation plans moved into the signed ruleset (1.0.0-draft.3, equal to docs/06 by test); sans-I/O escalator with restart resume, SR-008 silence, sound scopes and the docs/06 §3a OPS record (CR-010) |
 | 2026-10-10 | (this push) | M4 step 2a: escalator in the alarm service; stages, acknowledgement (onboard and ground stage), silence and escalation stage persisted (migration V4, alarm_notification); open alarms restored into engine and escalator after a restart (no duplicates, sound resumes); alarm authority per ROLE_MATRIX §2 tested; clinical audit actions defined |
 | 2026-10-10 | (this push) | M4 step 2b: alarm actions as IPC commands with role and crew-scope checks (astronaut own, CMO all, flight surgeon ground stage only) and clinical audit entries; ROLE_MATRIX §3 rows added |
+| 2026-10-10 | (this push) | M4 step 3: technical-alarm monitor (low battery, device lost, stale data, clock drift, storage low) and the start-up self-test (database, audit chain, ruleset, clock and leap table, storage) raising technical alarms (CR-011) |

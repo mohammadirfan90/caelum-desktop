@@ -2,7 +2,7 @@
 //! commands on them (F-SYS-01, F-SYS-02, F-SYS-03). Every command is authorised against
 //! `docs/ROLE_MATRIX.md` before it runs (CLAUDE.md rule 6); the IPC layer only translates.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use caelum_alarms::signing::{built_in_keys, TrustPolicy};
 use caelum_alarms::{BUNDLED_RULESET, BUNDLED_SIGNATURES};
@@ -78,6 +78,19 @@ pub struct Station {
     sessions: SessionManager,
     name: Option<String>,
     alarms: AlarmService,
+    data_dir: PathBuf,
+    self_test: Vec<Check>,
+}
+
+/// One self-test check (F-SYS-09).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Check {
+    /// Check name (`database`, `audit_chain`, `ruleset`, `clock`, `storage`).
+    pub name: &'static str,
+    /// Passed.
+    pub ok: bool,
+    /// What was found.
+    pub detail: String,
 }
 
 impl Station {
@@ -111,13 +124,15 @@ impl Station {
             TrustPolicy::for_this_build(),
             now,
         )?;
-        let station = Self {
+        let mut station = Self {
             db,
             key,
             clock,
             sessions: SessionManager::new(config),
             name,
             alarms,
+            data_dir: data_dir.to_path_buf(),
+            self_test: Vec::new(),
         };
         let key_id = station.key.verifying_key().key_id();
         for (created, entry) in [
@@ -133,7 +148,101 @@ impl Station {
                 )?;
             }
         }
+        // F-SYS-09: start-up self-test; failures raise technical alarms.
+        station.run_self_test(caelum_alarms::technical::Limits::DEFAULT.storage_low_bytes)?;
         Ok(station)
+    }
+
+    /// The last self-test result.
+    pub fn self_test_report(&self) -> &[Check] {
+        &self.self_test
+    }
+
+    /// Runs the self-test (F-SYS-09): database integrity, audit chain, ruleset in force, clock and
+    /// leap-second table, free storage. Each failed check raises `technical.self_test.<name>`;
+    /// a passing check clears it. Returns the checks.
+    pub fn run_self_test(&mut self, storage_low_bytes: u64) -> Result<Vec<Check>, StationError> {
+        let mut checks = Vec::new();
+        let db = self.db.quick_check();
+        checks.push(Check {
+            name: "database",
+            ok: db.is_ok(),
+            detail: db.err().unwrap_or_else(|| "integrity ok".to_owned()),
+        });
+        let chain = self.log().verify()?;
+        checks.push(Check {
+            name: "audit_chain",
+            ok: chain.is_intact(),
+            detail: format!(
+                "{} entries, {} problems",
+                chain.entries,
+                chain.problems.len()
+            ),
+        });
+        let ruleset = match self.alarms.status() {
+            RulesetStatus::Verified { version, .. } => {
+                (true, format!("ruleset {version} verified"))
+            }
+            RulesetStatus::Fallback {
+                version, reason, ..
+            } => (false, format!("fallback to {version}: {reason}")),
+            RulesetStatus::SafeState { reason } => {
+                (false, format!("no verified ruleset: {reason}"))
+            }
+        };
+        checks.push(Check {
+            name: "ruleset",
+            ok: ruleset.0,
+            detail: ruleset.1,
+        });
+        let clock = match (
+            self.clock.now_tai(),
+            caelum_domain::time::LeapSeconds::bundled(),
+        ) {
+            (Ok(now), Ok(leap)) => match leap.tai_to_utc(now) {
+                Ok((_, caelum_domain::time::Validity::Exact)) => {
+                    (true, "clock set, leap-second table current".to_owned())
+                }
+                Ok((_, caelum_domain::time::Validity::BeyondTable)) => (
+                    false,
+                    "leap-second table expired: update it by signed configuration".to_owned(),
+                ),
+                Err(e) => (false, format!("clock: {e}")),
+            },
+            (Err(e), _) => (false, format!("clock: {e}")),
+            (_, Err(e)) => (false, format!("leap-second table: {e}")),
+        };
+        checks.push(Check {
+            name: "clock",
+            ok: clock.0,
+            detail: clock.1,
+        });
+        let storage = match fs4::available_space(&self.data_dir) {
+            Ok(free) => (
+                free >= storage_low_bytes,
+                format!("{free} bytes free (limit {storage_low_bytes})"),
+            ),
+            Err(e) => (false, format!("free space unknown: {e}")),
+        };
+        checks.push(Check {
+            name: "storage",
+            ok: storage.0,
+            detail: storage.1,
+        });
+        // With a broken clock the alarm is still raised; its time is then marked unknown (the
+        // stored instant is the epoch, never presented as a real time).
+        let (now, time_known) = match self.clock.now_tai() {
+            Ok(t) => (t, true),
+            Err(_) => (caelum_domain::time::TaiNs(0), false),
+        };
+        for c in &checks {
+            let rule = format!("technical.self_test.{}", c.name);
+            let why = (!c.ok)
+                .then(|| json!({ "check": c.name, "detail": c.detail, "time_known": time_known }));
+            self.alarms.technical(&self.db, &rule, None, why, now)?;
+        }
+        self.self_test = checks.clone();
+        Ok(checks)
     }
 
     /// The audit log (for wiring and tests).

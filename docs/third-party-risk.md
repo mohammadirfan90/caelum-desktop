@@ -26,6 +26,7 @@ replacing a stack item or used in `caelum-alarms`, `caelum-ingest`, `caelum-secu
 | `bluer` (stack) | `0.17` (`Cargo.lock`), Linux only | BlueZ pairing (F-ACQ-01) | Needs a running `bluetoothd` and D-Bus | Used only in `caelum-devices::pairing`; failures fall back to guided OS pairing | M2 |
 | `hidapi` | `2.6.7` (`Cargo.lock`), backends `windows-native` and `linux-native-basic-udev` | HID input reports (F-ACQ-04) | Pre-built C library on macOS only; the device handle could also write | Pure-Rust backends on Windows and Linux (no C build, no libudev); handles are wrapped as read-only (`hid::ReadOnlyHid`); MIT licence | M2 |
 | `toml` | `1` (`Cargo.lock`) | Parsing the signed alarm ruleset (CR-009) | A parser bug could mis-read a rule | Unknown fields refused; the whole ruleset is validated after parsing and rejected on any error; the bytes are verified by digest and signature before parsing (SR-009); a test checks every rule against docs/06 §3 | M3 |
+| `fs4` | `1.1` (`Cargo.lock`) | Free disk space for the storage self-test and watchdog (F-SYS-09, CR-011) | Low; pure Rust, MIT OR Apache-2.0 | Read-only query; a failure is reported as a failed check (never as enough space) | M4 |
 | Security crates (`argon2`, `ed25519-dalek`, `sha2`, `getrandom`, `keyring-core` and the platform keyring stores) | see CR-006 | Passwords, audit signatures and hash chain, randomness, OS keystore | Recorded in CR-006 §1; `keyring-core` is a new major line | Wrapped behind CAELUM traits in `caelum-security`; parameters fixed in CR-006 §2 | M1 |
 
 ## Bundled runtime components
