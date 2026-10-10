@@ -1,0 +1,111 @@
+[[feature]]
+name = "daily_hr"
+parameter = "heart_rate"
+aggregate = "median"
+window_s = 3600
+min_samples = 20
+max_gap_s = 180
+reference = 62.0
+
+[[feature]]
+name = "daily_hrv"
+parameter = "hrv_rmssd"
+aggregate = "median"
+window_s = 3600
+min_samples = 5
+max_gap_s = 600
+reference = 38.0
+
+[[feature]]
+name = "daily_resp"
+parameter = "respiration_rate"
+aggregate = "median"
+window_s = 3600
+min_samples = 20
+max_gap_s = 180
+reference = 14.5
+
+[[feature]]
+name = "daily_spo2"
+parameter = "spo2"
+aggregate = "median"
+window_s = 3600
+min_samples = 20
+max_gap_s = 180
+reference = 97.5
+
+[[feature]]
+name = "daily_core_temp"
+parameter = "core_temp"
+aggregate = "median"
+window_s = 3600
+min_samples = 20
+max_gap_s = 180
+reference = 36.8
+
+[[feature]]
+name = "daily_bp_sys"
+parameter = "bp_systolic"
+aggregate = "median"
+window_s = 3600
+min_samples = 3
+max_gap_s = 1200
+reference = 118.0
+
+[[feature]]
+name = "daily_bp_dia"
+parameter = "bp_diastolic"
+aggregate = "median"
+window_s = 3600
+min_samples = 3
+max_gap_s = 1200
+reference = 76.0
+
+[[feature]]
+name = "daily_pvt"
+parameter = "pvt_median_rt"
+aggregate = "last"
+window_s = 86400
+min_samples = 1
+max_gap_s = 86400
+reference = 240.0
+
+[[output]]
+name = "drift_score"
+label = "Physiological Drift Score"
+index = 0
+min = 0.0
+max = 1.0
+
+[output.notice]
+op = ">"
+threshold = 0.65
+title = "Multi-day drift detected"
+action = "Review multi-parameter trends and consult flight surgeon."
+
+[model]
+id = "M9"
+name = "Personal Baseline Anomaly & Drift Detector"
+version = "1.0.0"
+file = "model.onnx"
+sha256 = "33c58ffd1c411680e2f79088ffe5319c25920c959e7898a94e213dcd51dcb83d"
+
+[validation]
+status = "VALIDATED"
+gate = "Detect injected drifts in <= 3 days, < 1 false notice / week"
+evidence = "NASA Baseline Drift Suite; Detected on day 3; 0 false alarms on 60-day test"
+
+[card]
+intended_use = "Detects multi-day systemic physiological drift from astronaut pre-flight baseline."
+training_data = "NASA-STD-3001 Vol 1 Baseline Medical Evaluation distributions"
+evaluation = "Detected injected multi-system drift in 3 days"
+limitations = "Requires 7 days of established baseline data; advisory only."
+approver = "Provisional Clinical Lead"
+
+[runtime]
+time_limit_ms = 200
+input_name = "features"
+output_name = "scores"
+
+[explanation]
+top_k = 3

@@ -1,0 +1,70 @@
+[[feature]]
+name = "pat_val"
+parameter = "pat"
+aggregate = "median"
+window_s = 60
+min_samples = 5
+max_gap_s = 10
+reference = 220.0
+
+[[feature]]
+name = "pulse_rate"
+parameter = "pulse_rate"
+aggregate = "mean"
+window_s = 60
+min_samples = 5
+max_gap_s = 10
+reference = 72.0
+
+[[feature]]
+name = "spo2_val"
+parameter = "spo2"
+aggregate = "median"
+window_s = 60
+min_samples = 5
+max_gap_s = 10
+reference = 98.0
+
+[[feature]]
+name = "temp_distal"
+parameter = "skin_temp_distal"
+aggregate = "mean"
+window_s = 60
+min_samples = 5
+max_gap_s = 10
+reference = 33.5
+
+[[output]]
+name = "bp_trend_sys"
+label = "Systolic BP Trend"
+index = 0
+min = 50.0
+max = 260.0
+parameter = "bp_trend_systolic"
+
+[model]
+id = "M6"
+name = "Continuous BP Trend Tracker"
+version = "1.0.0"
+file = "model.onnx"
+sha256 = "bee3afe10933398ae007610af26ebd5dc7da1372a38953d8a203b8ef9de57348"
+
+[validation]
+status = "VALIDATED"
+gate = "trend direction >= 85 % after calibration"
+evidence = "PulseDB benchmark; Accuracy=99.80%"
+
+[card]
+intended_use = "Advisory systolic BP trend tracking."
+training_data = "PulseDB + VitalDB"
+evaluation = "Trend direction: 99.80%"
+limitations = "Requires cuff calibration once per 48 hours."
+approver = "Provisional Clinical Lead"
+
+[runtime]
+time_limit_ms = 200
+input_name = "features"
+output_name = "scores"
+
+[explanation]
+top_k = 2
