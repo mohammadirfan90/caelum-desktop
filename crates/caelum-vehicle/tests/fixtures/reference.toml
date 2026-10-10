@@ -1,0 +1,157 @@
+# TEST FIXTURE: the ICD-VEH v0.2 reference MID table (docs/icd/ICD-VEH.md §5, CR-015 §3).
+#
+# Used by the caelum-vehicle tests and the test-equipment cFS packet source. It is NOT a flight
+# configuration: the flight table is built from the vehicle mission database, signed as a
+# configuration bundle of kind "vehicle" and applied by an administrator (docs/integration/M9.md).
+# The crew UUIDs below are test identities, not roster members.
+
+[vehicle]
+version = "ref-0.2"
+
+[link]
+listen = "127.0.0.1:0"
+framing = "ccsds"
+header = "cfe7"
+allowed_sources = ["127.0.0.1"]
+
+[time]
+epoch = "1980-01-06T00:00:00"
+scale = "tai"
+clock_state_max_age_s = 30
+
+[[crew]]
+vehicle_id = 1
+crew_member = "6f1c2f52-6a3e-4a8e-9a43-0d6c1f3e7a01"
+
+[[crew]]
+vehicle_id = 2
+crew_member = "6f1c2f52-6a3e-4a8e-9a43-0d6c1f3e7a02"
+
+# cFE TIME housekeeping: ClockStateFlags (bit 15 = CLKSET) and LeapSeconds.
+[[message]]
+mid = 0x0805
+name = "CFE_TIME_HK_TLM"
+kind = "time"
+byte_order = "little"
+clock_state = { offset = 2, type = "u16", mask = 0x8000 }
+leap_seconds = { offset = 6, type = "i16" }
+
+# Cabin atmosphere, 1 Hz.
+[[message]]
+mid = 0x0C40
+name = "ECLSS_CABIN_ATMOS_TLM"
+kind = "environment"
+byte_order = "little"
+location = "cabin"
+
+[[message.field]]
+parameter = "cabin_co2"
+offset = 0
+type = "f32"
+unit = "mm[Hg]"
+validity = { offset = 20, type = "u8", mask = 0x01 }
+
+[[message.field]]
+parameter = "cabin_o2"
+offset = 4
+type = "f32"
+unit = "kPa"
+validity = { offset = 20, type = "u8", mask = 0x02 }
+
+[[message.field]]
+parameter = "cabin_pressure"
+offset = 8
+type = "f32"
+unit = "kPa"
+validity = { offset = 20, type = "u8", mask = 0x04 }
+
+[[message.field]]
+parameter = "cabin_temp"
+offset = 12
+type = "f32"
+unit = "Cel"
+validity = { offset = 20, type = "u8", mask = 0x08 }
+
+[[message.field]]
+parameter = "cabin_humidity"
+offset = 16
+type = "f32"
+unit = "%"
+validity = { offset = 20, type = "u8", mask = 0x10 }
+
+# Area dosimeter and solar-particle-event state, every 10 s.
+[[message]]
+mid = 0x0C41
+name = "RAD_AREA_TLM"
+kind = "radiation"
+byte_order = "little"
+location = "cabin"
+
+[[message.field]]
+parameter = "radiation_dose_rate"
+offset = 0
+type = "f32"
+unit = "uSv/h"
+validity = { offset = 9, type = "u8", mask = 0x01 }
+
+[[message.field]]
+parameter = "radiation_dose_cumulative"
+offset = 4
+type = "f32"
+unit = "mSv"
+validity = { offset = 9, type = "u8", mask = 0x02 }
+
+[[message.field]]
+parameter = "spe_state"
+offset = 8
+type = "u8"
+validity = { offset = 9, type = "u8", mask = 0x04 }
+states = [
+    { code = 0, state = "none" },
+    { code = 1, state = "watch" },
+    { code = 2, state = "warning" },
+    { code = 3, state = "in_progress" },
+    { code = 4, state = "all_clear" },
+]
+
+# Personal dosimeters, every 60 s, one packet per crew member.
+[[message]]
+mid = 0x0C42
+name = "RAD_PERSONAL_TLM"
+kind = "radiation"
+byte_order = "little"
+crew_field = { offset = 0, type = "u8" }
+
+[[message.field]]
+parameter = "radiation_dose_rate"
+offset = 4
+type = "f32"
+unit = "uSv/h"
+validity = { offset = 1, type = "u8", mask = 0x01 }
+
+[[message.field]]
+parameter = "radiation_dose_cumulative"
+offset = 8
+type = "f32"
+unit = "mSv"
+validity = { offset = 1, type = "u8", mask = 0x02 }
+
+# Exercise session summary, one packet at the end of each session.
+[[message]]
+mid = 0x0C43
+name = "EXERCISE_SESSION_TLM"
+kind = "exercise"
+byte_order = "little"
+crew_field = { offset = 0, type = "u8" }
+
+[[message.field]]
+parameter = "exercise_load"
+offset = 4
+type = "f32"
+unit = "W"
+
+[[message.field]]
+parameter = "exercise_duration"
+offset = 8
+type = "u32"
+unit = "s"
