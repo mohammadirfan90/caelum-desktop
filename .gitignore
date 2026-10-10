@@ -35,3 +35,9 @@ Thumbs.db
 # Python cache
 __pycache__/
 *.pyc
+
+# Project documentation and agent instructions are kept locally, not published.
+/docs/
+/CLAUDE.md
+/START_PROMPT.md
+/reference/
