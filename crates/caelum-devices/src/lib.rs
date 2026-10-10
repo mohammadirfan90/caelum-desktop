@@ -5,6 +5,7 @@
 //!
 //! Implemented in M2, M7 and M8: F-ACQ-01..11.
 
+pub mod link;
 pub mod registry;
 pub mod sig;
 
@@ -13,7 +14,7 @@ use caelum_domain::observation::MeasurementMode;
 use caelum_domain::time::TaiNs;
 use caelum_ingest::RawReading;
 
-/// Turns a decoded value into the reading ingest validates (docs/03 §3 step 1).
+/// Turns a decoded value into the reading ingest validates (docs/03 Â§3 step 1).
 pub fn raw_reading(
     decoded: sig::Decoded,
     device_id: DeviceId,
