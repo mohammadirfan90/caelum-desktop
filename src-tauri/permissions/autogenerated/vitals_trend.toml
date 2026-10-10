@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-vitals-trend"
+description = "Enables the vitals_trend command without any pre-configured scope."
+commands.allow = ["vitals_trend"]
+
+[[permission]]
+identifier = "deny-vitals-trend"
+description = "Denies the vitals_trend command without any pre-configured scope."
+commands.deny = ["vitals_trend"]

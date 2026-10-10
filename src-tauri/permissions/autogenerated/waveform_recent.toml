@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-waveform-recent"
+description = "Enables the waveform_recent command without any pre-configured scope."
+commands.allow = ["waveform_recent"]
+
+[[permission]]
+identifier = "deny-waveform-recent"
+description = "Denies the waveform_recent command without any pre-configured scope."
+commands.deny = ["waveform_recent"]

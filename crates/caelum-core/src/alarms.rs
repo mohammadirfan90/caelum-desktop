@@ -315,6 +315,7 @@ impl AlarmService {
             why: why.to_string(),
             action: None,
             created_at_tai: now.0,
+            title: None,
         })?;
         self.technical.insert(key, id);
         Ok(())
@@ -539,6 +540,7 @@ impl AlarmService {
             why: why_json(a)?,
             action: Some(a.action.clone()),
             created_at_tai: a.created_at,
+            title: Some(a.title.clone()),
         })?;
         self.persisted.insert(a.id);
         self.crew_of.insert(a.id, a.crew);

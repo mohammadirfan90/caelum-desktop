@@ -207,7 +207,7 @@ pub struct BreakGlass {
 }
 
 /// One audit entry.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[derive(Debug, Clone, PartialEq, Serialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct AuditItem {
     /// Chain position (decimal).
@@ -216,6 +216,8 @@ pub struct AuditItem {
     pub id: String,
     /// TAI nanoseconds since 1958-01-01 (decimal).
     pub at_tai: String,
+    /// UTC Unix ms, for display.
+    pub at_utc_ms: Option<f64>,
     /// Actor.
     pub actor: String,
     /// Actor's role.
@@ -234,6 +236,7 @@ impl From<AuditEntry> for AuditItem {
             seq: e.seq.to_string(),
             id: e.id,
             at_tai: e.at_tai.0.to_string(),
+            at_utc_ms: crate::reads::utc_ms(e.at_tai.0),
             actor: e.actor,
             role: e.role,
             action: e.action,

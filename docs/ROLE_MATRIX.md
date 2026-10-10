@@ -61,6 +61,17 @@ lead (CR-003) until a licensed clinician advisor countersigns; it does not block
 | `user_list` | Astronaut (self); MCC (self); CMO, Flight Surgeon, BME, Admin (all) | §2 "Users and roles"; never credentials |
 | `user_create` | Admin | Re-authentication (§4); CR-007 policy; audited |
 | `user_disable` | Admin | Re-authentication (§4); never the caller's own account, so never the last administrator; audited |
+| `vitals_latest` | Astronaut (own); CMO, Flight Surgeon, BME (all) | §2 vital signs; value with source, time, quality and status (CR-012 §4) |
+| `vitals_trend` | Astronaut (own); CMO, Flight Surgeon, BME (all) | At most 24 h, thinned to 2000 points; baseline if one exists |
+| `waveform_recent` | Astronaut (own); CMO, Flight Surgeon, BME (all) | The last 30 s at most |
+| `alarm_list` | Astronaut (own); CMO, Flight Surgeon, BME (all); MCC (OPS fields only for every crew member) | Open alarms and those ended in the last 24 h (docs/06 §3a for MCC) |
+| `alarm_detail` | Astronaut (own); CMO, Flight Surgeon, BME (all) | §2 physiological alarm detail |
+| `alarm_report` | CMO, Flight Surgeon, BME | F-ALM-09, CR-012 §5 |
+| `device_list` | Astronaut (own devices); CMO, Flight Surgeon, BME, Admin (all) | §2 device registry with battery, link state and clock offset |
+| `device_assign` | CMO, BME, Admin | Re-authentication (§4); roster member in force; audited |
+| `device_unassign` | CMO, BME, Admin | Re-authentication (§4); audited |
+| `device_scan` | CMO, BME, Admin | Bluetooth scan for health services (F-ACQ-01) |
+| `device_pair` | CMO, BME, Admin | Pairs and registers a device; audited |
 
 ## 4. Sessions
 - Onboard: PIN plus device-bound key; auto-lock after 10 minutes (configurable). Ground: password

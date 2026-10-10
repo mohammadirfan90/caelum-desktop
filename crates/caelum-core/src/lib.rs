@@ -10,6 +10,11 @@ pub mod acquisition;
 pub mod alarms;
 pub mod station;
 
+/// Device adapters (BLE central, pairing) for the application shell's device runtime.
+pub use caelum_devices as devices;
 /// Security types used by the application shell (roles, sessions, audit).
 pub use caelum_security as security;
 pub use caelum_store as store;
+/// Test equipment (emulators, scenario player); only in `test-equipment` builds.
+#[cfg(feature = "test-equipment")]
+pub use caelum_test_equipment as test_equipment;

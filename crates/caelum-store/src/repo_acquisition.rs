@@ -71,7 +71,8 @@ pub struct ObservationRecord {
 
 const DEVICE_COLUMNS: &str = "id, adapter, model, vendor, serial, firmware, accuracy_class, \
      calibration_due, crew_member_id, device_user, status, last_seen_tai, clock_offset_ms";
-const OBSERVATION_COLUMNS: &str = "id, crew_member_id, device_id, parameter, value, value_text, \
+pub(crate) const OBSERVATION_COLUMNS: &str =
+    "id, crew_member_id, device_id, parameter, value, value_text, \
      unit, measured_at_tai, received_at_tai, quality, classification, measurement_mode, \
      algorithm_version, context";
 
@@ -93,7 +94,7 @@ fn device_from_row(r: &Row<'_>) -> rusqlite::Result<DeviceRecord> {
     })
 }
 
-fn observation_from_row(r: &Row<'_>) -> rusqlite::Result<ObservationRecord> {
+pub(crate) fn observation_from_row(r: &Row<'_>) -> rusqlite::Result<ObservationRecord> {
     Ok(ObservationRecord {
         id: r.get(0)?,
         crew_member_id: r.get(1)?,
@@ -288,6 +289,8 @@ pub struct AlarmRecord {
     pub action: Option<String>,
     /// TAI ns.
     pub created_at_tai: i64,
+    /// Title from the ruleset (physiological alarms; none for technical alarms).
+    pub title: Option<String>,
 }
 
 impl Database {
@@ -295,8 +298,8 @@ impl Database {
     pub fn insert_alarm(&self, a: &AlarmRecord) -> Result<(), StoreError> {
         self.connection().execute(
             "INSERT INTO alarm (id, crew_member_id, kind, category, rule_id, ruleset_version, priority,
-                 state, confirming_readings, latched, trigger_value, why, action, created_at_tai)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+                 state, confirming_readings, latched, trigger_value, why, action, created_at_tai, title)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
             rusqlite::params![
                 a.id,
                 a.crew_member_id,
@@ -312,6 +315,7 @@ impl Database {
                 a.why,
                 a.action,
                 a.created_at_tai,
+                a.title,
             ],
         )?;
         Ok(())

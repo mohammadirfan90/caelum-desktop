@@ -21,6 +21,17 @@
     "allow-config-apply-crew",
     "allow-user-list",
     "allow-user-create",
-    "allow-user-disable"
+    "allow-user-disable",
+    "allow-vitals-latest",
+    "allow-vitals-trend",
+    "allow-waveform-recent",
+    "allow-alarm-list",
+    "allow-alarm-detail",
+    "allow-alarm-report",
+    "allow-device-list",
+    "allow-device-assign",
+    "allow-device-unassign",
+    "allow-device-scan",
+    "allow-device-pair"
   ]
 }

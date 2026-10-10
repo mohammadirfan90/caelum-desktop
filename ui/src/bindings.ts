@@ -52,11 +52,35 @@ export const commands = {
 	userCreate: (username: string, role: RoleName, crewMemberId: string | null, secret: string) => typedError<string, CommandError>(__TAURI_INVOKE("user_create", { username, role, crewMemberId, secret })),
 	/**  Disables an account (administrator, re-authentication required). */
 	userDisable: (userId: string) => typedError<null, CommandError>(__TAURI_INVOKE("user_disable", { userId })),
+	/**  Newest value per parameter for a crew member. */
+	vitalsLatest: (crewMemberId: string) => typedError<VitalItem[], CommandError>(__TAURI_INVOKE("vitals_latest", { crewMemberId })),
+	/**  One parameter over the last `window_s` seconds (at most 24 h). */
+	vitalsTrend: (crewMemberId: string, parameter: string, windowS: number) => typedError<TrendData, CommandError>(__TAURI_INVOKE("vitals_trend", { crewMemberId, parameter, windowS })),
+	/**  Waveform chunks of one signal over the last `seconds` (at most 30 s). */
+	waveformRecent: (crewMemberId: string, signal: string, seconds: number) => typedError<WaveformChunk[], CommandError>(__TAURI_INVOKE("waveform_recent", { crewMemberId, signal, seconds })),
+	/**  Open alarms and those ended in the last 24 h. */
+	alarmList: () => typedError<AlarmEntry[], CommandError>(__TAURI_INVOKE("alarm_list")),
+	/**  One alarm's why, values and timeline. */
+	alarmDetail: (alarm: string) => typedError<AlarmInfo, CommandError>(__TAURI_INVOKE("alarm_detail", { alarm })),
+	/**  Alarm history, statistics and fatigue indicators over the last `window_s` seconds. */
+	alarmReport: (windowS: number) => typedError<AlarmReportData, CommandError>(__TAURI_INVOKE("alarm_report", { windowS })),
+	/**  The device registry with link health. */
+	deviceList: () => typedError<DeviceEntry[], CommandError>(__TAURI_INVOKE("device_list")),
+	/**  Assigns a device (and user slot) to a crew member. */
+	deviceAssign: (deviceId: string, crewMemberId: string, deviceUser: number | null) => typedError<null, CommandError>(__TAURI_INVOKE("device_assign", { deviceId, crewMemberId, deviceUser })),
+	/**  Removes a device's assignment. */
+	deviceUnassign: (deviceId: string) => typedError<null, CommandError>(__TAURI_INVOKE("device_unassign", { deviceId })),
+	/**  Scans for health devices nearby (CMO, BME, administrator). */
+	deviceScan: () => typedError<NearbyDevice[], CommandError>(__TAURI_INVOKE("device_scan")),
+	/**  Pairs (OS bonding) and registers a scanned device (CMO, BME, administrator; audited). */
+	devicePair: (address: string, name: string | null, services: number[]) => typedError<PairResult, CommandError>(__TAURI_INVOKE("device_pair", { address, name, services })),
 };
 
 /** Events */
 export const events = {
 	alarmBusEvent: makeEvent<AlarmBusEvent>("alarm-bus-event"),
+	devicesChanged: makeEvent<DevicesChanged>("devices-changed"),
+	observationsChanged: makeEvent<ObservationsChanged>("observations-changed"),
 };
 
 /* Types */
@@ -114,6 +138,76 @@ alarm: string;
 /**  `acknowledged` / `silenced` / `ended`. */
 reason: string };
 
+/**  An alarm as listed. For MCC only the OPS fields are filled (docs/06 §3a). */
+export type AlarmEntry = {
+	/**  Alarm ID. */
+	id: string,
+	/**  Crew member. */
+	crewMemberId: string | null,
+	/**  `physiological` / `technical`. */
+	kind: string,
+	/**  Category. */
+	category: string,
+	/**  Priority. */
+	priority: string,
+	/**  State. */
+	state: string,
+	/**  Title (physiological alarms; never for MCC). */
+	title: string | null,
+	/**  Rule ID (empty for MCC). */
+	ruleId: string,
+	/**  Raised at, TAI ns. */
+	createdAtTai: string,
+	/**  Raised at, UTC Unix ms. */
+	createdAtUtcMs: number | null,
+	/**  Acknowledged at, UTC Unix ms. */
+	acknowledgedAtUtcMs: number | null,
+	/**  Ended at, UTC Unix ms. */
+	resolvedAtUtcMs: number | null,
+	/**  Acknowledged at. */
+	acknowledgedAtTai: string | null,
+	/**  Ground stage acknowledged at. */
+	groundAcknowledgedAtTai: string | null,
+	/**  Silenced until. */
+	silencedUntilTai: string | null,
+	/**  Ended at. */
+	resolvedAtTai: string | null,
+	/**  Escalation stage reached. */
+	escalationStage: number,
+	/**  Only the OPS fields are present. */
+	opsOnly: boolean,
+};
+
+/**  One alarm with its why and timeline. */
+export type AlarmInfo = {
+	/**  The alarm. */
+	alarm: AlarmEntry,
+	/**  Ruleset version in force when raised. */
+	rulesetVersion: string,
+	/**  Triggering value. */
+	triggerValue: number | null,
+	/**  Why (JSON text from the engine). */
+	why: string,
+	/**  Recommended action. */
+	action: string | null,
+	/**  Delivered escalation stages. */
+	timeline: StageDelivered[],
+};
+
+/**  F-ALM-09 report. */
+export type AlarmReportData = {
+	/**  Window start, TAI ns. */
+	fromTai: string,
+	/**  Window end, TAI ns. */
+	toTai: string,
+	/**  Alarms raised in the window. */
+	history: AlarmEntry[],
+	/**  Per rule and priority. */
+	rules: RuleStatsItem[],
+	/**  Per crew member. */
+	perCrew: CrewRate[],
+};
+
 /**  Application identity shown in the main window (M0, F-SYS-06). */
 export type AppInfo = {
 	/**  Product name. */
@@ -130,6 +224,8 @@ export type AuditItem = {
 	id: string,
 	/**  TAI nanoseconds since 1958-01-01 (decimal). */
 	atTai: string,
+	/**  UTC Unix ms, for display. */
+	atUtcMs: number | null,
 	/**  Actor. */
 	actor: string,
 	/**  Actor's role. */
@@ -150,6 +246,18 @@ export type AuditStatus = {
 	intact: boolean,
 	/**  Problems found. */
 	problems: ChainProblem[],
+};
+
+/**  A personal baseline. */
+export type Baseline = {
+	/**  Median. */
+	median: number | null,
+	/**  Median absolute deviation. */
+	mad: number | null,
+	/**  Samples. */
+	n: number,
+	/**  Status. */
+	status: string,
 };
 
 /**  Result of opening the emergency view. */
@@ -203,6 +311,50 @@ export type CrewMember = {
 	active: boolean,
 };
 
+/**  Alarms per day for one crew member. */
+export type CrewRate = {
+	/**  Crew member. */
+	crewMemberId: string,
+	/**  Alarms per day. */
+	perDay: number | null,
+};
+
+/**  A registered device with its health. */
+export type DeviceEntry = {
+	/**  Device ID. */
+	id: string,
+	/**  Adapter (`ble-sig`, `ble-wristband`, `serial`, `test-equipment`, ...). */
+	adapter: string,
+	/**  Model. */
+	model: string,
+	/**  Vendor. */
+	vendor: string,
+	/**  Serial number. */
+	serial: string,
+	/**  Firmware. */
+	firmware: string | null,
+	/**  Assigned crew member. */
+	crewMemberId: string | null,
+	/**  User slot on a multi-user device. */
+	deviceUser: number | null,
+	/**  Link status. */
+	status: string,
+	/**  Last seen, TAI ns. */
+	lastSeenTai: string | null,
+	/**  Last seen, UTC Unix ms. */
+	lastSeenUtcMs: number | null,
+	/**  Measured clock offset, ms. */
+	clockOffsetMs: number | null,
+	/**  Newest battery level, %. */
+	batteryPct: number | null,
+};
+
+/**  A device's link state or registration changed (F-ACQ-10). No values. */
+export type DevicesChanged = {
+	/**  Device. */
+	deviceId: string,
+};
+
 /**  Why a command failed. */
 export type ErrorKind = 
 /**  Sign in first. */
@@ -227,6 +379,73 @@ export type ErrorKind =
 "unavailable" | 
 /**  Any other failure (storage, keystore, clock). */
 "failed";
+
+/**  Freshness of a value. */
+export type Freshness = 
+/**  Current. */
+"live" | 
+/**  Older than the parameter's stale limit. */
+"stale" | 
+/**  Marked unusable by the device. */
+"unusable";
+
+/**  A device found by a scan. */
+export type NearbyDevice = {
+	/**  Bluetooth address. */
+	address: string,
+	/**  Advertised name. */
+	name: string | null,
+	/**  Signal strength, dBm. */
+	rssi: number | null,
+	/**  Advertised health services (16-bit UUIDs). */
+	services: number[],
+	/**  An emulated device (test equipment builds only). */
+	emulated: boolean,
+};
+
+/**
+ *  New readings were stored for a crew member (CR-012 §4). It carries no value: windows call the
+ *  authorised read commands, so physiology leaves the core only through a role check.
+ */
+export type ObservationsChanged = {
+	/**  Crew member. */
+	crewId: string,
+};
+
+/**  Result of pairing. */
+export type PairResult = 
+/**  Paired (or already paired) and registered; assign it next. */
+{ result: "registered"; 
+/**  Device ID. */
+deviceId: string } | 
+/**  Pair it in the operating system settings first, then retry. */
+{ result: "needsOsPairing"; 
+/**  Why. */
+reason: string; 
+/**  Steps for this platform. */
+steps: string[] };
+
+/**  One stored value. */
+export type Reading = {
+	/**  Parameter key (`docs/05` §1). */
+	parameter: string,
+	/**  Numeric value. */
+	value: number | null,
+	/**  State value (enumerated parameters). */
+	text: string | null,
+	/**  UCUM unit. */
+	unit: string,
+	/**  Measured at, TAI ns (decimal). */
+	measuredAtTai: string,
+	/**  Measured at, UTC Unix ms. */
+	measuredAtUtcMs: number | null,
+	/**  `good` / `degraded` / `poor` / `unusable`. */
+	quality: string,
+	/**  `measured` / `derived` / `entered` / `imported` (`simulated` in test builds). */
+	classification: string,
+	/**  Source device ID. */
+	deviceId: string | null,
+};
 
 /**  A role (`docs/ROLE_MATRIX.md` §1). */
 export type RoleName = 
@@ -253,6 +472,26 @@ export type RosterResult = {
 	members: number,
 	/**  Signed with development keys only. */
 	development: boolean,
+};
+
+/**  F-ALM-09 statistics for one rule and priority. */
+export type RuleStatsItem = {
+	/**  Rule ID. */
+	ruleId: string,
+	/**  Priority. */
+	priority: string,
+	/**  Alarms raised. */
+	count: number,
+	/**  Median seconds to acknowledge. */
+	medianAckS: number | null,
+	/**  Acknowledged before escalation beyond the crew member and CMO. */
+	ackedEarly: number,
+	/**  Silenced. */
+	silenced: number,
+	/**  Ended by themselves within 60 s without action. */
+	selfResolved: number,
+	/**  Bursts of 3 or more within one hour for one crew member. */
+	repeatBursts: number,
 };
 
 /**  The ruleset banner (SR-009, docs/07 §3). */
@@ -290,6 +529,26 @@ export type SessionInfo = {
 	locked: boolean,
 };
 
+/**  A delivered escalation stage. */
+export type StageDelivered = {
+	/**  Audience. */
+	audience: string,
+	/**  Stage index. */
+	stage: number,
+	/**  Delivered at, TAI ns. */
+	atTai: string,
+	/**  Delivered at, UTC Unix ms. */
+	atUtcMs: number | null,
+};
+
+/**  A parameter over a window. */
+export type TrendData = {
+	/**  Points, oldest first. */
+	points: Reading[],
+	/**  Personal baseline, if one exists. */
+	baseline: Baseline | null,
+};
+
 /**  An account (never its credential). */
 export type UserItem = {
 	/**  Account ID. */
@@ -302,6 +561,34 @@ export type UserItem = {
 	crewMemberId: string | null,
 	/**  Cannot sign in. */
 	disabled: boolean,
+};
+
+/**  The newest value of a parameter with its freshness and source. */
+export type VitalItem = {
+	/**  The value. */
+	reading: Reading,
+	/**  Freshness now. */
+	status: Freshness,
+	/**  Age in seconds. */
+	ageS: number,
+	/**  Device model. */
+	deviceModel: string | null,
+};
+
+/**  One waveform chunk. */
+export type WaveformChunk = {
+	/**  Start, TAI ns (decimal). */
+	startTai: string,
+	/**  Start, UTC Unix ms. */
+	startUtcMs: number | null,
+	/**  Samples per second. */
+	sampleRate: number | null,
+	/**  Encoding of `data`. */
+	encoding: string,
+	/**  Samples. */
+	data: number[],
+	/**  Quality. */
+	quality: string,
 };
 
 /* Tauri Specta runtime */

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-device-scan"
+description = "Enables the device_scan command without any pre-configured scope."
+commands.allow = ["device_scan"]
+
+[[permission]]
+identifier = "deny-device-scan"
+description = "Denies the device_scan command without any pre-configured scope."
+commands.deny = ["device_scan"]

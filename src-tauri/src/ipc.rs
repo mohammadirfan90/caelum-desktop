@@ -54,8 +54,23 @@ static BUILDER: LazyLock<Builder<Wry>> = LazyLock::new(|| {
             crate::admin::user_list,
             crate::admin::user_create,
             crate::admin::user_disable,
+            crate::reads::vitals_latest,
+            crate::reads::vitals_trend,
+            crate::reads::waveform_recent,
+            crate::reads::alarm_list,
+            crate::reads::alarm_detail,
+            crate::reads::alarm_report,
+            crate::reads::device_list,
+            crate::reads::device_assign,
+            crate::reads::device_unassign,
+            crate::devices::device_scan,
+            crate::devices::device_pair,
         ])
-        .events(collect_events![crate::events::AlarmBusEvent])
+        .events(collect_events![
+            crate::events::AlarmBusEvent,
+            crate::events::ObservationsChanged,
+            crate::events::DevicesChanged
+        ])
 });
 
 /// Registers the typed events with the running app (call once in `setup`).

@@ -81,6 +81,29 @@ fn station_name() -> Option<String> {
         .find(|n| !n.is_empty())
 }
 
+/// Test equipment only (CR-012 §8): `CAELUM_TE_FAULT=audit-tamper` changes the newest audit
+/// entry's details after start-up, so the Audit screen must show the chain as broken.
+#[cfg(feature = "test-equipment")]
+pub fn inject_test_faults(state: &AppState) {
+    if std::env::var("CAELUM_TE_FAULT").as_deref() == Ok("audit-tamper") {
+        let _ = state.with(|s| {
+            s.db()
+                .connection()
+                .execute(
+                    "UPDATE audit_entry SET details = json_set(details, '$.tampered', 1)
+                     WHERE seq = (SELECT max(seq) FROM audit_entry)",
+                    [],
+                )
+                .map_err(|e| CommandError {
+                    kind: ErrorKind::Failed,
+                    message: e.to_string(),
+                    retry_after_s: None,
+                })?;
+            Ok(())
+        });
+    }
+}
+
 /// docs/03 §3: the alarm tick runs at 4 Hz.
 pub const TICK: Duration = Duration::from_millis(250);
 

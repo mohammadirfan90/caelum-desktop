@@ -172,6 +172,17 @@ impl BleCentral {
         Ok(found)
     }
 
+    /// The platform ID of the peripheral with this Bluetooth address, if the adapter knows it
+    /// (bonded, or seen in a scan). The registry stores the address as the device's serial.
+    pub async fn id_for_address(&self, address: &str) -> Result<Option<String>, BleError> {
+        for p in self.adapter.peripherals().await? {
+            if p.address().to_string().eq_ignore_ascii_case(address) {
+                return Ok(Some(p.id().to_string()));
+            }
+        }
+        Ok(None)
+    }
+
     async fn peripheral(&self, id: &str) -> Result<Peripheral, BleError> {
         for p in self.adapter.peripherals().await? {
             if p.id().to_string() == id {

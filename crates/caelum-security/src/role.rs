@@ -181,6 +181,28 @@ pub enum Command {
     UserCreate,
     /// Disable an account; re-authentication required.
     UserDisable,
+    /// Newest value per parameter for a crew member in scope.
+    VitalsLatest,
+    /// One parameter over a window, with the personal baseline if any.
+    VitalsTrend,
+    /// Recent waveform chunks of one signal.
+    WaveformRecent,
+    /// Active and recent alarms (OPS fields only for MCC).
+    AlarmList,
+    /// One alarm's why, values, timeline and actions.
+    AlarmDetail,
+    /// Alarm history, statistics and fatigue indicators (F-ALM-09).
+    AlarmReport,
+    /// Device registry with link health (F-ACQ-09, F-ACQ-10).
+    DeviceList,
+    /// Assign a device to a crew member; re-authentication required.
+    DeviceAssign,
+    /// Remove a device's assignment; re-authentication required.
+    DeviceUnassign,
+    /// Nearby devices with supported profiles (F-ACQ-01).
+    DeviceScan,
+    /// Pair and register a device (F-ACQ-01).
+    DevicePair,
 }
 
 /// Who may call a command.
@@ -196,7 +218,7 @@ pub enum Access {
 
 impl Command {
     /// Every command.
-    pub const ALL: [Command; 19] = [
+    pub const ALL: [Command; 30] = [
         Command::AppInfo,
         Command::AuthLogin,
         Command::AuthLogout,
@@ -216,6 +238,17 @@ impl Command {
         Command::UserList,
         Command::UserCreate,
         Command::UserDisable,
+        Command::VitalsLatest,
+        Command::VitalsTrend,
+        Command::WaveformRecent,
+        Command::AlarmList,
+        Command::AlarmDetail,
+        Command::AlarmReport,
+        Command::DeviceList,
+        Command::DeviceAssign,
+        Command::DeviceUnassign,
+        Command::DeviceScan,
+        Command::DevicePair,
     ];
 
     /// The IPC command name.
@@ -240,6 +273,17 @@ impl Command {
             Command::UserList => "user_list",
             Command::UserCreate => "user_create",
             Command::UserDisable => "user_disable",
+            Command::VitalsLatest => "vitals_latest",
+            Command::VitalsTrend => "vitals_trend",
+            Command::WaveformRecent => "waveform_recent",
+            Command::AlarmList => "alarm_list",
+            Command::AlarmDetail => "alarm_detail",
+            Command::AlarmReport => "alarm_report",
+            Command::DeviceList => "device_list",
+            Command::DeviceAssign => "device_assign",
+            Command::DeviceUnassign => "device_unassign",
+            Command::DeviceScan => "device_scan",
+            Command::DevicePair => "device_pair",
         }
     }
 
@@ -297,6 +341,17 @@ impl Command {
                 Role::Mcc,
                 Role::Administrator,
             ]),
+            Command::VitalsLatest => Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon, Role::Bme]),
+            Command::VitalsTrend => Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon, Role::Bme]),
+            Command::WaveformRecent => Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon, Role::Bme]),
+            Command::AlarmList => Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon, Role::Bme, Role::Mcc]),
+            Command::AlarmDetail => Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon, Role::Bme]),
+            Command::AlarmReport => Access::Roles(&[Role::Cmo, Role::FlightSurgeon, Role::Bme]),
+            Command::DeviceList => Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon, Role::Bme, Role::Administrator]),
+            Command::DeviceAssign => Access::Roles(&[Role::Cmo, Role::Bme, Role::Administrator]),
+            Command::DeviceUnassign => Access::Roles(&[Role::Cmo, Role::Bme, Role::Administrator]),
+            Command::DeviceScan => Access::Roles(&[Role::Cmo, Role::Bme, Role::Administrator]),
+            Command::DevicePair => Access::Roles(&[Role::Cmo, Role::Bme, Role::Administrator]),
         }
     }
 

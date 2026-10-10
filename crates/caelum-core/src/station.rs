@@ -24,7 +24,10 @@ use serde_json::json;
 use crate::alarms::{AlarmService, AlarmServiceError, Output, RulesetStatus};
 
 mod admin;
+pub mod reads;
+mod runtime;
 pub use admin::{RosterApplied, UserSummary, CREW_KIND};
+pub use runtime::{Ingested, BLE_SIG_ADAPTER, RUNTIME_ADAPTERS};
 
 /// How an acknowledgement was applied.
 #[derive(Debug, Clone, PartialEq)]
@@ -88,6 +91,7 @@ pub struct Station {
     self_test: Vec<Check>,
     monitor: caelum_alarms::technical::Monitor,
     watch: Watch,
+    acquisition: crate::acquisition::Acquisition,
 }
 
 /// Watchdog state between ticks (F-SYS-09).
@@ -157,6 +161,8 @@ impl Station {
                 caelum_alarms::technical::Limits::DEFAULT,
             ),
             watch: Watch::default(),
+            acquisition: crate::acquisition::Acquisition::new()
+                .map_err(|e| StationError::Rejected(format!("leap-second table: {e}")))?,
         };
         let key_id = station.key.verifying_key().key_id();
         for (created, entry) in [

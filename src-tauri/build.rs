@@ -23,6 +23,17 @@ fn main() {
             "user_list",
             "user_create",
             "user_disable",
+            "vitals_latest",
+            "vitals_trend",
+            "waveform_recent",
+            "alarm_list",
+            "alarm_detail",
+            "alarm_report",
+            "device_list",
+            "device_assign",
+            "device_unassign",
+            "device_scan",
+            "device_pair",
         ]));
     if let Err(error) = tauri_build::try_build(attributes) {
         panic!("tauri-build failed: {error:#}");

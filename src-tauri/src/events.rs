@@ -73,6 +73,23 @@ pub enum AlarmBusEvent {
     },
 }
 
+/// New readings were stored for a crew member (CR-012 §4). It carries no value: windows call the
+/// authorised read commands, so physiology leaves the core only through a role check.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type, tauri_specta::Event)]
+#[serde(rename_all = "camelCase")]
+pub struct ObservationsChanged {
+    /// Crew member.
+    pub crew_id: String,
+}
+
+/// A device's link state or registration changed (F-ACQ-10). No values.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type, tauri_specta::Event)]
+#[serde(rename_all = "camelCase")]
+pub struct DevicesChanged {
+    /// Device.
+    pub device_id: String,
+}
+
 fn alarm_event(a: &Alarm, state: &str) -> AlarmBusEvent {
     AlarmBusEvent::Alarm {
         alarm: a.id.to_string(),
