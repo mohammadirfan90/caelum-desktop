@@ -19,7 +19,7 @@ import {
   writeManifest,
 } from "../ci/src/offline.ts";
 import { REPO_ROOT } from "../ci/src/repo.ts";
-import { authenticode, installRuntime, signatureProblem, WEBVIEW2 } from "../ci/src/webview2.ts";
+import { authenticode, installRuntime, RELEASE_CONFIG, signatureProblem, WEBVIEW2 } from "../ci/src/webview2.ts";
 
 /** Pinned versions; keep in step with rust-toolchain.toml, package.json and the installed tools. */
 const RUST = "1.99.0";
@@ -130,7 +130,7 @@ const tauriTools = join(process.env["LOCALAPPDATA"] ?? "", "tauri");
 const haveTools = existsSync(join(tauriTools, "NSIS")) && existsSync(join(tauriTools, "WixTools314"));
 if (!haveTools) {
   installRuntime(webviewCab, true);
-  sh("pnpm tauri build");
+  sh(`pnpm tauri build --config ${RELEASE_CONFIG}`);
 }
 copyInto(tauriTools, join(cache, "tauri-tools"));
 // Tauri's own WebView2 offline-installer download (`x64/`, `x86/`, `arm64/`) is not used: CAELUM

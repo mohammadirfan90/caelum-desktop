@@ -109,10 +109,11 @@ fn capabilities_grant_only_app_commands() {
     assert_eq!(files, 1, "expected exactly one capability file");
 }
 
-/// R-OPS-03, CR-004: MSI and per-machine NSIS installers that ship the pinned WebView2 Fixed
-/// Version runtime, so release builds need no network and every laptop uses the same engine.
+/// R-OPS-03, CR-004: MSI and per-machine NSIS installers. Development builds use WebView2 mode
+/// `skip` (no runtime files needed for tests and clippy); release builds overlay
+/// tauri.release.conf.json, which ships the pinned WebView2 Fixed Version runtime.
 #[test]
-fn windows_installers_ship_pinned_webview2_fixed_runtime() {
+fn windows_installers_ship_pinned_webview2_fixed_runtime_in_release() {
     let conf = conf();
     let targets: Vec<&str> = conf["bundle"]["targets"]
         .as_array()
@@ -122,13 +123,14 @@ fn windows_installers_ship_pinned_webview2_fixed_runtime() {
         .collect();
     assert_eq!(targets, ["msi", "nsis"]);
     let windows = &conf["bundle"]["windows"];
-    assert_eq!(windows["webviewInstallMode"]["type"], "fixedRuntime");
-    assert_eq!(
-        windows["webviewInstallMode"]["path"],
-        "./webview2-fixed-runtime/"
-    );
+    assert_eq!(windows["webviewInstallMode"]["type"], "skip");
     assert_eq!(windows["nsis"]["installMode"], "perMachine");
     assert_eq!(conf["bundle"]["license"], "Apache-2.0");
+
+    let release = read_json(&crate_dir().join("tauri.release.conf.json"));
+    let mode = &release["bundle"]["windows"]["webviewInstallMode"];
+    assert_eq!(mode["type"], "fixedRuntime");
+    assert_eq!(mode["path"], "./webview2-fixed-runtime/");
 }
 
 /// CR-004: the ~670 MB runtime is expanded from the tool cache, never committed to git.

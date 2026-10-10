@@ -9,7 +9,7 @@ import { join } from "node:path";
 
 import { cacheDir, hashFile, offlineCargoConfig, readItems, verifyCache } from "../ci/src/offline.ts";
 import { REPO_ROOT } from "../ci/src/repo.ts";
-import { installRuntime, WEBVIEW2 } from "../ci/src/webview2.ts";
+import { installRuntime, RELEASE_CONFIG, WEBVIEW2 } from "../ci/src/webview2.ts";
 
 const cache = cacheDir(process.argv.slice(2));
 const outDir = join(REPO_ROOT, "target", "offline");
@@ -68,7 +68,7 @@ function sh(command: string): void {
 // 4. npm packages from the cached store, then the release build.
 const store = JSON.stringify(join(cache, "pnpm-store"));
 sh(`pnpm install --offline --frozen-lockfile --store-dir ${store}`);
-sh(`pnpm tauri build -- --config ${JSON.stringify(cargoConfig)}`);
+sh(`pnpm tauri build --config ${RELEASE_CONFIG} -- --config ${JSON.stringify(cargoConfig)}`);
 
 // 5. Report: installers with checksums, and the cache they came from.
 const bundle = join(REPO_ROOT, "target", "release", "bundle");

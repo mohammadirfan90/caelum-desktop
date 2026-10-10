@@ -17,8 +17,15 @@ export const WEBVIEW2 = {
   folder: "Microsoft.WebView2.FixedVersionRuntime.155.0.4283.45.x64",
 } as const;
 
-/** Where tauri.conf.json expects the runtime (git-ignored, filled from the tool cache). */
+/** Where tauri.release.conf.json expects the runtime (git-ignored, filled from the tool cache). */
 export const RUNTIME_DIR = join(REPO_ROOT, "src-tauri", "webview2-fixed-runtime");
+
+/**
+ * Release overlay for `tauri build --config`: switches WebView2 to the bundled fixed runtime.
+ * tauri.conf.json itself uses `skip`, so development builds, tests and clippy need no runtime.
+ * Every release build must pass this file.
+ */
+export const RELEASE_CONFIG = "src-tauri/tauri.release.conf.json";
 
 export interface Signature {
   readonly status: string;

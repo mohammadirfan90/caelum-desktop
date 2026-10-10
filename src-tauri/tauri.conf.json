@@ -43,8 +43,7 @@
     ],
     "windows": {
       "webviewInstallMode": {
-        "type": "fixedRuntime",
-        "path": "./webview2-fixed-runtime/"
+        "type": "skip"
       },
       "nsis": {
         "installMode": "perMachine"

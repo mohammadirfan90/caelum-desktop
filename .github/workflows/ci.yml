@@ -139,7 +139,13 @@ jobs:
         with:
           tool: cargo-llvm-cov
       - name: caelum-alarms branch coverage
-        run: cargo +nightly llvm-cov --branch -p caelum-alarms --summary-only
+        # caelum-alarms has no code or tests until M3; report that plainly instead of failing.
+        run: |
+          if ! grep -rqs '#\[test\]' crates/caelum-alarms; then
+            echo "::notice::caelum-alarms has no tests yet (implemented in M3); no branch coverage to report"
+            exit 0
+          fi
+          cargo +nightly llvm-cov --branch -p caelum-alarms --summary-only
 
   trace:
     runs-on: ubuntu-22.04

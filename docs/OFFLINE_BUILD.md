@@ -39,8 +39,10 @@ the installed toolchain as `1.99.0-x86_64-pc-windows-msvc` with `rustup toolchai
    digest its upstream publishes) and the WebView2 Fixed Version runtime (must carry a valid
    Microsoft Authenticode signature), copies the cargo check tools, Tauri's bundler tools and the
    advisory databases, and writes `ITEMS.json` (provenance) and `MANIFEST.sha256`.
-   For an online developer build, `node tools/offline/install-webview2.ts --cache <dir>` puts the
-   runtime where `tauri.conf.json` expects it before `pnpm tauri build`.
+   For an online release build, `node tools/offline/install-webview2.ts --cache <dir>` puts the
+   runtime where `src-tauri/tauri.release.conf.json` expects it, then
+   `pnpm tauri build --config src-tauri/tauri.release.conf.json`. A plain `pnpm tauri build` makes
+   development installers that rely on the system WebView2 and are never shipped.
 2. **Verify:** `node tools/offline/verify.ts --cache <dir>`. Fails on any changed, missing or
    unlisted file.
 3. **Build offline:** with the network disabled, `node tools/offline/build-offline.ts --cache <dir>`.

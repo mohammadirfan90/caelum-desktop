@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { describe, it } from "node:test";
 
 import { REPO_ROOT } from "../src/repo.ts";
-import { signatureProblem, WEBVIEW2 } from "../src/webview2.ts";
+import { RELEASE_CONFIG, signatureProblem, WEBVIEW2 } from "../src/webview2.ts";
 
 const microsoft = {
   status: "Valid",
@@ -33,10 +33,20 @@ describe("pinned runtime", () => {
     assert.match(WEBVIEW2.url, /^https:\/\/msedge\.sf\.dl\.delivery\.mp\.microsoft\.com\//);
   });
 
-  it("tauri.conf.json uses fixedRuntime from src-tauri/webview2-fixed-runtime", () => {
-    const conf = JSON.parse(readFileSync(join(REPO_ROOT, "src-tauri", "tauri.conf.json"), "utf8")) as {
+  it("the release overlay uses fixedRuntime from src-tauri/webview2-fixed-runtime", () => {
+    const conf = JSON.parse(readFileSync(join(REPO_ROOT, RELEASE_CONFIG), "utf8")) as {
       bundle: { windows: { webviewInstallMode: { type: string; path: string } } };
     };
     assert.deepEqual(conf.bundle.windows.webviewInstallMode, { type: "fixedRuntime", path: "./webview2-fixed-runtime/" });
+  });
+
+  it("every release build script passes the release overlay", () => {
+    for (const script of ["tools/offline/build-offline.ts", "tools/offline/prepare.ts"]) {
+      const text = readFileSync(join(REPO_ROOT, script), "utf8");
+      // Only real command invocations (sh(`...`)), not mentions in comments.
+      const builds = text.match(/sh\(`pnpm tauri build[^`]*`/g) ?? [];
+      assert.ok(builds.length > 0, `${script} runs no tauri build`);
+      for (const b of builds) assert.match(b, /--config \$\{RELEASE_CONFIG\}/, `${script}: ${b}`);
+    }
   });
 });
