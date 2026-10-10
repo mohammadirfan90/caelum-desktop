@@ -395,6 +395,14 @@ impl Station {
         Ok(())
     }
 
+    /// Sounds to resume after a restart (SR-007), delivered once.
+    pub fn take_restored(&mut self) -> Output {
+        Output {
+            events: Vec::new(),
+            notices: self.alarms.take_restored(),
+        }
+    }
+
     /// The 4 Hz tick (docs/03 §3): alarm engine and escalation, technical monitor, and the
     /// watchdogs (F-SYS-09): clock going backwards (SR-012) and free storage every
     /// [`STORAGE_CHECK_S`] seconds. Alarms never depend on sign-in, so nothing here is authorised.

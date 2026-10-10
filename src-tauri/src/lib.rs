@@ -14,6 +14,7 @@ compile_error!(
 use tauri::Manager;
 
 pub mod commands;
+pub mod events;
 pub mod ipc;
 pub mod state;
 
@@ -24,8 +25,10 @@ pub mod state;
 pub fn run() -> tauri::Result<()> {
     tauri::Builder::default()
         .setup(|app| {
+            ipc::mount_events(app);
             let data_dir = app.path().app_local_data_dir()?;
             app.manage(state::AppState::open(&data_dir));
+            state::start_alarm_tick(app.handle().clone());
             Ok(())
         })
         .invoke_handler(ipc::invoke_handler())

@@ -10,7 +10,7 @@ use std::sync::LazyLock;
 use specta_typescript::Typescript;
 use tauri::ipc::Invoke;
 use tauri::Wry;
-use tauri_specta::{collect_commands, Builder};
+use tauri_specta::{collect_commands, collect_events, Builder};
 
 /// Committed bindings file, relative to this crate's manifest directory.
 pub const BINDINGS_PATH: &str = "../ui/src/bindings.ts";
@@ -33,21 +33,28 @@ impl std::error::Error for BindingsError {}
 /// The single command registry. The invoke handler borrows it, and Tauri needs that borrow to be
 /// `'static`, so it lives for the whole process.
 static BUILDER: LazyLock<Builder<Wry>> = LazyLock::new(|| {
-    Builder::<Wry>::new().commands(collect_commands![
-        crate::commands::app_info,
-        crate::commands::auth_login,
-        crate::commands::auth_logout,
-        crate::commands::auth_me,
-        crate::commands::auth_reauth,
-        crate::commands::break_glass_open,
-        crate::commands::audit_list,
-        crate::commands::audit_verify,
-        crate::commands::ruleset_status,
-        crate::commands::alarm_acknowledge,
-        crate::commands::alarm_silence,
-        crate::commands::alarm_escalate,
-    ])
+    Builder::<Wry>::new()
+        .commands(collect_commands![
+            crate::commands::app_info,
+            crate::commands::auth_login,
+            crate::commands::auth_logout,
+            crate::commands::auth_me,
+            crate::commands::auth_reauth,
+            crate::commands::break_glass_open,
+            crate::commands::audit_list,
+            crate::commands::audit_verify,
+            crate::commands::ruleset_status,
+            crate::commands::alarm_acknowledge,
+            crate::commands::alarm_silence,
+            crate::commands::alarm_escalate,
+        ])
+        .events(collect_events![crate::events::AlarmBusEvent])
 });
+
+/// Registers the typed events with the running app (call once in `setup`).
+pub fn mount_events(app: &tauri::App) {
+    BUILDER.mount_events(app);
+}
 
 /// The invoke handler for every registered command.
 pub fn invoke_handler() -> impl Fn(Invoke<Wry>) -> bool + Send + Sync + 'static {

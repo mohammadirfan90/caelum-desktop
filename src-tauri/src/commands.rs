@@ -13,7 +13,8 @@ use caelum_core::station::{Acknowledged, Me, StationError};
 use caelum_domain::ids::AlarmId;
 use serde::Serialize;
 use specta::Type;
-use tauri::State;
+use tauri::{AppHandle, State};
+use tauri_specta::Event as _;
 use zeroize::Zeroizing;
 
 use crate::state::AppState;
@@ -367,16 +368,26 @@ pub enum AcknowledgeScope {
 #[tauri::command]
 #[specta::specta]
 pub async fn alarm_acknowledge(
+    app: AppHandle,
     state: State<'_, AppState>,
     alarm: String,
 ) -> Result<AcknowledgeScope, CommandError> {
     let id = alarm_id(&alarm)?;
-    state.with(|s| {
-        Ok(match s.alarm_acknowledge(id)? {
-            Acknowledged::Onboard(_) => AcknowledgeScope::Onboard,
-            Acknowledged::GroundStage => AcknowledgeScope::GroundStage,
-        })
+    let ack = state.with(|s| Ok(s.alarm_acknowledge(id)?))?;
+    Ok(match ack {
+        Acknowledged::Onboard(out) => {
+            emit(&app, &out);
+            AcknowledgeScope::Onboard
+        }
+        Acknowledged::GroundStage => AcknowledgeScope::GroundStage,
     })
+}
+
+/// Pushes an action's results to every window (the alarm bus).
+fn emit(app: &AppHandle, out: &caelum_core::alarms::Output) {
+    for e in crate::events::bus_events(out) {
+        let _ = e.emit(app);
+    }
 }
 
 /// Silences an alarm's sound for `seconds`, at most 2 min (critical) or 10 min (warning); returns
@@ -384,23 +395,29 @@ pub async fn alarm_acknowledge(
 #[tauri::command]
 #[specta::specta]
 pub async fn alarm_silence(
+    app: AppHandle,
     state: State<'_, AppState>,
     alarm: String,
     seconds: u32,
 ) -> Result<u32, CommandError> {
     let id = alarm_id(&alarm)?;
-    state.with(|s| Ok(s.alarm_silence(id, seconds)?.1))
+    let (out, applied) = state.with(|s| Ok(s.alarm_silence(id, seconds)?))?;
+    emit(&app, &out);
+    Ok(applied)
 }
 
 /// Escalates an alarm to its next stage now (F-ALM-05; audited).
 #[tauri::command]
 #[specta::specta]
-pub async fn alarm_escalate(state: State<'_, AppState>, alarm: String) -> Result<(), CommandError> {
+pub async fn alarm_escalate(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    alarm: String,
+) -> Result<(), CommandError> {
     let id = alarm_id(&alarm)?;
-    state.with(|s| {
-        s.alarm_escalate(id)?;
-        Ok(())
-    })
+    let out = state.with(|s| Ok(s.alarm_escalate(id)?))?;
+    emit(&app, &out);
+    Ok(())
 }
 
 // Commands are `async` so the argon2 work runs off the window's main thread.

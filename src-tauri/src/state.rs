@@ -6,6 +6,10 @@
 
 use std::path::Path;
 use std::sync::Mutex;
+use std::time::Duration;
+
+use tauri::{AppHandle, Manager};
+use tauri_specta::Event as _;
 
 use caelum_core::security::clock::SystemClock;
 use caelum_core::security::keystore::OsKeyStore;
@@ -75,4 +79,34 @@ fn station_name() -> Option<String> {
         .filter_map(|v| std::env::var(v).ok())
         .map(|n| n.trim().to_owned())
         .find(|n| !n.is_empty())
+}
+
+/// docs/03 §3: the alarm tick runs at 4 Hz.
+pub const TICK: Duration = Duration::from_millis(250);
+
+/// Starts the alarm tick on its own thread (database work stays off the async runtime): sounds
+/// from before a restart first, then every tick's events to every window. Alarms do not depend
+/// on sign-in, so the tick runs whatever the session state.
+pub fn start_alarm_tick(app: AppHandle) {
+    std::thread::spawn(move || {
+        let emit = |out: &caelum_core::alarms::Output| {
+            for e in crate::events::bus_events(out) {
+                let _ = e.emit(&app);
+            }
+        };
+        if let Ok(out) = app.state::<AppState>().with(|s| Ok(s.take_restored())) {
+            emit(&out);
+        }
+        loop {
+            std::thread::sleep(TICK);
+            match app
+                .state::<AppState>()
+                .with(|s| s.tick().map_err(CommandError::from))
+            {
+                Ok(out) => emit(&out),
+                // Station unavailable: the window already says why (every command reports it).
+                Err(_) => std::thread::sleep(Duration::from_secs(1)),
+            }
+        }
+    });
 }
