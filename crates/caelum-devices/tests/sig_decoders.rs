@@ -340,3 +340,19 @@ fn truncated_payloads_are_errors_not_partial_readings() {
         Err(DecodeError::Unsupported(0x2A19))
     );
 }
+
+/// F-ACQ-11: the Current Time characteristic gives the device clock, fractions included; an
+/// unset date gives none.
+#[test]
+fn f_acq_11_current_time_is_read_for_clock_exchanges() {
+    let mut bytes = DATE_2017.to_vec();
+    bytes.extend([7, 128, 0]); // Sunday, 128/256 s, adjust reason
+    let t = sig::current_time(&bytes, &leap()).unwrap().unwrap();
+    let mut whole = DATE_2017.to_vec();
+    whole.extend([7, 0, 0]);
+    let base = sig::current_time(&whole, &leap()).unwrap().unwrap();
+    assert_eq!(t.0 - base.0, 500_000_000);
+    let unset = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    assert_eq!(sig::current_time(&unset, &leap()).unwrap(), None);
+    assert!(sig::current_time(&[0xE1, 0x07, 1], &leap()).is_err());
+}

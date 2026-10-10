@@ -17,6 +17,9 @@ use futures::StreamExt;
 use tokio::sync::mpsc;
 use uuid::Uuid;
 
+use caelum_domain::time::{LeapSeconds, TaiNs};
+use caelum_ingest::SyncSample;
+
 use crate::link::{Action, LinkSupervisor};
 use crate::sig;
 
@@ -248,6 +251,39 @@ impl BleCentral {
             enable_notifications(&peripheral, c).await?;
         }
         Ok((peripheral, wanted))
+    }
+
+    /// One clock exchange with a connected device through its Current Time characteristic (a
+    /// read). `station_now` gives station TAI. `None` if the device has no Current Time Service
+    /// or its clock is not set.
+    pub async fn clock_sample(
+        &self,
+        id: &str,
+        leap: &LeapSeconds,
+        station_now: impl Fn() -> Option<TaiNs>,
+    ) -> Result<Option<SyncSample>, BleError> {
+        let peripheral = self.peripheral(id).await?;
+        let Some(cts) = peripheral
+            .characteristics()
+            .into_iter()
+            .find(|c| short_uuid(c.uuid) == Some(sig::CURRENT_TIME))
+        else {
+            return Ok(None);
+        };
+        let Some(station_send) = station_now() else {
+            return Ok(None);
+        };
+        let value = peripheral.read(&cts).await?;
+        let Some(station_recv) = station_now() else {
+            return Ok(None);
+        };
+        let device_time =
+            sig::current_time(&value, leap).map_err(|e| BleError::Platform(e.to_string()))?;
+        Ok(device_time.map(|device_time| SyncSample {
+            station_send,
+            device_time,
+            station_recv,
+        }))
     }
 
     /// Forwards notifications and RSSI until the device disconnects.

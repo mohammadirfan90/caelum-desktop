@@ -43,6 +43,9 @@ pub const WEIGHT_MEASUREMENT: u16 = 0x2A9D;
 /// Glucose Measurement.
 pub const GLUCOSE_MEASUREMENT: u16 = 0x2A18;
 
+/// Current Time (Current Time Service), read for clock synchronisation (F-ACQ-11).
+pub const CURRENT_TIME: u16 = 0x2A2B;
+
 /// Every characteristic with a decoder.
 pub const SUPPORTED: [u16; 7] = [
     HEART_RATE_MEASUREMENT,
@@ -142,6 +145,17 @@ pub fn decode(
         GLUCOSE_MEASUREMENT => glucose(payload, leap),
         other => Err(DecodeError::Unsupported(other)),
     }
+}
+
+/// CTS 0x2A2B Current Time (Exact Time 256: Date Time, day of week, fractions256, then adjust
+/// reason): the device's clock, for an offset exchange (F-ACQ-11). `None` if the device's date is
+/// not set.
+pub fn current_time(payload: &[u8], leap: &LeapSeconds) -> Result<Option<TaiNs>, DecodeError> {
+    let mut r = Reader::new(payload);
+    let base = r.date_time(leap, "date time")?;
+    r.u8("day of week")?;
+    let fractions = r.u8("fractions256")?;
+    Ok(base.map(|t| TaiNs(t.0 + i64::from(fractions) * 1_000_000_000 / 256)))
 }
 
 fn bit(value: u32, n: u32) -> bool {
