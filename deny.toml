@@ -33,10 +33,12 @@ allow = [
     "Unicode-3.0",
     "Zlib",
 ]
-# MPL-2.0 is file-level copyleft: allowed only for these reviewed crates, which are unmodified
-# dependencies of Tauri. Obligation: tell recipients where the MPL source is available (recorded
-# in docs/third-party-risk.md; carried into NOTICE with the release SBOM).
+# MPL-2.0 is file-level copyleft: allowed only for these reviewed crates, used unmodified: Tauri's
+# dependencies and `serialport` (a CLAUDE.md stack item, F-ACQ-04). Obligation: tell recipients
+# where the MPL source is available (recorded in docs/third-party-risk.md; carried into NOTICE
+# with the release SBOM).
 exceptions = [
+    { allow = ["MPL-2.0"], crate = "serialport" },
     { allow = ["MPL-2.0"], crate = "cssparser" },
     { allow = ["MPL-2.0"], crate = "cssparser-macros" },
     { allow = ["MPL-2.0"], crate = "selectors" },

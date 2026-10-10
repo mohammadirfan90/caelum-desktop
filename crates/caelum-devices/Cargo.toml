@@ -12,6 +12,8 @@ publish.workspace = true
 caelum-domain.workspace = true
 caelum-ingest.workspace = true
 caelum-store.workspace = true
+# Stack item (CLAUDE.md); MPL-2.0, allowed per crate in deny.toml. No libudev: nothing to install.
+serialport = { version = "4.10.1", default-features = false }
 thiserror = "2.0.21"
 uuid = { version = "1.28.0", features = ["v4"] }
 

@@ -7,6 +7,7 @@
 
 pub mod link;
 pub mod registry;
+pub mod serial;
 pub mod sig;
 
 use caelum_domain::ids::DeviceId;
