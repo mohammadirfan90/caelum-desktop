@@ -10,6 +10,17 @@ publish.workspace = true
 
 [dependencies]
 caelum-domain.workspace = true
+serde = { version = "1.0.229", features = ["derive"] }
+thiserror = "2.0.21"
+# Stack item (CLAUDE.md). `net` for the UDP receive socket only (CR-015 §6); already in Cargo.lock.
+tokio = { version = "1", features = ["net"] }
+# Parses the signed MID table (CR-015 §3); same crate and version as the ruleset parser.
+toml = "1"
+
+[dev-dependencies]
+caelum-test-equipment.workspace = true
+proptest = "1.11.0"
+tokio = { version = "1", features = ["net", "rt", "macros", "time"] }
 
 [lints]
 workspace = true
