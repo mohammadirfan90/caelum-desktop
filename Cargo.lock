@@ -337,6 +337,10 @@ name = "caelum-devices"
 version = "0.1.0"
 dependencies = [
  "caelum-domain",
+ "caelum-ingest",
+ "caelum-store",
+ "thiserror 2.0.21",
+ "uuid",
 ]
 
 [[package]]
@@ -362,6 +366,9 @@ name = "caelum-ingest"
 version = "0.1.0"
 dependencies = [
  "caelum-domain",
+ "serde",
+ "thiserror 2.0.21",
+ "uuid",
 ]
 
 [[package]]

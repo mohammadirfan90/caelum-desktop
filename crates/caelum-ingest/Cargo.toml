@@ -10,6 +10,15 @@ publish.workspace = true
 
 [dependencies]
 caelum-domain.workspace = true
+serde = { version = "1.0.229", features = ["derive"] }
+thiserror = "2.0.21"
+
+[dev-dependencies]
+uuid = "1.28.0"
+
+[features]
+# Test equipment only (CLAUDE.md rule 3): flagged readings are kept as `simulated`.
+test-equipment = ["caelum-domain/test-equipment"]
 
 [lints]
 workspace = true

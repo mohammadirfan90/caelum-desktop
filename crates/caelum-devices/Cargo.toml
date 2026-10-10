@@ -10,6 +10,11 @@ publish.workspace = true
 
 [dependencies]
 caelum-domain.workspace = true
+caelum-ingest.workspace = true
+caelum-store.workspace = true
+thiserror = "2.0.21"
+uuid = { version = "1.28.0", features = ["v4"] }
+
 
 [lints]
 workspace = true

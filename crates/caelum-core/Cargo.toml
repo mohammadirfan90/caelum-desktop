@@ -26,16 +26,17 @@ caelum-test-equipment = { workspace = true, optional = true }
 
 serde_json = "1.0.151"
 thiserror = "2.0.21"
+uuid = { version = "1.28.0", features = ["v4"] }
 
 
 [features]
 # Test equipment only; release builds must not enable it (CLAUDE.md rule 3).
-test-equipment = ["dep:caelum-test-equipment", "caelum-domain/test-equipment", "caelum-store/test-equipment"]
+test-equipment = ["dep:caelum-test-equipment", "caelum-domain/test-equipment", "caelum-store/test-equipment", "caelum-ingest/test-equipment"]
 
 [lints]
 workspace = true
 
 [dev-dependencies]
 cargo_metadata = "0.23.1"
-uuid = { version = "1.28.0", features = ["v4"] }
+caelum-test-equipment.workspace = true
 zeroize = "1.9.1"

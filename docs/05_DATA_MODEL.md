@@ -35,7 +35,7 @@ OS keystore. Attachment file store: AES-256-GCM.
 |---|---|
 | crew_member | id, name, role, mission, active, photo hash |
 | user | id, role, crew_member_id?, credential (argon2), key id, disabled |
-| device | id, adapter, model, vendor, serial, firmware, accuracy_class, calibration_due, crew_member_id, status, last_seen, clock_offset_ms |
+| device | id, adapter, model, vendor, serial, firmware, accuracy_class, calibration_due, crew_member_id, device_user? (user slot on multi-user devices, CR-008), status, last_seen, clock_offset_ms |
 | observation | id, crew_member_id, device_id, parameter, value, unit, measured_at (TAI ns), received_at, quality, classification (measured/derived/entered/imported), measurement_mode (continuous/spot, from the device profile), algorithm_version?, context JSON |
 | waveform_chunk | id, crew_member_id, device_id, signal, start_tai, sample_rate, encoding, data (compressed), quality |
 | baseline | crew_member_id, parameter, median, mad, n, window, status, method_version |
@@ -63,7 +63,11 @@ them, and then only with the simulated classification.
 
 ## 4. Time
 All timestamps stored as TAI nanoseconds plus the source clock; UI shows UTC and MET. Device clock
-offset tracked per device; corrections recorded in provenance. UTC is derived from TAI with a
+offset tracked per device (measured from request/answer exchanges, shortest round trip; residual
+above 50 ms raises a technical alarm, R-OPS-04); corrections recorded in provenance. A device time
+without a measured offset is not used: the reading gets the station receipt time, marked
+`receipt_unsynchronised`. A corrected time more than 1 s after receipt is rejected as a clock
+fault. UTC is derived from TAI with a
 bundled IERS leap-second table that only signed configuration can update. CCSDS CUC timestamps use
 the CCSDS epoch 1958-01-01 TAI. The MET epoch comes from signed mission configuration (R-OPS-05).
 
