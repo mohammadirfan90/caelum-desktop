@@ -93,6 +93,7 @@ static BUILDER: LazyLock<Builder<Wry>> = LazyLock::new(|| {
             crate::mds::config_apply_mds,
             crate::mds::mds_identity_set,
             crate::mds::mds_status,
+            crate::mds::uplink_apply,
         ])
         .events(collect_events![
             crate::events::AlarmBusEvent,

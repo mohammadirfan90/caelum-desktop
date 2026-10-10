@@ -31,6 +31,7 @@ pub mod mds_link;
 pub mod pathb;
 pub mod reads;
 mod runtime;
+pub mod uplink;
 pub mod vehicle;
 pub use admin::{RosterApplied, UserSummary, CREW_KIND};
 pub use runtime::{Ingested, BLE_SIG_ADAPTER, RUNTIME_ADAPTERS};
@@ -151,10 +152,17 @@ impl Station {
         let db = Database::open(&path, &db_key)?;
         let now = clock.now_tai().map_err(SecurityError::from)?;
         // SR-009: verified for this build's trust policy, with the safe fallback.
+        // F-GND-07: an uplinked ruleset (verified when applied) takes precedence over the one
+        // built in; it is verified again here, and SR-009 falls back if it no longer verifies.
+        let uplinked = db.latest_config_bundle(uplink::RULESET_UPLINK_KIND)?;
+        let (ruleset_text, ruleset_sig) = match &uplinked {
+            Some((_, sig, content)) => (content.as_str(), sig.as_str()),
+            None => (BUNDLED_RULESET, BUNDLED_SIGNATURES),
+        };
         let alarms = AlarmService::load(
             &db,
-            BUNDLED_RULESET,
-            BUNDLED_SIGNATURES,
+            ruleset_text,
+            ruleset_sig,
             &built_in_keys(),
             TrustPolicy::for_this_build(),
             now,

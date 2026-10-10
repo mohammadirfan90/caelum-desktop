@@ -426,6 +426,14 @@ export const en = {
   mdsHealth: { connected: "Connected", degraded: "Degraded", unreachable: "Unreachable", not_configured: "Not configured" } as Record<string, string>,
   mdsCounts: (pending: number, held: number) => `${String(pending)} records waiting · ${String(held)} held for review`,
 
+  // Uplink (F-GND-07)
+  uplinkTitle: "Apply a signed item",
+  uplinkHelp: "Uplinked or delivered on media: a ruleset, protocol library or configuration with its signature file. Nothing unsigned is accepted.",
+  uplinkKind: "Item",
+  uplinkKinds: { ruleset: "Alarm ruleset", protocols: "Protocol library", crew: "Crew roster", vehicle: "Vehicle table", ground: "Ground configuration", mds: "Medical data system configuration" } as Record<string, string>,
+  uplinkApply: "Verify and apply",
+  uplinkDone: (version: string, later: boolean) => (later ? `Version ${version} verified. It takes effect at the next start.` : `Version ${version} verified and applied.`),
+
   // Advisory models (F-ML-01)
   modelsTitle: "Advisory models",
   modelsEmpty: "No models are installed. Model outputs are advisory and never change alarm rules.",

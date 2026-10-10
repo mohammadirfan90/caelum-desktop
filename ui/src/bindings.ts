@@ -130,6 +130,8 @@ export const commands = {
 	mdsIdentitySet: (certPem: string, keyPem: string) => typedError<null, CommandError>(__TAURI_INVOKE("mds_identity_set", { certPem, keyPem })),
 	/**  Medical data system link status (counts only). */
 	mdsStatus: () => typedError<MdsLink, CommandError>(__TAURI_INVOKE("mds_status")),
+	/**  Verifies and applies an uplinked item (administrator, re-authentication; F-GND-07). */
+	uplinkApply: (kind: string, content: string, signature: string) => typedError<UplinkOutcome, CommandError>(__TAURI_INVOKE("uplink_apply", { kind, content, signature })),
 };
 
 /** Events */
@@ -819,6 +821,14 @@ export type TrendData = {
 	points: Reading[],
 	/**  Personal baseline, if one exists. */
 	baseline: Baseline | null,
+};
+
+/**  Result of an uplink. */
+export type UplinkOutcome = {
+	/**  Verified version. */
+	version: string,
+	/**  Takes effect at the next start (rulesets). */
+	atNextStart: boolean,
 };
 
 /**  An account (never its credential). */

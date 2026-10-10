@@ -10,6 +10,7 @@ import type {
   Encounter,
   GroundStatus,
   MdsLink,
+  UplinkOutcome,
   ModelItem,
   MedicationEntry,
   OverviewEntry,
@@ -108,6 +109,7 @@ export interface Api {
   readonly modelList: () => Promise<Res<ModelItem[]>>;
   readonly windowOpenWaveform: () => Promise<Res<null>>;
   readonly mdsStatus: () => Promise<Res<MdsLink>>;
+  readonly uplinkApply: (kind: string, content: string, signature: string) => Promise<Res<UplinkOutcome>>;
   // Export (F-SYS-08)
   readonly exportFhir: (crewMemberId: string, windowS: number) => Promise<Res<string>>;
   readonly exportCsv: (crewMemberId: string, parameter: string, windowS: number) => Promise<Res<string>>;

@@ -164,3 +164,31 @@ impl Default for MdsLink {
         }
     }
 }
+
+/// Result of an uplink.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct UplinkOutcome {
+    /// Verified version.
+    pub version: String,
+    /// Takes effect at the next start (rulesets).
+    pub at_next_start: bool,
+}
+
+/// Verifies and applies an uplinked item (administrator, re-authentication; F-GND-07).
+#[tauri::command]
+#[specta::specta]
+pub async fn uplink_apply(
+    state: State<'_, AppState>,
+    kind: String,
+    content: String,
+    signature: String,
+) -> Result<UplinkOutcome, CommandError> {
+    state.with(|s| {
+        let r = s.uplink_apply(&kind, content.as_bytes(), &signature)?;
+        Ok(UplinkOutcome {
+            version: r.version,
+            at_next_start: r.at_next_start,
+        })
+    })
+}

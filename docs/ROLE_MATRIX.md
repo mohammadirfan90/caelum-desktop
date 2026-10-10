@@ -101,6 +101,7 @@ lead (CR-003) until a licensed clinician advisor countersigns; it does not block
 | `config_apply_mds` | Admin | Signed bundle kind mds (CR-016 §10); re-authentication (§4); audited |
 | `mds_identity_set` | Admin | PEM, kept in the encrypted records; re-authentication (§4); audited without the key |
 | `mds_status` | CMO, Flight Surgeon, BME, Admin | Health, pending and held counts; no record content |
+| `uplink_apply` | Admin | Signed items only; rulesets take effect at the next start; re-authentication (§4); audited |
 
 ## 4. Sessions
 - Onboard: PIN plus device-bound key; auto-lock after 10 minutes (configurable). Ground: password

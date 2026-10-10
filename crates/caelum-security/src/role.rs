@@ -259,6 +259,8 @@ pub enum Command {
     MdsIdentitySet,
     /// Medical data system link status (counts only).
     MdsStatus,
+    /// Verify and apply an uplinked ruleset, protocol library or configuration (F-GND-07).
+    UplinkApply,
 }
 
 /// Who may call a command.
@@ -274,7 +276,7 @@ pub enum Access {
 
 impl Command {
     /// Every command.
-    pub const ALL: [Command; 58] = [
+    pub const ALL: [Command; 59] = [
         Command::AppInfo,
         Command::AuthLogin,
         Command::AuthLogout,
@@ -333,6 +335,7 @@ impl Command {
         Command::ConfigApplyMds,
         Command::MdsIdentitySet,
         Command::MdsStatus,
+        Command::UplinkApply,
     ];
 
     /// The IPC command name.
@@ -396,6 +399,7 @@ impl Command {
             Command::ConfigApplyMds => "config_apply_mds",
             Command::MdsIdentitySet => "mds_identity_set",
             Command::MdsStatus => "mds_status",
+            Command::UplinkApply => "uplink_apply",
         }
     }
 
@@ -492,6 +496,7 @@ impl Command {
             Command::ConfigApplyMds => Access::Roles(&[Role::Administrator]),
             Command::MdsIdentitySet => Access::Roles(&[Role::Administrator]),
             Command::MdsStatus => Access::Roles(&[Role::Cmo, Role::FlightSurgeon, Role::Bme, Role::Administrator]),
+            Command::UplinkApply => Access::Roles(&[Role::Administrator]),
         }
     }
 

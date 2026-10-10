@@ -285,6 +285,93 @@ function UsersSection({
   );
 }
 
+function UplinkSection({ api, run }: { readonly api: Api; readonly run: Run }) {
+  const kindId = useId();
+  const fileId = useId();
+  const sigId = useId();
+  const [kind, setKind] = useState("ruleset");
+  const [file, setFile] = useState<File | null>(null);
+  const [sig, setSig] = useState<File | null>(null);
+  const [notice, setNotice] = useState<Notice>(null);
+  const apply = (e: SyntheticEvent) => {
+    e.preventDefault();
+    if (file === null || sig === null) {
+      setNotice({ kind: "error", text: strings.rosterChooseFiles });
+      return;
+    }
+    Promise.all([file.text(), sig.text()]).then(
+      ([c, s]) =>
+        run(
+          () => api.uplinkApply(kind, c, s),
+          (r) => {
+            setNotice({ kind: "ok", text: strings.uplinkDone(r.version, r.atNextStart) });
+          },
+          (err) => {
+            setNotice({ kind: "error", text: errorText(err) });
+          },
+        ),
+      () => {
+        setNotice({ kind: "error", text: strings.rosterReadFailed });
+      },
+    );
+  };
+  return (
+    <section aria-labelledby="uplink-title" className="flex flex-col gap-3">
+      <h3 id="uplink-title" className="text-xl font-semibold">
+        {strings.uplinkTitle}
+      </h3>
+      <p className="text-sm text-ink-3">{strings.uplinkHelp}</p>
+      <form onSubmit={apply} aria-label={strings.uplinkTitle} className="flex flex-col gap-3">
+        <label htmlFor={kindId} className="text-sm font-semibold">
+          {strings.uplinkKind}
+        </label>
+        <select
+          id={kindId}
+          className="min-h-12 rounded-lg border border-ink-3 bg-surface px-3"
+          value={kind}
+          onChange={(e) => {
+            setKind(e.target.value);
+          }}
+        >
+          {Object.entries(strings.uplinkKinds).map(([k, v]) => (
+            <option key={k} value={k}>
+              {v}
+            </option>
+          ))}
+        </select>
+        <label htmlFor={fileId} className="text-sm font-semibold">
+          {strings.rosterFile}
+        </label>
+        <input
+          id={fileId}
+          type="file"
+          accept=".toml"
+          className="min-h-12"
+          onChange={(e) => {
+            setFile(e.target.files?.[0] ?? null);
+          }}
+        />
+        <label htmlFor={sigId} className="text-sm font-semibold">
+          {strings.rosterSignature}
+        </label>
+        <input
+          id={sigId}
+          type="file"
+          accept=".toml"
+          className="min-h-12"
+          onChange={(e) => {
+            setSig(e.target.files?.[0] ?? null);
+          }}
+        />
+        <NoticeLine notice={notice} />
+        <button type="submit" className="btn btn-ink self-start">
+          {strings.uplinkApply}
+        </button>
+      </form>
+    </section>
+  );
+}
+
 /** Crew roster and accounts for the administrator (F-SYS-07, CR-012 §2–3, CR-007 §4). */
 export function Administration({ api, self }: { readonly api: Api; readonly self: string }) {
   const [crew, setCrew] = useState<CrewMember[] | null>(null);
@@ -311,6 +398,7 @@ export function Administration({ api, self }: { readonly api: Api; readonly self
       {prompt}
       <RosterSection api={api} crew={crew} run={run} onChanged={reload} />
       <UsersSection api={api} self={self} crew={crew} users={users} run={run} onChanged={reload} />
+      <UplinkSection api={api} run={run} />
     </section>
   );
 }

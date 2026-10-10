@@ -60,6 +60,7 @@
     "allow-export-csv",
     "allow-config-apply-mds",
     "allow-mds-identity-set",
-    "allow-mds-status"
+    "allow-mds-status",
+    "allow-uplink-apply"
   ]
 }

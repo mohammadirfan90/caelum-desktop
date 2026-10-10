@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-uplink-apply"
+description = "Enables the uplink_apply command without any pre-configured scope."
+commands.allow = ["uplink_apply"]
+
+[[permission]]
+identifier = "deny-uplink-apply"
+description = "Denies the uplink_apply command without any pre-configured scope."
+commands.deny = ["uplink_apply"]
