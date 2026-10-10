@@ -100,6 +100,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "arbitrary-int"
+version = "2.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ab387a0c4143b4fd3804e193946e78c8ab16cf26c5fde2048e4ac3d618c3b64"
+
+[[package]]
 name = "argon2"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -201,6 +207,17 @@ name = "bit-vec"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5e764a1d40d510daf35e07be9eb06e75770908c27d411ee6c92109c9840eaaf7"
+
+[[package]]
+name = "bitbybit"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf218b839af0730012cc21856c4149789afde9ae6dc3078c7adaf311e8b76854"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
 
 [[package]]
 name = "bitflags"
@@ -505,7 +522,19 @@ dependencies = [
 name = "caelum-ground"
 version = "0.1.0"
 dependencies = [
+ "arbitrary-int",
+ "caelum-alarms",
  "caelum-domain",
+ "ed25519-dalek",
+ "proptest",
+ "quick-xml",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "spacepackets",
+ "thiserror 2.0.21",
+ "toml 1.1.8+spec-1.1.0",
+ "uuid",
 ]
 
 [[package]]
@@ -523,6 +552,11 @@ name = "caelum-mds"
 version = "0.1.0"
 dependencies = [
  "caelum-domain",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "thiserror 2.0.21",
+ "uuid",
 ]
 
 [[package]]
@@ -877,6 +911,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "crc"
+version = "3.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5eb8a2a1cd12ab0d987a5d5e825195d372001a4094a0376319d5a0ad71c1ba0d"
+dependencies = [
+ "crc-catalog",
+]
+
+[[package]]
+name = "crc-catalog"
+version = "2.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "217698eaf96b4a3f0bc4f3662aaa55bdf913cd54d7204591faa790070c6d0853"
+
+[[package]]
 name = "crc32fast"
 version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1223,6 +1272,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "10d60334b3b2e7c9d91ef8150abfb6fa4c1c39ebbcf4a81c2e346aad939fee3e"
 dependencies = [
  "thiserror 2.0.21",
+]
+
+[[package]]
+name = "delegate"
+version = "0.13.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "780eb241654bf097afb00fc5f054a09b687dad862e485fdcf8399bb056565370"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
 ]
 
 [[package]]
@@ -4330,6 +4390,26 @@ dependencies = [
  "gobject-sys",
  "libc",
  "system-deps",
+]
+
+[[package]]
+name = "spacepackets"
+version = "0.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "93b9cf1b8372119e7c79383f1578f3e845b2ca2e6d07073e96f475ba354f44e3"
+dependencies = [
+ "arbitrary-int",
+ "bitbybit",
+ "chrono",
+ "crc",
+ "defmt",
+ "delegate",
+ "num-traits",
+ "num_enum",
+ "paste",
+ "serde",
+ "thiserror 2.0.21",
+ "zerocopy",
 ]
 
 [[package]]

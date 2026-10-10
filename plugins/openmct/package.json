@@ -1,0 +1,33 @@
+{
+  "name": "@caelum/openmct-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "CAELUM Open MCT plugin: OPS-channel telemetry provider, crew status board and alert timeline (F-GND-04)",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "openmct": ">=4 <5"
+  },
+  "devDependencies": {
+    "jsdom": "30.1.2",
+    "typescript": "6.0.3",
+    "vite": "8.3.4",
+    "vitest": "5.0.3"
+  }
+}

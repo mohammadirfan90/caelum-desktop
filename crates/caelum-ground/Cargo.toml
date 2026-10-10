@@ -10,6 +10,25 @@ publish.workspace = true
 
 [dependencies]
 caelum-domain.workspace = true
+# Signing patterns, ruleset and configuration verification, the OPS escalation record (CR-016 §2).
+caelum-alarms.workspace = true
+# CR-016 §2: arbitrary-int provides the u11 / u14 field types of the spacepackets API.
+arbitrary-int = "2"
+ed25519-dalek = "3"
+# CR-016 §2: XTCE generation (stack crate).
+quick-xml = "0.42"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+sha2 = "0.11"
+# CR-016 §2: CCSDS Space Packets (133.0-B-2), CUC time (301.0-B-4) and CFDP PDUs (727.0-B-5).
+# `std` is off so chrono's system clock is not pulled in; time comes from caelum-domain.
+spacepackets = { version = "0.18", default-features = false, features = ["alloc"] }
+thiserror = "2.0.21"
+toml = "1"
+uuid = { version = "1.28.0", features = ["serde"] }
+
+[dev-dependencies]
+proptest = "1.11"
 
 [lints]
 workspace = true
