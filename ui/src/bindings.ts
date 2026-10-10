@@ -74,6 +74,40 @@ export const commands = {
 	deviceScan: () => typedError<NearbyDevice[], CommandError>(__TAURI_INVOKE("device_scan")),
 	/**  Pairs (OS bonding) and registers a scanned device (CMO, BME, administrator; audited). */
 	devicePair: (address: string, name: string | null, services: number[]) => typedError<PairResult, CommandError>(__TAURI_INVOKE("device_pair", { address, name, services })),
+	/**  Crew overview (CMO, flight surgeon). */
+	crewOverview: () => typedError<OverviewEntry[], CommandError>(__TAURI_INVOKE("crew_overview")),
+	/**  A crew member's encounters. */
+	encounterList: (crewMemberId: string) => typedError<Encounter[], CommandError>(__TAURI_INVOKE("encounter_list", { crewMemberId })),
+	/**  Creates (no `id`) or updates an unsigned encounter; returns its ID. */
+	encounterSave: (id: string | null, crewMemberId: string, subjective: string | null, objective: string | null, assessment: string | null, plan: string | null, attachments: string[]) => typedError<string, CommandError>(__TAURI_INVOKE("encounter_save", { id, crewMemberId, subjective, objective, assessment, plan, attachments })),
+	/**  Signs an encounter (author, re-authentication). */
+	encounterSign: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("encounter_sign", { id })),
+	/**  Submits the own daily check-in in a privacy tier. */
+	checkinSubmit: (answers: Checkin, tier: string) => typedError<null, CommandError>(__TAURI_INVOKE("checkin_submit", { answers, tier })),
+	/**  Check-ins the caller may read for a crew member. */
+	checkinList: (crewMemberId: string) => typedError<CheckinEntry[], CommandError>(__TAURI_INVOKE("checkin_list", { crewMemberId })),
+	/**  Stores a PVT run. */
+	pvtSubmit: (reactionMs: number[]) => typedError<Pvt, CommandError>(__TAURI_INVOKE("pvt_submit", { reactionMs })),
+	/**  The medication and kit log. */
+	medicationLog: () => typedError<MedicationEntry[], CommandError>(__TAURI_INVOKE("medication_log")),
+	/**  Records a dose (with crew member) or kit use/restock (without). */
+	medicationAdd: (crewMemberId: string | null, kind: string, item: string, amount: number | null, unit: string | null, note: string | null) => typedError<string, CommandError>(__TAURI_INVOKE("medication_add", { crewMemberId, kind, item, amount, unit, note })),
+	/**  The signed protocol library (public, SR-014). */
+	protocolList: () => typedError<ProtocolItem[], CommandError>(__TAURI_INVOKE("protocol_list")),
+	/**  Applies a signed protocol library (administrator, re-authentication). */
+	configApplyProtocols: (bundle: string, signature: string) => typedError<number, CommandError>(__TAURI_INVOKE("config_apply_protocols", { bundle, signature })),
+	/**  Starts a checklist run. */
+	checklistStart: (protocolId: string, crewMemberId: string | null, alarm: string | null) => typedError<string, CommandError>(__TAURI_INVOKE("checklist_start", { protocolId, crewMemberId, alarm })),
+	/**  Marks a step, or completes the run. */
+	checklistUpdate: (run: string, step: number, mark: Step, complete: boolean) => typedError<null, CommandError>(__TAURI_INVOKE("checklist_update", { run, step, mark, complete })),
+	/**  Checklist runs in scope. */
+	checklistList: () => typedError<ChecklistRun[], CommandError>(__TAURI_INVOKE("checklist_list")),
+	/**  Imports a file into the encrypted attachment store. */
+	attachmentImport: (crewMemberId: string, kind: string, filename: string, bytes: number[]) => typedError<string, CommandError>(__TAURI_INVOKE("attachment_import", { crewMemberId, kind, filename, bytes })),
+	/**  Attachment metadata (optionally for one crew member). */
+	attachmentList: (crewMemberId: string | null) => typedError<Attachment[], CommandError>(__TAURI_INVOKE("attachment_list", { crewMemberId })),
+	/**  One decrypted attachment's bytes. */
+	attachmentGet: (id: string) => typedError<number[], CommandError>(__TAURI_INVOKE("attachment_get", { id })),
 };
 
 /** Events */
@@ -216,6 +250,24 @@ export type AppInfo = {
 	version: string,
 };
 
+/**  Attachment metadata. */
+export type Attachment = {
+	/**  ID. */
+	id: string,
+	/**  `dicom` / `ecg` / `file`. */
+	kind: string,
+	/**  SHA-256. */
+	sha256: string,
+	/**  Metadata (JSON). */
+	metadata: string,
+	/**  Crew member. */
+	crewMemberId: string | null,
+	/**  File name. */
+	filename: string | null,
+	/**  Imported, UTC ms. */
+	createdAtUtcMs: number | null,
+};
+
 /**  One audit entry. */
 export type AuditItem = {
 	/**  Chain position (decimal). */
@@ -287,6 +339,48 @@ export type ChainProblemKind =
 /**  The signature is not the instance key's. */
 "badSignature";
 
+/**  Check-in answers. */
+export type Checkin = {
+	/**  Mood 1–5. */
+	mood: number,
+	/**  Symptoms. */
+	symptoms: string[],
+	/**  Hours slept. */
+	sleepHours: number | null,
+};
+
+/**  A stored check-in. */
+export type CheckinEntry = {
+	/**  ID. */
+	id: string,
+	/**  Answers; `None` if the stored record cannot be read. */
+	answers: Checkin | null,
+	/**  Tier. */
+	privacyTier: string,
+	/**  At, UTC ms. */
+	atUtcMs: number | null,
+};
+
+/**  A checklist run. */
+export type ChecklistRun = {
+	/**  ID. */
+	id: string,
+	/**  Protocol. */
+	protocolId: string,
+	/**  Protocol version. */
+	protocolVersion: string,
+	/**  Linked alarm. */
+	alarmId: string | null,
+	/**  Crew member. */
+	crewMemberId: string | null,
+	/**  Step states. */
+	steps: Step[],
+	/**  Started, UTC ms. */
+	startedAtUtcMs: number | null,
+	/**  Completed, UTC ms. */
+	completedAtUtcMs: number | null,
+};
+
 /**  A failed command, as the UI sees it. Messages never contain secrets. */
 export type CommandError = {
 	/**  Category. */
@@ -355,6 +449,32 @@ export type DevicesChanged = {
 	deviceId: string,
 };
 
+/**  An encounter. */
+export type Encounter = {
+	/**  ID. */
+	id: string,
+	/**  Crew member. */
+	crewMemberId: string,
+	/**  Author (user ID). */
+	author: string,
+	/**  Subjective. */
+	subjective: string | null,
+	/**  Objective. */
+	objective: string | null,
+	/**  Assessment. */
+	assessment: string | null,
+	/**  Plan. */
+	plan: string | null,
+	/**  Vitals snapshot (JSON). */
+	vitals: string | null,
+	/**  Created, UTC ms. */
+	createdAtUtcMs: number | null,
+	/**  Signed, UTC ms. */
+	signedAtUtcMs: number | null,
+	/**  Attachment IDs. */
+	attachments: string[],
+};
+
 /**  Why a command failed. */
 export type ErrorKind = 
 /**  Sign in first. */
@@ -389,6 +509,26 @@ export type Freshness =
 /**  Marked unusable by the device. */
 "unusable";
 
+/**  A medication or kit entry. */
+export type MedicationEntry = {
+	/**  ID. */
+	id: string,
+	/**  Crew member (doses). */
+	crewMemberId: string | null,
+	/**  `dose` / `kit_use` / `kit_restock`. */
+	kind: string,
+	/**  Item. */
+	item: string,
+	/**  Amount. */
+	amount: number | null,
+	/**  Unit. */
+	unit: string | null,
+	/**  Note. */
+	note: string | null,
+	/**  At, UTC ms. */
+	atUtcMs: number | null,
+};
+
 /**  A device found by a scan. */
 export type NearbyDevice = {
 	/**  Bluetooth address. */
@@ -412,6 +552,26 @@ export type ObservationsChanged = {
 	crewId: string,
 };
 
+/**  One crew member in the overview. */
+export type OverviewEntry = {
+	/**  Crew member. */
+	crewMemberId: string,
+	/**  Name. */
+	name: string,
+	/**  Highest open alarm priority. */
+	topPriority: string | null,
+	/**  Key vitals with freshness. */
+	vitals: OverviewVital[],
+};
+
+/**  A key vital in the overview. */
+export type OverviewVital = {
+	/**  The value. */
+	reading: Reading,
+	/**  Freshness. */
+	status: Freshness,
+};
+
 /**  Result of pairing. */
 export type PairResult = 
 /**  Paired (or already paired) and registered; assign it next. */
@@ -424,6 +584,30 @@ deviceId: string } |
 reason: string; 
 /**  Steps for this platform. */
 steps: string[] };
+
+/**  A protocol. */
+export type ProtocolItem = {
+	/**  ID. */
+	id: string,
+	/**  Version. */
+	version: string,
+	/**  Title. */
+	title: string,
+	/**  Rules it applies to. */
+	rules: string[],
+	/**  Steps. */
+	steps: string[],
+};
+
+/**  A PVT result. */
+export type Pvt = {
+	/**  Median reaction time, ms. */
+	medianMs: number | null,
+	/**  Lapses. */
+	lapses: number,
+	/**  Responses. */
+	responses: number,
+};
 
 /**  One stored value. */
 export type Reading = {
@@ -540,6 +724,15 @@ export type StageDelivered = {
 	/**  Delivered at, UTC Unix ms. */
 	atUtcMs: number | null,
 };
+
+/**  A checklist step state. */
+export type Step = 
+/**  Not done. */
+"open" | 
+/**  Done. */
+"done" | 
+/**  Skipped. */
+"skipped";
 
 /**  A parameter over a window. */
 export type TrendData = {

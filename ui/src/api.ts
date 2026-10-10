@@ -3,6 +3,16 @@ import type {
   AlarmEntry,
   AlarmInfo,
   AlarmReportData,
+  Attachment,
+  Checkin,
+  CheckinEntry,
+  ChecklistRun,
+  Encounter,
+  MedicationEntry,
+  OverviewEntry,
+  ProtocolItem,
+  Pvt,
+  Step,
   AppInfo,
   AuditItem,
   AuditStatus,
@@ -59,6 +69,37 @@ export interface Api {
   readonly devicePair: (address: string, name: string | null, services: number[]) => Promise<Res<PairResult>>;
   readonly auditList: () => Promise<Res<AuditItem[]>>;
   readonly auditVerify: () => Promise<Res<AuditStatus>>;
+  // Clinical workflows (CR-019)
+  readonly crewOverview: () => Promise<Res<OverviewEntry[]>>;
+  readonly encounterList: (crewMemberId: string) => Promise<Res<Encounter[]>>;
+  readonly encounterSave: (
+    id: string | null,
+    crewMemberId: string,
+    subjective: string | null,
+    objective: string | null,
+    assessment: string | null,
+    plan: string | null,
+    attachments: string[],
+  ) => Promise<Res<string>>;
+  readonly encounterSign: (id: string) => Promise<Res<null>>;
+  readonly checkinSubmit: (answers: Checkin, tier: string) => Promise<Res<null>>;
+  readonly checkinList: (crewMemberId: string) => Promise<Res<CheckinEntry[]>>;
+  readonly pvtSubmit: (reactionMs: number[]) => Promise<Res<Pvt>>;
+  readonly medicationLog: () => Promise<Res<MedicationEntry[]>>;
+  readonly medicationAdd: (
+    crewMemberId: string | null,
+    kind: string,
+    item: string,
+    amount: number | null,
+    unit: string | null,
+    note: string | null,
+  ) => Promise<Res<string>>;
+  readonly protocolList: () => Promise<Res<ProtocolItem[]>>;
+  readonly checklistStart: (protocolId: string, crewMemberId: string | null, alarm: string | null) => Promise<Res<string>>;
+  readonly checklistUpdate: (run: string, step: number, mark: Step, complete: boolean) => Promise<Res<null>>;
+  readonly checklistList: () => Promise<Res<ChecklistRun[]>>;
+  readonly attachmentImport: (crewMemberId: string, kind: string, filename: string, bytes: number[]) => Promise<Res<string>>;
+  readonly attachmentList: (crewMemberId: string | null) => Promise<Res<Attachment[]>>;
 }
 
 /** Subscriptions to the value-free change events (new readings, device changes). */

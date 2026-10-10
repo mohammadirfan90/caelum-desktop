@@ -11,8 +11,10 @@ import { strings } from "../strings";
 import { Administration } from "./Admin";
 import { Alerts } from "./Alerts";
 import { Audit } from "./Audit";
+import { Checks } from "./Checks";
 import { Body, type CrewContext, Home } from "./Crew";
 import { Devices } from "./Devices";
+import { Medical } from "./Medical";
 
 const NO_EVENTS: DataEvents = {
   onObservations: () => Promise.resolve(() => undefined),
@@ -272,9 +274,11 @@ export function Shell({
               {screen === "alerts" ? <Alerts api={api} userRole={session.role} crew={crew} version={alarmVersion} /> : null}
               {screen === "devices" ? <Devices api={api} userRole={session.role} crew={crew} version={deviceVersion} /> : null}
               {screen === "audit" ? <Audit api={api} version={deviceVersion} /> : null}
-              {screen === "checks" || screen === "env" || screen === "medical" || screen === "ground" ? (
-                <EmptyState detail={strings.screenNoData} />
+              {screen === "checks" ? <Checks api={api} crewId={crewId} isAstronaut={session.role === "astronaut"} /> : null}
+              {screen === "medical" ? (
+                <Medical api={api} userRole={session.role} self={session.userId} crewId={crewId} crew={crew} version={observed} />
               ) : null}
+              {screen === "env" || screen === "ground" ? <EmptyState detail={strings.screenNoData} /> : null}
             </section>
           )}
         </main>
