@@ -90,6 +90,61 @@ pub struct Me {
     pub locked: bool,
 }
 
+/// The alarm service from the ruleset in force: an uplinked one (verified again here) before the
+/// built-in one, with the SR-009 fallback, and the open alarms restored from the record (SR-007).
+fn load_alarms(db: &Database, now: caelum_domain::time::TaiNs) -> Result<AlarmService, StationError> {
+    let uplinked = db.latest_config_bundle(uplink::RULESET_UPLINK_KIND)?;
+    let (ruleset_text, ruleset_sig) = match &uplinked {
+        Some((_, sig, content)) => (content.as_str(), sig.as_str()),
+        None => (BUNDLED_RULESET, BUNDLED_SIGNATURES),
+    };
+    Ok(AlarmService::load(
+        db,
+        ruleset_text,
+        ruleset_sig,
+        &built_in_keys(),
+        TrustPolicy::for_this_build(),
+        now,
+    )?)
+}
+
+/// Commands a standby refuses: everything that writes the record (it would not be replicated).
+/// Sign-in, reads, exports and this node's own provisioning stay available.
+fn writes_record(command: Command) -> bool {
+    matches!(
+        command,
+        Command::AlarmAcknowledge
+            | Command::AlarmSilence
+            | Command::AlarmEscalate
+            | Command::SetupCreateAdministrator
+            | Command::ConfigApplyCrew
+            | Command::UserCreate
+            | Command::UserDisable
+            | Command::DeviceAssign
+            | Command::DeviceUnassign
+            | Command::DeviceScan
+            | Command::DevicePair
+            | Command::EncounterSave
+            | Command::EncounterSign
+            | Command::CheckinSubmit
+            | Command::PvtSubmit
+            | Command::MedicationAdd
+            | Command::ConfigApplyProtocols
+            | Command::ChecklistStart
+            | Command::ChecklistUpdate
+            | Command::AttachmentImport
+            | Command::ConfigApplyVehicle
+            | Command::ConfigApplyGround
+            | Command::ConfigApplyMds
+            | Command::MdsIdentitySet
+            | Command::UplinkApply
+            | Command::FhirImport
+    )
+}
+
+/// Refusal on a standby.
+pub const STANDBY_REFUSAL: &str = "this instance is the standby: use the primary station";
+
 /// This installation.
 pub struct Station {
     db: Database,
@@ -98,6 +153,9 @@ pub struct Station {
     sessions: SessionManager,
     name: Option<String>,
     alarms: AlarmService,
+    /// False on the standby of a fail-over pair: it holds the replicated record, runs no alarm
+    /// logic and accepts no writes until it is promoted (F-SYS-04, docs/integration/M11.md).
+    acting: bool,
     data_dir: PathBuf,
     self_test: Vec<Check>,
     monitor: caelum_alarms::technical::Monitor,
@@ -174,19 +232,7 @@ impl Station {
         // SR-009: verified for this build's trust policy, with the safe fallback.
         // F-GND-07: an uplinked ruleset (verified when applied) takes precedence over the one
         // built in; it is verified again here, and SR-009 falls back if it no longer verifies.
-        let uplinked = db.latest_config_bundle(uplink::RULESET_UPLINK_KIND)?;
-        let (ruleset_text, ruleset_sig) = match &uplinked {
-            Some((_, sig, content)) => (content.as_str(), sig.as_str()),
-            None => (BUNDLED_RULESET, BUNDLED_SIGNATURES),
-        };
-        let alarms = AlarmService::load(
-            &db,
-            ruleset_text,
-            ruleset_sig,
-            &built_in_keys(),
-            TrustPolicy::for_this_build(),
-            now,
-        )?;
+        let alarms = load_alarms(&db, now)?;
         let mut station = Self {
             db,
             key,
@@ -194,6 +240,7 @@ impl Station {
             sessions: SessionManager::new(config),
             name,
             alarms,
+            acting: true,
             data_dir: data_dir.to_path_buf(),
             self_test: Vec::new(),
             monitor: caelum_alarms::technical::Monitor::new(
@@ -478,6 +525,7 @@ impl Station {
     /// Evaluates a stored observation in the ingest path (docs/03 §3 step 5) and refreshes the
     /// technical monitor (staleness, battery).
     pub fn observe(&mut self, obs: &caelum_ingest::Observation) -> Result<Output, StationError> {
+        self.require_acting()?;
         self.core_temp_measured(obs);
         let value = match obs.value {
             caelum_ingest::Value::Number(v) => Some(v),
@@ -543,6 +591,10 @@ impl Station {
     /// watchdogs (F-SYS-09): clock going backwards (SR-012) and free storage every
     /// [`STORAGE_CHECK_S`] seconds. Alarms never depend on sign-in, so nothing here is authorised.
     pub fn tick(&mut self) -> Result<Output, StationError> {
+        // A standby runs no alarm logic: the primary does, and a promotion resumes it here.
+        if !self.acting {
+            return Ok(Output::default());
+        }
         let now = self.now()?;
         let mono = self.clock.monotonic_ns();
         let backwards = self.watch.last.is_some_and(|(t, _)| now.0 < t);
@@ -591,6 +643,9 @@ impl Station {
 
     /// The caller's principal, after checking that it may use `command`.
     fn authorize(&mut self, command: Command) -> Result<Principal, StationError> {
+        if !self.acting && writes_record(command) {
+            return Err(StationError::Rejected(STANDBY_REFUSAL.to_owned()));
+        }
         let (sessions, log) = self.parts();
         let principal = sessions.principal(&log)?;
         command.authorize(&principal)?;
@@ -666,5 +721,38 @@ impl Station {
     pub fn audit_verify(&mut self) -> Result<ChainStatus, StationError> {
         self.authorize(Command::AuditVerify)?;
         Ok(self.log().verify()?)
+    }
+}
+
+impl Station {
+    /// Whether this instance acts (standalone, or the primary of a pair).
+    pub fn is_acting(&self) -> bool {
+        self.acting
+    }
+
+    /// Becomes the standby of a pair: no alarm logic and no writes until promoted. Called before
+    /// the pair's node starts, so nothing is evaluated twice (F-SYS-04).
+    pub fn stand_by(&mut self) {
+        self.acting = false;
+    }
+
+    /// Promotion to primary (F-SYS-04, SR-007): the alarm service is rebuilt from the replicated
+    /// record (open alarms and their escalation stages, the restart path), then this instance acts.
+    pub fn promote(&mut self) -> Result<(), StationError> {
+        let now = self.now()?;
+        self.alarms = load_alarms(&self.db, now)?;
+        self.ecg.clear();
+        self.kit.clear();
+        self.acting = true;
+        Ok(())
+    }
+
+    /// Refuses data intake on a standby (the primary owns the devices and the record).
+    pub(crate) fn require_acting(&self) -> Result<(), StationError> {
+        if self.acting {
+            Ok(())
+        } else {
+            Err(StationError::Rejected(STANDBY_REFUSAL.to_owned()))
+        }
     }
 }

@@ -101,6 +101,7 @@ impl Station {
         &mut self,
         inbound: &InboundObservation,
     ) -> Result<(Output, Option<String>), StationError> {
+        self.require_acting()?;
         let Some(crew) = inbound.crew else {
             return Ok((Output::default(), None));
         };

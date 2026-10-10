@@ -772,6 +772,7 @@ dependencies = [
  "caelum-domain",
  "refinery",
  "rusqlite",
+ "serde_json",
  "thiserror 2.0.21",
  "zeroize",
 ]

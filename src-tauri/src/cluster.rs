@@ -15,8 +15,10 @@ use caelum_cluster::lan::tls::TlsMaterial;
 use caelum_cluster::log::InstanceSigner;
 use caelum_cluster::node::{Node, NodeConfig, NodeEvent, NodeParts};
 use caelum_core::cluster::{
-    config_in_force, identity, trusted_signers, DbFenceStore, DbLogStore, LanAlarms, LanAuthority,
+    config_in_force, identity, pending_rows, row_applier, trusted_signers, DbFenceStore, DbLogStore,
+    LanAlarms, LanAuthority,
 };
+use caelum_core::security::clock::Clock as _;
 use caelum_core::security::clock::SystemClock;
 use caelum_core::security::keys::{database_key, instance_key, IfMissing};
 use caelum_core::security::keystore::OsKeyStore;
@@ -102,7 +104,7 @@ fn prepare(data_dir: &Path) -> Result<Option<(NodeConfig, NodeParts, Arc<LanAlar
     let mut config = NodeConfig::new(plan.node.clone(), plan.listen);
     config.peer = plan.peer.as_ref().map(|(p, _)| p.clone());
     let parts = NodeParts {
-        log: Box::new(DbLogStore::new(open(data_dir)?, clock()?, None)),
+        log: Box::new(DbLogStore::new(open(data_dir)?, clock()?, Some(row_applier()))),
         fences: Box::new(DbFenceStore::new(db)),
         signer: Box::new(InstanceSigner::new(plan.node.clone(), own_key)),
         trust,
@@ -112,6 +114,70 @@ fn prepare(data_dir: &Path) -> Result<Option<(NodeConfig, NodeParts, Arc<LanAlar
         alarms: alarms.clone(),
     };
     Ok(Some((config, parts, alarms)))
+}
+
+/// Rows sent per pump round at most.
+const PUMP_BATCH: i64 = 256;
+/// Pump interval while primary.
+const PUMP_EVERY: std::time::Duration = std::time::Duration::from_millis(100);
+
+/// Acts again after a failure, so alarms never stay off because the pair could not run.
+fn act_alone(app: &AppHandle, reason: &str) {
+    tracing::error!(%reason, "the configured instance cannot run as a pair; acting alone");
+    *app.state::<ClusterState>()
+        .not_running
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner) = Some(NotRunning::Failed);
+    let _ = app.state::<AppState>().with(|s| Ok(s.promote()?));
+    technical(app, Some(reason));
+}
+
+/// The primary's replication pump: queued row changes become signed log entries, which the node
+/// ships to the standby. A change leaves the queue only once appended; a crash in between sends
+/// it again, which the standby's upsert absorbs.
+async fn pump(app: AppHandle, db: Database, clock: Box<SystemClock>) {
+    loop {
+        tokio::time::sleep(PUMP_EVERY).await;
+        let primary = app
+            .state::<ClusterState>()
+            .node
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .as_ref()
+            .is_some_and(|n| n.status().role == caelum_cluster::failover::InstanceRole::Primary);
+        if !primary {
+            continue;
+        }
+        let Ok(now) = clock.now_tai() else { continue };
+        let (last, bodies) = match pending_rows(&db, PUMP_BATCH, now.0) {
+            Ok(r) => r,
+            Err(e) => {
+                technical(&app, Some(&format!("replication queue: {e}")));
+                continue;
+            }
+        };
+        let Some(last) = last else { continue };
+        let mut sent = true;
+        {
+            let cluster = app.state::<ClusterState>();
+            let guard = cluster
+                .node
+                .lock()
+                .unwrap_or_else(PoisonError::into_inner);
+            let Some(node) = guard.as_ref() else { continue };
+            for body in bodies {
+                if node.append(body).is_err() {
+                    sent = false;
+                    break;
+                }
+            }
+        }
+        if sent {
+            if let Err(e) = db.cluster_outbox_done(last) {
+                technical(&app, Some(&format!("replication queue: {e}")));
+            }
+        }
+    }
 }
 
 fn technical(app: &AppHandle, reason: Option<&str>) {
@@ -126,12 +192,7 @@ pub fn start_cluster(app: AppHandle, data_dir: &Path) {
     let prepared = match prepare(data_dir) {
         Ok(p) => p,
         Err(reason) => {
-            tracing::error!(%reason, "the configured instance cannot start");
-            *app.state::<ClusterState>()
-                .not_running
-                .lock()
-                .unwrap_or_else(PoisonError::into_inner) = Some(NotRunning::Failed);
-            technical(&app, Some(&reason));
+            act_alone(&app, &reason);
             return;
         }
     };
@@ -141,6 +202,26 @@ pub fn start_cluster(app: AppHandle, data_dir: &Path) {
             .lock()
             .unwrap_or_else(PoisonError::into_inner) = Some(NotRunning::Standalone);
         return;
+    };
+    // A configured instance starts as the standby: it acts only once the node promotes it, so a
+    // pair never evaluates alarms twice (F-SYS-04).
+    let _ = app.state::<AppState>().with(|s| {
+        s.stand_by();
+        Ok(())
+    });
+    let pump_db = match open(data_dir).and_then(|db| Ok((db, clock()?))) {
+        Ok(p) => Some(p),
+        Err(reason) => {
+            act_alone(&app, &format!("replication queue: {reason}"));
+            return;
+        }
+    };
+    let capture_db = match open(data_dir) {
+        Ok(db) => db,
+        Err(reason) => {
+            act_alone(&app, &format!("replication queue: {reason}"));
+            return;
+        }
     };
     // Every alarm change on this station goes to the crew-LAN stream (OPS fields; detail only
     // to viewers allowed it, decided by caelum-cluster).
@@ -158,16 +239,13 @@ pub fn start_cluster(app: AppHandle, data_dir: &Path) {
         let node = match Node::start(config, parts).await {
             Ok(n) => n,
             Err(e) => {
-                let reason = format!("the instance could not start: {e}");
-                tracing::error!(%reason);
-                *app.state::<ClusterState>()
-                    .not_running
-                    .lock()
-                    .unwrap_or_else(PoisonError::into_inner) = Some(NotRunning::Failed);
-                technical(&app, Some(&reason));
+                act_alone(&app, &format!("the instance could not start: {e}"));
                 return;
             }
         };
+        if let Some((db, clock)) = pump_db {
+            tauri::async_runtime::spawn(pump(app.clone(), db, clock));
+        }
         let mut events = node.events();
         *app.state::<ClusterState>()
             .node
@@ -186,12 +264,39 @@ pub fn start_cluster(app: AppHandle, data_dir: &Path) {
             match event {
                 NodeEvent::BecamePrimary { fence, silence } => {
                     tracing::warn!(%fence, ?silence, "this instance is now primary");
+                    // The first primary of a pair queues what it held before the pair existed;
+                    // a promoted standby already holds the replicated record.
+                    let fresh = app
+                        .state::<ClusterState>()
+                        .node
+                        .lock()
+                        .unwrap_or_else(PoisonError::into_inner)
+                        .as_ref()
+                        .is_some_and(|n| n.status().head_seq == 0);
+                    let capture = capture_db.cluster_set_capture(true).and_then(|()| {
+                        if fresh {
+                            capture_db.cluster_seed_outbox().map(|_| ())
+                        } else {
+                            Ok(())
+                        }
+                    });
+                    if let Err(e) = capture {
+                        technical(&app, Some(&format!("replication capture: {e}")));
+                    }
+                    if let Err(e) = app.state::<AppState>().with(|s| Ok(s.promote()?)) {
+                        technical(&app, Some(&format!("promotion: {}", e.message)));
+                    }
                 }
                 NodeEvent::ReconnectDevices { fence, .. } => {
                     tracing::warn!(%fence, "hand-off: devices reconnect to this instance");
                 }
                 NodeEvent::Demoted { from, to } => {
                     tracing::warn!(%from, %to, "this instance was fenced and is now standby");
+                    let _ = capture_db.cluster_set_capture(false);
+                    let _ = app.state::<AppState>().with(|s| {
+                        s.stand_by();
+                        Ok(())
+                    });
                 }
                 NodeEvent::Diverted { entries } => technical(
                     &app,

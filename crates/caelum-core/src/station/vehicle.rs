@@ -133,6 +133,7 @@ impl Station {
         &mut self,
         readings: &[VehicleReading],
     ) -> Result<VehicleIngested, StationError> {
+        self.require_acting()?;
         let mut out = VehicleIngested::default();
         let active: Vec<CrewMemberId> = self
             .db

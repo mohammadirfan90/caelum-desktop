@@ -59,6 +59,7 @@ impl Station {
         characteristic: u16,
         payload: &[u8],
     ) -> Result<Ingested, StationError> {
+        self.require_acting()?;
         let now = self.now()?;
         let outcome = self
             .acquisition

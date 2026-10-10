@@ -18,7 +18,7 @@ use caelum_cluster::lan::server::{
     AlarmSource, LanAuditEvent, SignInRefused, SourceUnavailable, UserAuthority,
 };
 use caelum_cluster::lan::{Fingerprint, StationIdentity, StationKind, StationRegistry};
-use caelum_cluster::log::{ChainHead, EventKind, LogEntry, TrustedSigners};
+use caelum_cluster::log::{ChainHead, EntryBody, EventKind, LogEntry, TrustedSigners};
 use caelum_cluster::node::PeerConfig;
 use caelum_cluster::replication::{FenceStore, LogStore};
 use caelum_cluster::StoreFailure;
@@ -687,4 +687,58 @@ impl AlarmSource for LanAlarms {
     fn subscribe(&self) -> broadcast::Receiver<LanAlarm> {
         self.tx.subscribe()
     }
+}
+
+/// Event kind of a replicated row (docs/integration/M11.md item 1).
+pub const ROW_KIND: &str = "row";
+
+/// What a `row` entry carries: the table, the row's primary key and the whole row.
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct RowChange {
+    /// Replicated table.
+    pub table: String,
+    /// Primary key values, in key-column order.
+    pub key: serde_json::Value,
+    /// The row as stored on the primary.
+    pub row: serde_json::Map<String, serde_json::Value>,
+}
+
+/// The next queued changes as log entry bodies, oldest first, with the outbox position to mark
+/// sent once they are appended. A row that no longer exists is skipped (rows are not deleted, so
+/// this does not happen in practice).
+pub fn pending_rows(
+    db: &Database,
+    limit: i64,
+    now_tai_ns: i64,
+) -> Result<(Option<i64>, Vec<EntryBody>), String> {
+    let queued = db.cluster_outbox(limit).map_err(|e| e.to_string())?;
+    let last = queued.last().map(|(seq, _, _)| *seq);
+    let mut bodies = Vec::with_capacity(queued.len());
+    for (_, table, key) in queued {
+        let key: serde_json::Value = serde_json::from_str(&key).map_err(|e| e.to_string())?;
+        let Some(row) = db.replica_row(&table, &key).map_err(|e| e.to_string())? else {
+            continue;
+        };
+        let payload = serde_json::to_vec(&RowChange { table, key, row }).map_err(|e| e.to_string())?;
+        bodies.push(EntryBody {
+            kind: EventKind::new(ROW_KIND).map_err(|e| e.to_string())?,
+            at_tai_ns: now_tai_ns,
+            payload,
+        });
+    }
+    Ok((last, bodies))
+}
+
+/// The standby's applier: each `row` entry is upserted into the record in the transaction that
+/// stores the entry; audit rows go to the replica of their origin's chain. Other kinds are kept
+/// in the log only.
+pub fn row_applier() -> Applier {
+    Box::new(|db: &Database, entry: &LogEntry| {
+        if entry.kind.as_str() != ROW_KIND {
+            return Ok(());
+        }
+        let change: RowChange = serde_json::from_slice(&entry.payload).map_err(failure)?;
+        db.replica_apply(entry.fence.node.as_str(), &change.table, &change.row)
+            .map_err(failure)
+    })
 }

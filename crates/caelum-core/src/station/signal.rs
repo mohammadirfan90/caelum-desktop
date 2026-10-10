@@ -80,6 +80,7 @@ impl Station {
         device: DeviceId,
         waveforms: Vec<(CrewMemberId, Waveform)>,
     ) -> Result<Output, StationError> {
+        self.require_acting()?;
         let mut out = Output::default();
         let now = self.now()?;
         for (crew, w) in waveforms {

@@ -15,6 +15,7 @@ mod repo_cluster;
 mod repo_crew;
 mod repo_mds;
 mod repo_reads;
+mod repo_replication;
 
 pub use db::{Database, StoreError};
 pub use key::DbKey;
@@ -25,4 +26,5 @@ pub use repo_clinical::{
 };
 pub use repo_cluster::ClusterLogRecord;
 pub use repo_crew::CrewMemberRecord;
+pub use repo_replication::REPLICATED;
 pub use repo_reads::{AlarmView, BaselineRecord, NotificationRecord, WaveformChunkRecord};

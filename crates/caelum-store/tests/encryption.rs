@@ -105,7 +105,7 @@ fn migrations_create_every_documented_table() {
     let tmp = TempDb::new();
     let db = Database::open(&tmp.0, &key(0x33)).expect("create");
     let expected = documented_tables();
-    assert_eq!(expected.len(), 24, "{expected:?}");
+    assert_eq!(expected.len(), 26, "{expected:?}");
     assert_eq!(db.table_names().expect("tables"), expected);
     drop(db);
     let again = Database::open(&tmp.0, &key(0x33)).expect("re-open");
