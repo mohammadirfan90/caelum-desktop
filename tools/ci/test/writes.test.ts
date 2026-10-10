@@ -130,8 +130,10 @@ describe("markers and register", () => {
 });
 
 describe("repository", () => {
-  it("has an empty register (M0 ships with zero exceptions)", () => {
-    assert.deepEqual(readRegister(REPO_ROOT), []);
+  it("has exactly the reviewed entries (WX-001 CCCD enable, M2)", () => {
+    const entries = readRegister(REPO_ROOT);
+    assert.deepEqual(entries.map((e) => [e.id, e.crate, e.category]), [["WX-001", "caelum-devices", "a"]]);
+    assert.ok(entries.every((e) => e.reviewer.length > 0));
   });
 
   it("has no unregistered writes in caelum-devices or caelum-vehicle", () => {

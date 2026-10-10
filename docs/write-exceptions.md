@@ -28,5 +28,6 @@ allowed. Changing these categories needs a change request.
 ## Register
 | ID | Crate | Call (module::function) | Category | Standard / ICD reference | Reason | Reviewer | Date |
 |---|---|---|---|---|---|---|---|
+| WX-001 | caelum-devices | `ble::enable_notifications` (btleplug `subscribe`) | a | CCCD 0x2902, Bluetooth Core Specification Vol 3 Part G §3.3.3.3; HRS, PLXS, BPS, HTS, WSS, GLS service specifications | Enables notifications (0x0001) or indications (0x0002) on the supported measurement characteristics only (`ble::measurement_characteristics`: 0x2A37, 0x2A5E, 0x2A5F, 0x2A35, 0x2A1C, 0x2A9D, 0x2A18); needed to receive data | Product owner (mohammadirfan90) | 2026-10-10 |
 
-No entries. M0 ships with zero exceptions.
+M0 shipped with zero exceptions; WX-001 added in M2.

@@ -5,6 +5,7 @@
 //!
 //! Implemented in M2, M7 and M8: F-ACQ-01..11.
 
+pub mod ble;
 pub mod link;
 pub mod registry;
 pub mod serial;
