@@ -103,6 +103,43 @@ impl Acquisition {
         *self.dropped.entry((device, code)).or_default() += 1;
     }
 
+    /// Readings a plug-in decoded (F-ACQ-12): through ingest like any device reading; the caller
+    /// has already dropped parameters outside the plug-in's signed manifest.
+    pub fn plugin_readings(
+        &mut self,
+        db: &Database,
+        device: DeviceId,
+        readings: Vec<caelum_devices::sig::Decoded>,
+        received_at: TaiNs,
+    ) -> Result<Outcome, AcquisitionError> {
+        let registry = Registry::new(db);
+        registry.record_status(device, DeviceStatus::Connected, Some(received_at), None)?;
+        let owner = registry.owner(device, None)?;
+        let offset = self.offsets.get(&device).copied();
+        let mut outcome = Outcome::default();
+        for decoded in readings {
+            let raw = raw_reading(decoded, device, received_at, MeasurementMode::Continuous);
+            match ingest(raw, owner, offset.as_ref()) {
+                Ok(obs) => {
+                    let row = observation_record(&obs)?;
+                    db.insert_observation(&row)?;
+                    outcome.stored.push(row.id);
+                    outcome.observations.push(obs);
+                }
+                Err(rejection) => {
+                    self.count(device, rejection.code());
+                    outcome.rejected.push(rejection);
+                }
+            }
+        }
+        Ok(outcome)
+    }
+
+    /// Counts a dropped plug-in reading or frame (F-ACQ-10).
+    pub fn count_dropped(&mut self, device: DeviceId, code: &'static str) {
+        self.count(device, code);
+    }
+
     /// Processes one CAELUM sensor-kit Data frame (F-ACQ-05, ICD-SENSOR-KIT): CRC, version and
     /// layout checked by the decoder; duplicates dropped and gaps counted (F-ACQ-10); catalog
     /// readings (skin temperatures, EDA, battery) go through ingest like any device reading;

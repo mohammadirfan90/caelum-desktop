@@ -10,6 +10,7 @@ pub mod acquisition;
 pub mod alarms;
 pub mod cluster;
 pub mod mds;
+pub mod plugin_host;
 pub mod station;
 
 /// Device adapters (BLE central, pairing) for the application shell's device runtime.

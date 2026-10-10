@@ -46,7 +46,9 @@ impl Station {
             .devices()?
             .into_iter()
             .filter(|d| {
-                RUNTIME_ADAPTERS.contains(&d.adapter.as_str()) && d.crew_member_id.is_some()
+                (RUNTIME_ADAPTERS.contains(&d.adapter.as_str())
+                    || d.adapter.starts_with(super::plugins::PLUGIN_ADAPTER_PREFIX))
+                    && d.crew_member_id.is_some()
             })
             .collect())
     }

@@ -85,6 +85,14 @@ pub enum BleEvent {
     },
     /// The sensor-kit Info characteristic, read once after connecting (a read, not a write).
     KitInfo(Vec<u8>),
+    /// A notification on a vendor characteristic declared by a signed adapter plug-in manifest
+    /// (F-ACQ-12, CR-026): handed to that plug-in to decode.
+    VendorFrame {
+        /// Raw frame.
+        value: Vec<u8>,
+        /// Monotonic arrival time.
+        at: Instant,
+    },
     /// Signal strength reported by the radio.
     Rssi(i16),
     /// The link was lost; the supervisor reconnects.
@@ -212,6 +220,19 @@ impl BleCentral {
     pub async fn supervise(
         &self,
         id: &str,
+        link: LinkSupervisor,
+        origin: Instant,
+        events: mpsc::Sender<BleEvent>,
+    ) {
+        self.supervise_vendor(id, None, link, origin, events).await;
+    }
+
+    /// As [`Self::supervise`], also enabling notifications on `vendor`, the data characteristic a
+    /// signed adapter plug-in manifest declares (F-ACQ-12; WX-001, CR-026).
+    pub async fn supervise_vendor(
+        &self,
+        id: &str,
+        vendor: Option<Uuid>,
         mut link: LinkSupervisor,
         origin: Instant,
         events: mpsc::Sender<BleEvent>,
@@ -226,7 +247,7 @@ impl BleCentral {
                     // `stream` returned while connected only on a transport error: treat as loss.
                     link.disconnected(now());
                 }
-                Action::Connect => match self.connect(id).await {
+                Action::Connect => match self.connect(id, vendor).await {
                     Ok((peripheral, enabled)) => {
                         link.connected(now());
                         if events
@@ -248,7 +269,8 @@ impl BleCentral {
                                 let _ = events.send(BleEvent::KitInfo(value)).await;
                             }
                         }
-                        self.stream(&peripheral, &mut link, &now, &events).await;
+                        self.stream(&peripheral, vendor, &mut link, &now, &events)
+                            .await;
                         link.disconnected(now());
                         let _ = events.send(BleEvent::Disconnected).await;
                     }
@@ -262,7 +284,11 @@ impl BleCentral {
     }
 
     /// Connects, discovers services and enables the measurement characteristics.
-    async fn connect(&self, id: &str) -> Result<(Peripheral, Vec<u16>), BleError> {
+    async fn connect(
+        &self,
+        id: &str,
+        vendor: Option<Uuid>,
+    ) -> Result<(Peripheral, Vec<u16>), BleError> {
         let peripheral = self.peripheral(id).await?;
         if !peripheral.is_connected().await? {
             peripheral.connect().await?;
@@ -279,7 +305,8 @@ impl BleCentral {
         }));
         // F-ACQ-05: the CAELUM sensor kit's Data characteristic (ICD-SENSOR-KIT §3; WX-001).
         let kit = characteristics.iter().find(|c| {
-            c.uuid == crate::sensor_kit::DATA_UUID && c.properties.contains(CharPropFlags::NOTIFY)
+            (c.uuid == crate::sensor_kit::DATA_UUID || Some(c.uuid) == vendor)
+                && c.properties.contains(CharPropFlags::NOTIFY)
         });
         if wanted.is_empty() && kit.is_none() {
             let _ = peripheral.disconnect().await;
@@ -334,6 +361,7 @@ impl BleCentral {
     async fn stream(
         &self,
         peripheral: &Peripheral,
+        vendor: Option<Uuid>,
         link: &mut LinkSupervisor,
         now: &impl Fn() -> u64,
         events: &mpsc::Sender<BleEvent>,
@@ -349,7 +377,9 @@ impl BleCentral {
             tokio::select! {
                 value = values.next() => {
                     let Some(v) = value else { return };
-                    let event = if v.uuid == crate::sensor_kit::DATA_UUID {
+                    let event = if Some(v.uuid) == vendor {
+                        BleEvent::VendorFrame { value: v.value, at: Instant::now() }
+                    } else if v.uuid == crate::sensor_kit::DATA_UUID {
                         BleEvent::KitFrame { value: v.value, at: Instant::now() }
                     } else {
                         let Some(characteristic) = short_uuid(v.uuid) else { continue };

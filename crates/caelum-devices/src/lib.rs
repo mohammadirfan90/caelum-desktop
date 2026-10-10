@@ -11,6 +11,7 @@ pub mod ghs;
 pub mod hid;
 pub mod link;
 pub mod pairing;
+pub mod plugin;
 pub mod registry;
 pub mod sensor_kit;
 pub mod serial;

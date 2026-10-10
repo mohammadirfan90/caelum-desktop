@@ -35,6 +35,7 @@ mod kit;
 pub mod m8;
 pub mod mds_link;
 pub mod pathb;
+pub mod plugins;
 pub mod reads;
 pub mod retention;
 mod runtime;
@@ -179,6 +180,8 @@ pub struct Station {
     console_cfdp: Option<caelum_ground::cfdp::CfdpEntity>,
     /// The ground downlink (CR-024).
     ground: Option<downlink::GroundLink>,
+    /// Adapter plug-ins (F-ACQ-12).
+    plugins: std::collections::HashMap<String, plugins::Installed>,
     /// When retention last ran (CR-022).
     retention_at: Option<i64>,
     /// Running core-temperature estimates per crew member (F-SIG-05).
@@ -271,6 +274,7 @@ impl Station {
             kit: std::collections::HashMap::new(),
             core_temp: std::collections::HashMap::new(),
             retention_at: None,
+            plugins: std::collections::HashMap::new(),
             ground: None,
             console_cfdp: None,
             baselines: std::collections::HashMap::new(),
@@ -314,6 +318,8 @@ impl Station {
                 now,
             )?;
         }
+        // F-ACQ-12: signed adapter plug-ins.
+        station.load_plugins()?;
         // F-SYS-09: start-up self-test; failures raise technical alarms.
         station.run_self_test(caelum_alarms::technical::Limits::DEFAULT.storage_low_bytes)?;
         Ok(station)

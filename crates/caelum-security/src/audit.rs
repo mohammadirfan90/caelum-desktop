@@ -113,11 +113,13 @@ pub enum AuditAction {
     LanRefused,
     /// Retention removed eligible data (CR-022).
     RetentionPurged,
+    /// An adapter plug-in was refused at start (F-ACQ-12, CR-026).
+    PluginRefused,
 }
 
 impl AuditAction {
     /// Every action.
-    pub const ALL: [AuditAction; 31] = [
+    pub const ALL: [AuditAction; 32] = [
         AuditAction::Login,
         AuditAction::LoginFailed,
         AuditAction::Logout,
@@ -149,6 +151,7 @@ impl AuditAction {
         AuditAction::FhirImported,
         AuditAction::LanRefused,
         AuditAction::RetentionPurged,
+        AuditAction::PluginRefused,
     ];
 
     /// Stored name.
@@ -185,6 +188,7 @@ impl AuditAction {
             AuditAction::FhirImported => "fhir.import",
             AuditAction::LanRefused => "lan.refused",
             AuditAction::RetentionPurged => "retention.purge",
+            AuditAction::PluginRefused => "plugin.refused",
         }
     }
 
@@ -207,9 +211,9 @@ impl AuditAction {
             | AuditAction::UserDisabled
             | AuditAction::KeyCreated
             | AuditAction::LanRefused => AuditCategory::Security,
-            AuditAction::ConfigApplied | AuditAction::RetentionPurged => {
-                AuditCategory::Configuration
-            }
+            AuditAction::ConfigApplied
+            | AuditAction::RetentionPurged
+            | AuditAction::PluginRefused => AuditCategory::Configuration,
             // Device work is technical: BME reads it (ROLE_MATRIX §2, "Audit log").
             AuditAction::DevicePaired
             | AuditAction::DeviceAssigned

@@ -146,10 +146,20 @@ fn start_device(app: AppHandle, d: DeviceRecord) {
         };
         let (tx, mut rx) = tokio::sync::mpsc::channel::<BleEvent>(64);
         let supervisor = central.clone();
+        // F-ACQ-12: a plug-in device's vendor characteristic, from its signed manifest.
+        let vendor = d
+            .adapter
+            .strip_prefix(caelum_core::station::plugins::PLUGIN_ADAPTER_PREFIX)
+            .and_then(|id| {
+                app.state::<AppState>()
+                    .with(|s| Ok(s.plugin_data_uuids()))
+                    .ok()
+                    .and_then(|m| m.get(id).copied())
+            });
         tauri::async_runtime::spawn(async move {
             let link = LinkSupervisor::new(ReconnectPolicy::default(), 0, None);
             supervisor
-                .supervise(&peripheral, link, Instant::now(), tx)
+                .supervise_vendor(&peripheral, vendor, link, Instant::now(), tx)
                 .await;
         });
         while let Some(event) = rx.recv().await {
@@ -166,6 +176,14 @@ fn start_device(app: AppHandle, d: DeviceRecord) {
                     if let Ok(ingested) = app
                         .state::<AppState>()
                         .with(|s| Ok(s.ingest_sensor_kit(device, &value)?))
+                    {
+                        emit_ingested(&app, &ingested);
+                    }
+                }
+                BleEvent::VendorFrame { value, .. } => {
+                    if let Ok(ingested) = app
+                        .state::<AppState>()
+                        .with(|s| Ok(s.ingest_plugin_frame(device, &value)?))
                     {
                         emit_ingested(&app, &ingested);
                     }
