@@ -18,6 +18,8 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     include: ["tests/**/*.test.{ts,tsx}"],
+    // Accessibility tests run in a real browser (vitest.browser.config.ts).
+    exclude: ["tests/a11y/**", "node_modules/**"],
     setupFiles: ["tests/setup.ts"],
   },
 });

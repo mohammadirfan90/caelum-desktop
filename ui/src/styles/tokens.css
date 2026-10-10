@@ -5,6 +5,7 @@
  *   - Outfit only ('Google Sans' removed from every font stack);
  *   - --ink-3 darkened; --warning is a fill only, amber text uses --warning-ink;
  *   - high-contrast theme; DRAFT alarm tokens (CR-003); scrollbars visible.
+ *   - type sizes in rem, never px, so text follows the station text size to 200 % (F-SYS-10);
  * Every token pair used for text or UI elements is declared in contrast-pairs.ts and checked by
  * ui/tests/contrast.test.ts (text >= 4.5:1, UI elements >= 3:1, every theme).
  */
@@ -159,12 +160,12 @@
   .card { background: var(--raised); border-radius: var(--r-card); border: 1px solid var(--border); box-shadow: var(--shadow-raised); }
   .icon-btn { background: var(--raised); border-radius: 999px; box-shadow: var(--shadow-raised); display: inline-flex; align-items: center; justify-content: center; transition: transform .25s cubic-bezier(.3,1.4,.5,1); }
   .icon-btn:active { transform: scale(.94); }
-  .btn { font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 22px; border-radius: 999px; font-size: 15px; transition: transform .25s cubic-bezier(.3,1.4,.5,1), background .2s; }
+  .btn { font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 22px; border-radius: 999px; font-size: 0.9375rem; transition: transform .25s cubic-bezier(.3,1.4,.5,1), background .2s; }
   .btn:active { transform: scale(.97); }
   .btn-ink { background: var(--ink); color: var(--canvas); }
   .btn-soft { background: var(--raised); color: var(--ink); box-shadow: var(--shadow-raised); }
-  .btn-lg { min-height: 64px; font-size: 17px; padding: 0 28px; }
-  .label { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); font-weight: 400; }
+  .btn-lg { min-height: 64px; font-size: 1.0625rem; padding: 0 28px; }
+  .label { font-size: 0.75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); font-weight: 400; }
   .dot-num { font-family: var(--font-dot); font-weight: 600; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums lining-nums; }
   .crit-pulse { animation: crit 1.6s ease-in-out infinite; }
   .live-pulse { animation: live 1.4s ease-in-out infinite; }

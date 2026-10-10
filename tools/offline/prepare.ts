@@ -79,6 +79,14 @@ for (const version of readdirSync(join(cache, "pnpm-store"))) {
 }
 items.push({ name: "npm packages (pnpm fetch)", version: "pnpm-lock.yaml", path: "pnpm-store", source: "https://registry.npmjs.org", fetchedAt: now, licence: "per package; see SBOM and npm licence guard", upstreamCheck: "pnpm-lock.yaml integrity hashes (pnpm)" });
 
+// 2b. Chromium for the browser-mode UI tests (M5 gate: axe, keyboard walkthrough), downloaded by
+// the Playwright version pinned in pnpm-lock.yaml. Test equipment only: never shipped, not used by
+// the release build; `check-all --offline` points Playwright at it.
+process.env.PLAYWRIGHT_BROWSERS_PATH = join(cache, "playwright");
+sh("pnpm -C ui exec playwright install chromium");
+delete process.env.PLAYWRIGHT_BROWSERS_PATH;
+items.push({ name: "Chromium for UI tests (Playwright)", version: "pinned by playwright in pnpm-lock.yaml", path: "playwright", source: "https://playwright.azureedge.net (Playwright CDN)", fetchedAt: now, licence: "BSD-3-Clause (Chromium); test only, not shipped", upstreamCheck: "HTTPS from the Playwright CDN (no published digest); MANIFEST.sha256 from then on" });
+
 // 3. Rust standalone installer, checked against the published .sha256.
 const rustMsi = `rust-${RUST}-${RUST_TARGET}.msi`;
 const rustUrl = `https://static.rust-lang.org/dist/${rustMsi}`;

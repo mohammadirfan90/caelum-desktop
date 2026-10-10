@@ -18,6 +18,8 @@ const args = new Set(process.argv.slice(2));
 const JUNIT_DIR = join(REPO_ROOT, "target", "junit");
 const NEXTEST_JUNIT = join(REPO_ROOT, "target", "nextest", "ci", "junit.xml");
 const UI_JUNIT = join(JUNIT_DIR, "ui.xml");
+/** UI tests in a real browser (Vitest browser mode, Chromium via Playwright; M5 gate). */
+const UI_BROWSER_JUNIT = join(JUNIT_DIR, "ui-browser.xml");
 const NODE_JUNIT_DIR = join(JUNIT_DIR, "tools-ci");
 const NODE_TEST_DIR = join(REPO_ROOT, "tools", "ci", "test");
 const CSV_PATH = join(REPO_ROOT, "docs", "trace.csv");
@@ -32,8 +34,10 @@ function runSuites(): void {
   mkdirSync(NODE_JUNIT_DIR, { recursive: true });
   rmSync(NEXTEST_JUNIT, { force: true });
   rmSync(UI_JUNIT, { force: true });
+  rmSync(UI_BROWSER_JUNIT, { force: true });
   run("cargo nextest run --workspace --profile ci", REPO_ROOT);
   run(`pnpm -C ui exec vitest run --reporter=junit --outputFile=${JSON.stringify(UI_JUNIT)}`, REPO_ROOT);
+  run(`pnpm -C ui exec vitest run --config vitest.browser.config.ts --reporter=junit --outputFile=${JSON.stringify(UI_BROWSER_JUNIT)}`, REPO_ROOT);
   for (const file of readdirSync(NODE_TEST_DIR).filter((f) => f.endsWith(".test.ts"))) {
     const out = join(NODE_JUNIT_DIR, file.replace(/\.ts$/, ".xml"));
     rmSync(out, { force: true });
@@ -52,7 +56,7 @@ function readResults(): Results {
     .flatMap((file) =>
       readJunit(join(NODE_JUNIT_DIR, file.replace(/\.ts$/, ".xml"))).map((c) => ({ ...c, classname: `tools/ci/test/${file}` })),
     );
-  return { nextest: readJunit(NEXTEST_JUNIT), vitest: readJunit(UI_JUNIT), node };
+  return { nextest: readJunit(NEXTEST_JUNIT), vitest: [...readJunit(UI_JUNIT), ...readJunit(UI_BROWSER_JUNIT)], node };
 }
 
 if (!args.has("--no-run")) runSuites();

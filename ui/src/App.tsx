@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
 import { AlarmSounder, type AudioLike } from "./alarmSound";
 import { type AlarmMap, ranked, reduce } from "./alarmStore";
@@ -94,6 +94,17 @@ export function App({ api: overrides = {}, subscribeAlarms = listenAlarms, makeA
   useEffect(() => {
     applyPrefs(prefs);
   }, [prefs]);
+
+  // Keyboard users keep their place (docs/07 §5): when the window changes state (signed in,
+  // locked, emergency view opened or closed) the focused control is gone, so focus moves to the
+  // new content instead of falling back to the start of the page. Not on start-up, so the first
+  // Tab still reaches the skip link.
+  const shownPhase = useRef<Phase["kind"]>("loading");
+  useEffect(() => {
+    const before = shownPhase.current;
+    shownPhase.current = phase.kind;
+    if (before !== "loading" && before !== phase.kind) document.getElementById("content")?.focus();
+  }, [phase.kind]);
 
   // Alarm sound and alarm state on this station (SR-015): independent of sign-in.
   useEffect(() => {

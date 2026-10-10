@@ -73,6 +73,17 @@ jobs:
       - run: pnpm -C ui typecheck
       - run: pnpm -C ui lint
       - run: pnpm -C ui test
+      # M5 gate: axe checks in a real browser (Vitest browser mode, Chromium via Playwright).
+      - name: accessibility (axe, browser mode)
+        run: |
+          pnpm -C ui exec playwright install --with-deps chromium
+          pnpm -C ui test:a11y
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: ui-screenshots
+          path: ui/tests/a11y/__screenshots__/
+          if-no-files-found: warn
       - name: build + offline bundle check
         run: pnpm -C ui build
 
@@ -177,6 +188,8 @@ jobs:
           node-version: 24.11.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # The trace also runs the browser-mode UI tests (axe, keyboard walkthrough).
+      - run: pnpm -C ui exec playwright install --with-deps chromium
       - name: all suites + docs/trace.csv up to date + milestone gate
         run: pnpm -C tools/ci trace:check
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

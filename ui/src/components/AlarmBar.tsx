@@ -43,7 +43,7 @@ export function AlarmBar({
 }) {
   const top = alarms[0];
   return (
-    <section aria-label={strings.alarmBarLabel} className="flex min-h-16 items-center gap-4 border-b border-border bg-surface px-4 py-2">
+    <section aria-label={strings.alarmBarLabel} className="flex min-h-16 flex-wrap items-center gap-4 border-b border-border bg-surface px-4 py-2">
       {top === undefined ? (
         <p className="flex items-center gap-2 text-sm text-ink-3">
           <LevelGlyph level="normal" size={16} />
@@ -51,10 +51,10 @@ export function AlarmBar({
         </p>
       ) : (
         <>
-          <div aria-live="assertive" className="flex min-w-0 flex-1 items-center gap-3">
+          <div aria-live="assertive" className="flex min-w-[16rem] flex-1 items-center gap-3">
             <LevelGlyph level={level(top.priority)} size={28} />
             <div className="min-w-0">
-              <p className="truncate text-base font-semibold">
+              <p className="text-base font-semibold break-words">
                 {`${strings.level[level(top.priority)]}: ${top.title}`}
               </p>
               <p className="text-sm text-ink-3">

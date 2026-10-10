@@ -15,6 +15,7 @@ the M0 gate.
 | WebView2 | Default mode downloads a bootstrapper at install time; Tauri 2.12's `offlineInstaller` mode contacts Microsoft on every build | `fixedRuntime` (CR-004): the pinned, Microsoft-signed WebView2 Fixed Version runtime (`webview2/` in the cache) is expanded into `src-tauri/webview2-fixed-runtime/` and shipped inside CAELUM; nothing is downloaded at build or install time |
 | ONNX Runtime (M12) | `ort` downloads binaries at build time | `ort` with `load-dynamic`; a pinned, checksummed ONNX Runtime binary from the cache, shipped with the app |
 | Advisory databases | cargo-deny, cargo-audit and pnpm audit download them | Online CI job on every run; a dated offline snapshot in the cache for air-gapped builds, whose reports state the snapshot date |
+| Chromium for UI tests (M5) | Playwright downloads it on `playwright install` | Test only, never shipped: the build of the pinned Playwright is placed in `playwright/` in the cache; `check-all --offline` sets `PLAYWRIGHT_BROWSERS_PATH` to it |
 | Fonts | — | Outfit from `@fontsource/outfit`, bundled at build time; nothing fetched at runtime |
 | LOINC table (M1) | Downloaded from loinc.org with an account | Placed by the product owner in `tools/offline/loinc/` (git-ignored); only the subset of codes used is committed, with the LOINC copyright notice and licence attribution |
 
@@ -60,6 +61,7 @@ the installed toolchain as `1.99.0-x86_64-pc-windows-msvc` with `rustup toolchai
 Air-gapped checks: `node tools/ci/check-all.ts --offline` uses the advisory snapshot
 (`cargo deny --offline check`, `cargo audit --no-fetch`); copy `advisory-db/cargo-deny` to
 `~/.cargo/advisory-dbs` and `advisory-db/cargo-audit` to `~/.cargo/advisory-db` first. `pnpm audit`
-has no offline mode; npm advisories are checked online in CI only.
+has no offline mode; npm advisories are checked online in CI only. With `CAELUM_TOOL_CACHE` set, the
+browser-mode UI tests (axe checks, keyboard walkthrough) run with the cached Chromium.
 
 Linux and macOS bundler tools (AppImage, DMG) are not cached yet; Windows is the reference platform.

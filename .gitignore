@@ -24,3 +24,7 @@ Thumbs.db
 
 # cargo-cyclonedx output next to manifests (tools/ci/src/sbom.ts moves the app one to target/sbom/).
 *.cdx.json
+
+# Vitest browser-mode output (reviewed screenshots are copied to docs/gates/M5-screenshots/).
+/ui/tests/a11y/__screenshots__/
+/ui/.vitest/

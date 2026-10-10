@@ -1,13 +1,22 @@
 // Runs every check of docs/09_VV_PLAN.md §4 that can run on a developer machine, in CI order,
 // and prints a summary. Same commands as .github/workflows/ci.yml.
 //   node tools/ci/check-all.ts             online (advisory databases and pnpm audit fetched)
-//   node tools/ci/check-all.ts --offline   air-gapped: advisory snapshot, no pnpm audit
+//   node tools/ci/check-all.ts --offline   air-gapped: advisory snapshot, no pnpm audit; the
+//                                          browser-mode UI tests use Chromium from the tool cache
+//                                          ($CAELUM_TOOL_CACHE/playwright, docs/OFFLINE_BUILD.md)
 // Exit code 1 if any check fails.
 import { spawnSync } from "node:child_process";
+import { join } from "node:path";
 
 import { REPO_ROOT } from "./src/repo.ts";
 
 const offline = process.argv.includes("--offline");
+const toolCache = process.env.CAELUM_TOOL_CACHE;
+const offlineEnv: NodeJS.ProcessEnv = {
+  ...process.env,
+  CARGO_NET_OFFLINE: "true",
+  ...(toolCache === undefined || process.env.PLAYWRIGHT_BROWSERS_PATH !== undefined ? {} : { PLAYWRIGHT_BROWSERS_PATH: join(toolCache, "playwright") }),
+};
 
 interface Check {
   readonly name: string;
@@ -38,7 +47,7 @@ for (const check of CHECKS) {
     cwd: REPO_ROOT,
     stdio: "inherit",
     shell: true,
-    env: offline ? { ...process.env, CARGO_NET_OFFLINE: "true" } : process.env,
+    env: offline ? offlineEnv : process.env,
   });
   results.push({ name: check.name, ok: r.status === 0, seconds: Math.round((Date.now() - start) / 1000) });
 }
