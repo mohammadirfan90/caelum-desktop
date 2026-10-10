@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-ruleset-status"
+description = "Enables the ruleset_status command without any pre-configured scope."
+commands.allow = ["ruleset_status"]
+
+[[permission]]
+identifier = "deny-ruleset-status"
+description = "Denies the ruleset_status command without any pre-configured scope."
+commands.deny = ["ruleset_status"]

@@ -4,6 +4,8 @@
 
 use std::path::Path;
 
+use caelum_alarms::signing::{built_in_keys, TrustPolicy};
+use caelum_alarms::{BUNDLED_RULESET, BUNDLED_SIGNATURES};
 use caelum_security::audit::{Actor, AuditAction, AuditEntry, AuditLog, ChainStatus};
 use caelum_security::clock::Clock;
 use caelum_security::keys::{
@@ -15,6 +17,8 @@ use caelum_security::session::{AuthError, BreakGlassGrant, SessionConfig, Sessio
 use caelum_security::SecurityError;
 use caelum_store::Database;
 use serde_json::json;
+
+use crate::alarms::{AlarmService, AlarmServiceError, RulesetStatus};
 
 /// File name of the encrypted database inside the data directory.
 pub const DATABASE_FILE: &str = "caelum.db";
@@ -34,6 +38,9 @@ pub enum StationError {
     /// The data directory could not be created.
     #[error("data directory: {0}")]
     Io(#[from] std::io::Error),
+    /// The alarm service could not record its state.
+    #[error(transparent)]
+    Alarms(#[from] AlarmServiceError),
 }
 
 impl From<caelum_store::StoreError> for StationError {
@@ -58,6 +65,7 @@ pub struct Station {
     clock: Box<dyn Clock>,
     sessions: SessionManager,
     name: Option<String>,
+    alarms: AlarmService,
 }
 
 impl Station {
@@ -81,12 +89,23 @@ impl Station {
         let (db_key, db_key_created) = database_key(keystore, if_missing)?;
         let (key, instance_key_created) = instance_key(keystore, if_missing)?;
         let db = Database::open(&path, &db_key)?;
+        let now = clock.now_tai().map_err(SecurityError::from)?;
+        // SR-009: verified for this build's trust policy, with the safe fallback.
+        let alarms = AlarmService::load(
+            &db,
+            BUNDLED_RULESET,
+            BUNDLED_SIGNATURES,
+            &built_in_keys(),
+            TrustPolicy::for_this_build(),
+            now,
+        )?;
         let station = Self {
             db,
             key,
             clock,
             sessions: SessionManager::new(config),
             name,
+            alarms,
         };
         let key_id = station.key.verifying_key().key_id();
         for (created, entry) in [
@@ -108,6 +127,11 @@ impl Station {
     /// The audit log (for wiring and tests).
     pub fn log(&self) -> AuditLog<'_> {
         AuditLog::new(&self.db, &self.key, &*self.clock)
+    }
+
+    /// `ruleset_status` (public): the ruleset in force, for the SR-009 banner.
+    pub fn ruleset_status(&self) -> &RulesetStatus {
+        self.alarms.status()
     }
 
     /// The database (for wiring and tests).

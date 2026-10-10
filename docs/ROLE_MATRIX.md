@@ -50,6 +50,7 @@ lead (CR-003) until a licensed clinician advisor countersigns; it does not block
 | `break_glass_open` | no login | Opens the emergency view; audited and notified (SR-014) |
 | `audit_list` | CMO, Flight Surgeon (all); BME (technical); Admin (configuration and security) | Filtered by role server-side |
 | `audit_verify` | CMO, Flight Surgeon, BME, Admin | Returns chain and signature status only |
+| `ruleset_status` | public | Ruleset version in force and the DEVELOPMENT RULESET / fallback / safe-state banner (SR-009); safety information shown before sign-in, no clinical content |
 
 ## 4. Sessions
 - Onboard: PIN plus device-bound key; auto-lock after 10 minutes (configurable). Ground: password

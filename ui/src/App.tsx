@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { commands, type AppInfo } from "./bindings";
+import { RulesetBanner, type RulesetResult, TechnicalGlyph } from "./RulesetBanner";
 import { strings } from "./strings";
 
 /**
@@ -17,6 +18,8 @@ type Load =
 export interface AppProps {
   /** Source of the application identity; the generated IPC command by default. */
   readonly loadAppInfo?: () => Promise<AppInfo>;
+  /** Source of the alarm ruleset status (SR-009 banner); the generated IPC command by default. */
+  readonly loadRuleset?: () => Promise<RulesetResult>;
 }
 
 function describe(error: unknown): string {
@@ -25,7 +28,7 @@ function describe(error: unknown): string {
   return "unknown error";
 }
 
-export function App({ loadAppInfo = commands.appInfo }: AppProps) {
+export function App({ loadAppInfo = commands.appInfo, loadRuleset = commands.rulesetStatus }: AppProps) {
   const [load, setLoad] = useState<Load>({ state: "loading" });
 
   useEffect(() => {
@@ -44,7 +47,8 @@ export function App({ loadAppInfo = commands.appInfo }: AppProps) {
   }, [loadAppInfo]);
 
   return (
-    <main className="grid min-h-full place-items-center bg-canvas p-6 text-ink">
+    <main className="flex min-h-full flex-col items-center justify-center bg-canvas p-6 text-ink">
+      <RulesetBanner load={loadRuleset} />
       <section aria-labelledby="app-title" className="card w-full max-w-[34rem] p-8">
         <p className="label">{strings.tagline}</p>
         <h1 id="app-title" className="mt-2 text-[2.75rem] leading-tight font-semibold tracking-[-0.03em]">
@@ -65,17 +69,5 @@ export function App({ loadAppInfo = commands.appInfo }: AppProps) {
         )}
       </section>
     </main>
-  );
-}
-
-/** Technical-problem glyph: square with "!" (docs/06_SAFETY_AND_ALARMS.md §2); never colour alone. */
-function TechnicalGlyph() {
-  return (
-    <span
-      aria-hidden="true"
-      className="inline-flex size-7 shrink-0 items-center justify-center rounded-[4px] border-2 border-ink text-sm font-semibold"
-    >
-      !
-    </span>
   );
 }

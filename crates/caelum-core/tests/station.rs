@@ -311,3 +311,18 @@ fn keys_are_created_on_first_start_only() {
         "nothing created"
     );
 }
+
+/// SR-009: the station loads the signed ruleset at start-up; development builds run the
+/// development-signed ruleset and report it for the DEVELOPMENT RULESET banner.
+#[test]
+fn sr_009_the_station_loads_the_ruleset_for_its_build() {
+    use caelum_core::alarms::RulesetStatus;
+    let dir = DataDir::new();
+    let keys = MemoryKeyStore::default();
+    let station = open(&dir, &keys, &TestClock::default()).unwrap();
+    assert!(
+        matches!(station.ruleset_status(), RulesetStatus::Verified { development: true, .. }),
+        "{:?}",
+        station.ruleset_status()
+    );
+}

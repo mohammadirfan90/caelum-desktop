@@ -135,6 +135,8 @@ pub enum Command {
     AuditList,
     /// Audit chain and signature status.
     AuditVerify,
+    /// Alarm ruleset in force (SR-009 banner).
+    RulesetStatus,
 }
 
 /// Who may call a command.
@@ -150,7 +152,7 @@ pub enum Access {
 
 impl Command {
     /// Every command.
-    pub const ALL: [Command; 8] = [
+    pub const ALL: [Command; 9] = [
         Command::AppInfo,
         Command::AuthLogin,
         Command::AuthLogout,
@@ -159,6 +161,7 @@ impl Command {
         Command::BreakGlassOpen,
         Command::AuditList,
         Command::AuditVerify,
+        Command::RulesetStatus,
     ];
 
     /// The IPC command name.
@@ -172,6 +175,7 @@ impl Command {
             Command::BreakGlassOpen => "break_glass_open",
             Command::AuditList => "audit_list",
             Command::AuditVerify => "audit_verify",
+            Command::RulesetStatus => "ruleset_status",
         }
     }
 
@@ -183,7 +187,10 @@ impl Command {
     /// The access rule (`docs/ROLE_MATRIX.md` §3).
     pub const fn access(self) -> Access {
         match self {
-            Command::AppInfo | Command::AuthLogin | Command::BreakGlassOpen => Access::Public,
+            Command::AppInfo
+            | Command::AuthLogin
+            | Command::BreakGlassOpen
+            | Command::RulesetStatus => Access::Public,
             Command::AuthLogout | Command::AuthMe | Command::AuthReauth => Access::AnySignedIn,
             Command::AuditList => Access::Roles(&[
                 Role::Cmo,

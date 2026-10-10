@@ -23,6 +23,8 @@ export const commands = {
 	auditList: () => typedError<AuditItem[], CommandError>(__TAURI_INVOKE("audit_list")),
 	/**  Audit chain and signature status. */
 	auditVerify: () => typedError<AuditStatus, CommandError>(__TAURI_INVOKE("audit_verify")),
+	/**  The alarm ruleset in force and its banner (public: safety information, SR-009). */
+	rulesetStatus: () => typedError<RulesetInfo, CommandError>(__TAURI_INVOKE("ruleset_status")),
 };
 
 /* Types */
@@ -140,6 +142,27 @@ export type RoleName =
 "administrator" | 
 /**  Device gateway (never signs in interactively). */
 "device_gateway";
+
+/**  The ruleset banner (SR-009, docs/07 §3). */
+export type RulesetInfo = {
+	/**  State. */
+	state: RulesetState,
+	/**  Version in force, if any. */
+	version: string | null,
+	/**  Development-signed: show the DEVELOPMENT RULESET banner. */
+	development: boolean,
+	/**  Why the bundled ruleset was rejected, if it was. */
+	reason: string | null,
+};
+
+/**  Which alarm ruleset is in force (SR-009). */
+export type RulesetState = 
+/**  The bundled ruleset verified. */
+"verified" | 
+/**  The bundled ruleset was rejected; the last verified one is in force. */
+"fallback" | 
+/**  No verified ruleset: physiological alarms are not running. */
+"safeState";
 
 /**  The signed-in user. */
 export type SessionInfo = {

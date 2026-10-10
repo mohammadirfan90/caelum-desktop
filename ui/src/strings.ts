@@ -9,4 +9,9 @@ export const strings = {
   version: (version: string) => `Version ${version}`,
   versionUnavailable: "Version unavailable",
   coreNoResponse: (reason: string) => `The application core did not respond: ${reason}`,
+  rulesetLabel: "Alarm ruleset",
+  developmentRuleset: (version: string) => `DEVELOPMENT RULESET ${version}: not for operational use`,
+  rulesetFallback: (version: string) => `The installed alarm ruleset was rejected; ruleset ${version} is in use`,
+  rulesetSafeState: "Physiological alarm rules are not running: no verified ruleset",
+  rulesetUnknown: "Alarm ruleset status unavailable",
 } as const;

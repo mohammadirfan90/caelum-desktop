@@ -10,6 +10,7 @@
     "allow-auth-reauth",
     "allow-break-glass-open",
     "allow-audit-list",
-    "allow-audit-verify"
+    "allow-audit-verify",
+    "allow-ruleset-status"
   ]
 }

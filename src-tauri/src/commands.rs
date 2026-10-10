@@ -5,6 +5,7 @@
 //! (CLAUDE.md rule 6). 64-bit values (TAI times, sequence numbers) are sent as decimal strings so
 //! JavaScript never rounds them.
 
+use caelum_core::alarms::RulesetStatus;
 use caelum_core::security::audit::{AuditEntry, ChainStatus, ProblemKind};
 use caelum_core::security::role::{DeniedReason, Role};
 use caelum_core::security::session::AuthError;
@@ -99,7 +100,9 @@ impl From<StationError> for CommandError {
                 AuthError::ReauthRequired => ErrorKind::ReauthRequired,
                 AuthError::Security(_) => ErrorKind::Failed,
             },
-            StationError::Security(_) | StationError::Io(_) => ErrorKind::Failed,
+            StationError::Security(_) | StationError::Io(_) | StationError::Alarms(_) => {
+                ErrorKind::Failed
+            }
         };
         Self {
             kind,
@@ -274,6 +277,71 @@ impl From<ChainStatus> for AuditStatus {
                 .collect(),
         }
     }
+}
+
+/// Which alarm ruleset is in force (SR-009).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub enum RulesetState {
+    /// The bundled ruleset verified.
+    Verified,
+    /// The bundled ruleset was rejected; the last verified one is in force.
+    Fallback,
+    /// No verified ruleset: physiological alarms are not running.
+    SafeState,
+}
+
+/// The ruleset banner (SR-009, docs/07 §3).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct RulesetInfo {
+    /// State.
+    pub state: RulesetState,
+    /// Version in force, if any.
+    pub version: Option<String>,
+    /// Development-signed: show the DEVELOPMENT RULESET banner.
+    pub development: bool,
+    /// Why the bundled ruleset was rejected, if it was.
+    pub reason: Option<String>,
+}
+
+impl From<&RulesetStatus> for RulesetInfo {
+    fn from(s: &RulesetStatus) -> Self {
+        match s {
+            RulesetStatus::Verified {
+                version,
+                development,
+            } => Self {
+                state: RulesetState::Verified,
+                version: Some(version.clone()),
+                development: *development,
+                reason: None,
+            },
+            RulesetStatus::Fallback {
+                version,
+                development,
+                reason,
+            } => Self {
+                state: RulesetState::Fallback,
+                version: Some(version.clone()),
+                development: *development,
+                reason: Some(reason.clone()),
+            },
+            RulesetStatus::SafeState { reason } => Self {
+                state: RulesetState::SafeState,
+                version: None,
+                development: false,
+                reason: Some(reason.clone()),
+            },
+        }
+    }
+}
+
+/// The alarm ruleset in force and its banner (public: safety information, SR-009).
+#[tauri::command]
+#[specta::specta]
+pub async fn ruleset_status(state: State<'_, AppState>) -> Result<RulesetInfo, CommandError> {
+    state.with(|s| Ok(s.ruleset_status().into()))
 }
 
 // Commands are `async` so the argon2 work runs off the window's main thread.

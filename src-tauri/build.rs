@@ -12,6 +12,7 @@ fn main() {
             "break_glass_open",
             "audit_list",
             "audit_verify",
+            "ruleset_status",
         ]));
     if let Err(error) = tauri_build::try_build(attributes) {
         panic!("tauri-build failed: {error:#}");

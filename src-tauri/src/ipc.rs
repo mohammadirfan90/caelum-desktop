@@ -42,6 +42,7 @@ static BUILDER: LazyLock<Builder<Wry>> = LazyLock::new(|| {
         crate::commands::break_glass_open,
         crate::commands::audit_list,
         crate::commands::audit_verify,
+        crate::commands::ruleset_status,
     ])
 });
 
