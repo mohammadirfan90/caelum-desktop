@@ -23,6 +23,17 @@ spot_n = 4
 max_gap_s = 30
 at_rest = { parameter = "activity_level", max = 0.3 }
 parameters = [{ parameter = "heart_rate", category = "CARDIO", at_rest = true }]
+
+[escalation]
+critical = [
+    { after_s = 0, audience = "astronaut" },
+    { after_s = 0, audience = "cmo" },
+    { after_s = 15, audience = "sound" },
+    { after_s = 30, audience = "crew" },
+    { after_s = 60, audience = "ground" },
+]
+warning = [{ after_s = 0, audience = "astronaut" }, { after_s = 60, audience = "crew" }]
+observe = [{ after_s = 0, audience = "astronaut" }]
 "#;
 
 fn rule(body: &str) -> String {
@@ -146,4 +157,42 @@ fn header_and_baseline_checks_reject_the_ruleset() {
 fn the_bundled_ruleset_parses_and_tests_run_with_the_development_policy() {
     assert!(Ruleset::parse(BUNDLED_RULESET).is_ok());
     assert_eq!(TrustPolicy::for_this_build(), TrustPolicy::Development);
+}
+
+#[test]
+fn escalation_plans_are_checked() {
+    let ok_rule = "type = \"absence\"
+event = \"qrs\"
+gate = { parameter = \"sqi_ecg\", min = 0.7 }";
+    let unordered = rule(ok_rule).replacen(
+        "{ after_s = 30, audience = \"crew\" }",
+        "{ after_s = 5, audience = \"crew\" }",
+        1,
+    );
+    assert!(
+        errors(&unordered).iter().any(|e| e.contains("time order")),
+        "{:?}",
+        errors(&unordered)
+    );
+    let no_ground = rule(ok_rule).replacen(
+        "    { after_s = 60, audience = \"ground\" },
+",
+        "",
+        1,
+    );
+    assert!(
+        errors(&no_ground).iter().any(|e| e.contains("Ground")),
+        "{:?}",
+        errors(&no_ground)
+    );
+    let late = rule(ok_rule).replacen(
+        "observe = [{ after_s = 0, audience = \"astronaut\" }]",
+        "observe = [{ after_s = 10, audience = \"astronaut\" }]",
+        1,
+    );
+    assert!(
+        errors(&late).iter().any(|e| e.contains("at once")),
+        "{:?}",
+        errors(&late)
+    );
 }

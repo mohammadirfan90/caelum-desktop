@@ -7,7 +7,7 @@
 # and 600 for warning rules. max_gap_s 30 for every rule until the flight-surgeon review.
 
 [ruleset]
-version = "1.0.0-draft.2"
+version = "1.0.0-draft.3"
 status = "DRAFT"
 approved_by = "Provisional medical lead (CR-003), DRAFT"
 
@@ -267,4 +267,27 @@ parameters = [
     { parameter = "core_temp", category = "THERMAL", at_rest = false },
     { parameter = "spo2", category = "RESPIRATORY", at_rest = true },
     { parameter = "weight", category = "CARDIO", at_rest = false },
+]
+
+# ⚕ Escalation (docs/06 §3; seconds after creation; stops on acknowledge). Audiences (CR-010):
+# astronaut and cmo get the alarm with its tone on their station at once; sound makes every crew
+# station sound with the wristband alert in addition; crew shows it on every crew station; ground
+# sends the OPS escalation event (path B, docs/06 §3a); reminder repeats it to the astronaut.
+[escalation]
+critical = [
+    { after_s = 0, audience = "astronaut" },
+    { after_s = 0, audience = "cmo" },
+    { after_s = 15, audience = "sound" },
+    { after_s = 30, audience = "crew" },
+    { after_s = 60, audience = "ground" },
+]
+warning = [
+    { after_s = 0, audience = "astronaut" },
+    { after_s = 0, audience = "cmo" },
+    { after_s = 60, audience = "crew" },
+]
+observe = [
+    { after_s = 0, audience = "astronaut" },
+    { after_s = 3600, audience = "reminder" },
+    { after_s = 86400, audience = "cmo" },
 ]

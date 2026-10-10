@@ -352,7 +352,7 @@ fn sr_010_why_records_rule_version_values_duration_device_and_quality() {
     let w = &alarm.why;
     assert_eq!(
         (w.rule_id.as_str(), w.ruleset_version.as_str()),
-        ("hr.critical.high", "1.0.0-draft.2")
+        ("hr.critical.high", "1.0.0-draft.3")
     );
     assert_eq!(
         (w.parameter, w.unit, w.threshold, w.op),
@@ -897,7 +897,7 @@ fn at_rest_baseline_with_unknown_activity_is_evaluated() {
 #[test]
 fn engines_use_random_ids_and_expose_their_ruleset() {
     let mut a = Engine::new(bundled());
-    assert_eq!(a.ruleset().version, "1.0.0-draft.2");
+    assert_eq!(a.ruleset().version, "1.0.0-draft.3");
     stream(&mut a, Parameter::Spo2, 80.0, 0, 15);
     let mut b = Engine::new(bundled());
     stream(&mut b, Parameter::Spo2, 80.0, 0, 15);

@@ -94,7 +94,7 @@ fn sr_009_tampered_ruleset_raises_a_technical_alarm_and_falls_back() {
         RulesetStatus::Fallback {
             version, reason, ..
         } => {
-            assert_eq!(version, "1.0.0-draft.2");
+            assert_eq!(version, "1.0.0-draft.3");
             assert!(reason.contains("digest"), "{reason}");
         }
         other => panic!("{other:?}"),

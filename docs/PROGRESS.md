@@ -11,7 +11,7 @@ picture). Last updated: 2026-10-10 (M3 independent review recorded; CI runs no l
 | M1 Domain, storage, security core | **complete** (13292b4) | `docs/gates/M1.md` | First-administrator enrolment arrives with the M3/M6 login screen (CR-007 §4) |
 | M2 Ingest pipeline and device framework | code complete; closes on the next all-green CI run | `docs/gates/M2.md` | Physical devices on the hardware-in-the-loop bench (docs/09) |
 | M3 Alarm engine | gate items met; closes on the next all-green CI run | `docs/gates/M3.md` (independent review: Mohammad Irfan, 2026-10-10) | ⚕ clinical content stays DRAFT |
-| M4 Escalation, technical alarms, notifications, self-test | next | | Wristband alert needs a reviewed write-exception entry (category c) |
+| M4 Escalation, technical alarms, notifications, self-test | **in progress**: step 1 escalation done | | Wristband alert needs a reviewed write-exception entry (category c) |
 | M5–M13 | not started | | |
 
 Status of record: the table in `docs/10_BUILD_PLAN.md` (the trace enforces milestones marked
@@ -43,12 +43,13 @@ Status of record: the table in `docs/10_BUILD_PLAN.md` (the trace enforces miles
 | CR-007 | Sign-in policy (PIN/password, throttling, locked sessions) and user provisioning |
 | CR-008 | Quality and flags from Bluetooth SIG profiles (⚕ glucose out-of-range pending) |
 | CR-009 | Ruleset format, signing, dependencies; ⚕ draft values and the SR-019 interpretation |
+| CR-010 | Escalation audiences, sound and silence semantics (⚕) |
 
 Write exceptions: `docs/write-exceptions.md` (WX-001 CCCD enable, reviewed by the product owner
 2026-10-10). Third-party risks: `docs/third-party-risk.md`.
 
 ## 4. Waiting on people
-- **Medical lead** on ⚕ DRAFT items: CR-003 site classes, CR-008 §3 glucose out-of-range, CR-009 §3
+- **Medical lead** on ⚕ DRAFT items: CR-010 escalation audiences and behaviour, CR-003 site classes, CR-008 §3 glucose out-of-range, CR-009 §3
   (ECG SQI gate 0.7, spot interpretation, weight notice category), all docs/06 §3 thresholds.
 - **Licensed clinician advisor**: countersignature; until then no flight ruleset key exists and
   release builds start in the SR-009 safe state (no physiological rules) by design.
@@ -76,3 +77,4 @@ Write exceptions: `docs/write-exceptions.md` (WX-001 CCCD enable, reviewed by th
 | 2026-10-10 | 5a422b0..4e0a6c4 | M3: signed ruleset and signer, engine, alarm service with SR-009 fallback, coverage gates in CI, DEVELOPMENT RULESET banner (CR-009); M0 and M1 gates closed |
 | 2026-10-10 | 5ceaf9d.. | PROGRESS.md added; M3 independent review by Mohammad Irfan recorded; CI concurrency per commit so every pushed commit gets a complete run (pushes happen after every commit) |
 | 2026-10-10 | (this push) | rustfmt on the station test (CI run 38030239526 failed `cargo fmt --check` on Ubuntu); the run on this commit is the M2/M3 closing candidate |
+| 2026-10-10 | (this push) | M4 step 1: escalation plans moved into the signed ruleset (1.0.0-draft.3, equal to docs/06 by test); sans-I/O escalator with restart resume, SR-008 silence, sound scopes and the docs/06 §3a OPS record (CR-010) |

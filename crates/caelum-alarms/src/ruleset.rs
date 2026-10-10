@@ -224,6 +224,57 @@ pub struct BaselineParamDef {
     pub at_rest: bool,
 }
 
+/// Who an escalation stage reaches (docs/06 §3, F-ALM-04; CR-010).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize, serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Audience {
+    /// The affected astronaut (their station and devices: visual and tone).
+    Astronaut,
+    /// The crew medical officer.
+    Cmo,
+    /// Every crew station sounds; the wristband alert is sent in addition (SR-015).
+    Sound,
+    /// The whole crew (emergency view on every crew station, F-ALM-07).
+    Crew,
+    /// Ground: OPS escalation event, path B (docs/06 §3a).
+    Ground,
+    /// A reminder to the affected astronaut.
+    Reminder,
+}
+
+/// One escalation stage.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Stage {
+    /// Seconds after the alarm was created.
+    pub after_s: u32,
+    /// Who it reaches.
+    pub audience: Audience,
+}
+
+/// ⚕ Escalation plans per priority (docs/06 §3); stops on acknowledge.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Escalation {
+    /// Critical.
+    pub critical: Vec<Stage>,
+    /// Warning.
+    pub warning: Vec<Stage>,
+    /// Observe.
+    pub observe: Vec<Stage>,
+}
+
+impl Escalation {
+    /// The plan for a priority.
+    pub fn plan(&self, p: Priority) -> &[Stage] {
+        match p {
+            Priority::Critical => &self.critical,
+            Priority::Warning => &self.warning,
+            Priority::Observe => &self.observe,
+        }
+    }
+}
+
 /// Ruleset header.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -247,6 +298,8 @@ pub struct RulesetFile {
     pub rules: Vec<RuleDef>,
     /// Baseline notices.
     pub baseline: BaselineDef,
+    /// Escalation plans.
+    pub escalation: Escalation,
 }
 
 /// Validated threshold limits.
@@ -364,6 +417,8 @@ pub struct Ruleset {
     pub rules: Vec<Rule>,
     /// Baseline notices.
     pub baseline: Baseline,
+    /// Escalation plans.
+    pub escalation: Escalation,
 }
 
 /// Why a ruleset was rejected.
@@ -640,6 +695,41 @@ impl Ruleset {
                 })
             })
             .collect();
+        for (name, plan) in [
+            ("critical", &file.escalation.critical),
+            ("warning", &file.escalation.warning),
+            ("observe", &file.escalation.observe),
+        ] {
+            if plan.is_empty() || plan.windows(2).any(|w| w[0].after_s > w[1].after_s) {
+                errors.push(format!(
+                    "escalation.{name}: stages must exist and be in time order"
+                ));
+            }
+            if !plan
+                .iter()
+                .any(|s| s.after_s == 0 && s.audience == Audience::Astronaut)
+            {
+                errors.push(format!(
+                    "escalation.{name}: the astronaut is notified at once"
+                ));
+            }
+        }
+        // F-ALM-04, SR-015: critical alarms reach every crew station (sound) and the ground.
+        for needed in [
+            Audience::Cmo,
+            Audience::Sound,
+            Audience::Crew,
+            Audience::Ground,
+        ] {
+            if !file
+                .escalation
+                .critical
+                .iter()
+                .any(|s| s.audience == needed)
+            {
+                errors.push(format!("escalation.critical: missing the {needed:?} stage"));
+            }
+        }
         let (Some(at_rest), true) = (at_rest, errors.is_empty()) else {
             return Err(RulesetError::Invalid(errors));
         };
@@ -658,6 +748,7 @@ impl Ruleset {
                 at_rest: (at_rest, b.at_rest.max),
                 parameters,
             },
+            escalation: file.escalation,
         })
     }
 

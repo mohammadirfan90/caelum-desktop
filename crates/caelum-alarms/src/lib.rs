@@ -5,6 +5,7 @@
 //! Implemented in M3 and M4: F-ALM-01..08, SR-001..SR-019.
 
 pub mod engine;
+pub mod escalation;
 pub mod ruleset;
 pub mod signing;
 
