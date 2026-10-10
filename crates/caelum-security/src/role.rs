@@ -167,6 +167,10 @@ pub enum Command {
     AlarmSilence,
     /// Escalate an alarm to its next stage.
     AlarmEscalate,
+    /// Whether any account exists (first start).
+    SetupStatus,
+    /// Create the first administrator (only while no account exists).
+    SetupCreateAdministrator,
 }
 
 /// Who may call a command.
@@ -182,7 +186,7 @@ pub enum Access {
 
 impl Command {
     /// Every command.
-    pub const ALL: [Command; 12] = [
+    pub const ALL: [Command; 14] = [
         Command::AppInfo,
         Command::AuthLogin,
         Command::AuthLogout,
@@ -195,6 +199,8 @@ impl Command {
         Command::AlarmAcknowledge,
         Command::AlarmSilence,
         Command::AlarmEscalate,
+        Command::SetupStatus,
+        Command::SetupCreateAdministrator,
     ];
 
     /// The IPC command name.
@@ -212,6 +218,8 @@ impl Command {
             Command::AlarmAcknowledge => "alarm_acknowledge",
             Command::AlarmSilence => "alarm_silence",
             Command::AlarmEscalate => "alarm_escalate",
+            Command::SetupStatus => "setup_status",
+            Command::SetupCreateAdministrator => "setup_create_administrator",
         }
     }
 
@@ -226,7 +234,10 @@ impl Command {
             Command::AppInfo
             | Command::AuthLogin
             | Command::BreakGlassOpen
-            | Command::RulesetStatus => Access::Public,
+            | Command::RulesetStatus
+            // CR-007 §4: public, and the station refuses it once any account exists.
+            | Command::SetupStatus
+            | Command::SetupCreateAdministrator => Access::Public,
             Command::AuthLogout | Command::AuthMe | Command::AuthReauth => Access::AnySignedIn,
             Command::AuditList => Access::Roles(&[
                 Role::Cmo,

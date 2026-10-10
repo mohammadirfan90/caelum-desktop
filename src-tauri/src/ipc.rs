@@ -47,6 +47,8 @@ static BUILDER: LazyLock<Builder<Wry>> = LazyLock::new(|| {
             crate::commands::alarm_acknowledge,
             crate::commands::alarm_silence,
             crate::commands::alarm_escalate,
+            crate::commands::setup_status,
+            crate::commands::setup_create_administrator,
         ])
         .events(collect_events![crate::events::AlarmBusEvent])
 });

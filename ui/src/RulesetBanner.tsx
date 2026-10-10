@@ -20,7 +20,7 @@ type Load =
 function describe(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === "string") return error;
-  return "unknown error";
+  return strings.unknownError;
 }
 
 export function RulesetBanner({ load }: { readonly load: () => Promise<RulesetResult> }) {

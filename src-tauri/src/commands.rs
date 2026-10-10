@@ -420,6 +420,25 @@ pub async fn alarm_escalate(
     Ok(())
 }
 
+/// Whether this installation still needs its first administrator (public, CR-007 §4).
+#[tauri::command]
+#[specta::specta]
+pub async fn setup_status(state: State<'_, AppState>) -> Result<bool, CommandError> {
+    state.with(|s| Ok(s.needs_first_administrator()?))
+}
+
+/// Creates the first administrator; refused once any account exists (public, CR-007 §4; audited).
+#[tauri::command]
+#[specta::specta]
+pub async fn setup_create_administrator(
+    state: State<'_, AppState>,
+    username: String,
+    secret: String,
+) -> Result<(), CommandError> {
+    let secret = Zeroizing::new(secret);
+    state.with(|s| Ok(s.create_first_administrator(&username, &secret)?))
+}
+
 // Commands are `async` so the argon2 work runs off the window's main thread.
 
 /// Signs in with a sign-in name and PIN or password (public; throttled; every attempt audited).

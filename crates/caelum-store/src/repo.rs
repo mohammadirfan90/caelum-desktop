@@ -127,6 +127,13 @@ impl Database {
         Ok(user)
     }
 
+    /// Number of user accounts.
+    pub fn user_count(&self) -> Result<i64, StoreError> {
+        Ok(self
+            .connection()
+            .query_row("SELECT count(*) FROM user", [], |r| r.get(0))?)
+    }
+
     /// Appends one audit entry. `build` receives the current chain head (`None` for the first
     /// entry) and returns the complete record to insert; reading the head and inserting happen in
     /// one immediate transaction.

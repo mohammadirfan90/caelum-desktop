@@ -12,7 +12,7 @@ picture). Last updated: 2026-10-10 (M3 independent review recorded; CI runs no l
 | M2 Ingest pipeline and device framework | **complete** (8550faf) | `docs/gates/M2.md` | Physical devices on the hardware-in-the-loop bench (docs/09) |
 | M3 Alarm engine | **complete** (8550faf) | `docs/gates/M3.md` (independent review: Mohammad Irfan, 2026-10-10) | ⚕ clinical content stays DRAFT |
 | M4 Escalation, technical alarms, notifications, self-test | gate items met; closes on the next all-green CI run | `docs/gates/M4.md` | Wristband against a real device on the HIL bench; device runtime wiring with the Devices screen (M6) |
-| M5 UI shell and design system | **in progress**: localisation catalog, primitives, alarm store | | |
+| M5 UI shell and design system | **in progress**: catalog, primitives, shell, sign-in, lock, break-glass, first administrator, display settings done; next: axe in Vitest browser mode, screenshots | | |
 | M6–M13 | not started | | |
 
 Status of record: the table in `docs/10_BUILD_PLAN.md` (the trace enforces milestones marked
@@ -89,3 +89,4 @@ reviewed by Mohammad Irfan, product owner, 2026-10-10). Third-party risks: `docs
 | 2026-10-10 | (this push) | M4 step 5: wristband alert (WX-002, Immediate Alert Level, reviewed by Mohammad Irfan) and wristband targeting by crew member; M4 gate evidence written |
 | 2026-10-10 | (this push) | M2 and M3 closed (CI run 38030464043 on 8550faf all green incl. release-windows); M5 started: localisation catalog, LevelGlyph, NoData/Stat (no number without a source), cards, AlarmBar, EscalationTracker, alarm store |
 | 2026-10-10 | (this push) | Trace fix: with M3 enforced, F-ALM-01/02/03/08 must be cited by their tests; headers of the engine, ruleset, escalation and UI primitive tests now cite them (the previous push left trace.csv failing the gate) |
+| 2026-10-10 | (this push) | M5 step 2: window states (enrolment, sign-in, lock, emergency, shell), role-based nav (ROLE_MATRIX §6), display settings (themes, text to 200 %, glove, reduced motion), first-administrator commands (CR-007 §4), auth_me no longer counts as activity, i18n gate test (no literal text outside the catalog) |

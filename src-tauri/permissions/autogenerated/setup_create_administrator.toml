@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-setup-create-administrator"
+description = "Enables the setup_create_administrator command without any pre-configured scope."
+commands.allow = ["setup_create_administrator"]
+
+[[permission]]
+identifier = "deny-setup-create-administrator"
+description = "Denies the setup_create_administrator command without any pre-configured scope."
+commands.deny = ["setup_create_administrator"]

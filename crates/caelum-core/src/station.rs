@@ -295,6 +295,38 @@ impl Station {
         Ok(self.clock.now_tai().map_err(SecurityError::from)?)
     }
 
+    /// `setup_status` (public): whether the installation still needs its first administrator.
+    pub fn needs_first_administrator(&self) -> Result<bool, StationError> {
+        Ok(self.db.user_count()? == 0)
+    }
+
+    /// `setup_create_administrator` (public, CR-007 §4): creates the first administrator, only
+    /// while no account exists; audited with actor `system`. Refused afterwards.
+    pub fn create_first_administrator(
+        &mut self,
+        username: &str,
+        secret: &str,
+    ) -> Result<(), StationError> {
+        self.authorize(Command::SetupCreateAdministrator)?;
+        if !self.needs_first_administrator()? {
+            return Err(StationError::Denied(Denied {
+                command: Command::SetupCreateAdministrator,
+                reason: DeniedReason::Role,
+            }));
+        }
+        caelum_security::users::create_user(
+            &self.log(),
+            &Actor::system(),
+            caelum_security::users::NewUser {
+                username,
+                role: caelum_security::role::Role::Administrator,
+                crew_member_id: None,
+                secret,
+            },
+        )?;
+        Ok(())
+    }
+
     /// `alarm_acknowledge` (F-ALM-05): onboard for the astronaut (own) and the CMO; the flight
     /// surgeon's acknowledgement counts for the ground stage only (ROLE_MATRIX §5.4). Audited.
     pub fn alarm_acknowledge(&mut self, alarm: AlarmId) -> Result<Acknowledged, StationError> {
@@ -493,19 +525,24 @@ impl Station {
         Ok(())
     }
 
-    /// `auth_me`.
+    /// `auth_me`: who is signed in and whether the session is locked. Reading the state is not
+    /// activity, so a window polling it cannot keep a session from auto-locking (ROLE_MATRIX §4).
     pub fn me(&mut self) -> Result<Me, StationError> {
-        match self.authorize(Command::AuthMe)? {
-            Principal::User(identity) => Ok(Me {
+        let (sessions, log) = self.parts();
+        match sessions.status(&log)? {
+            caelum_security::session::SessionStatus::Active(identity) => Ok(Me {
                 identity,
                 locked: false,
             }),
-            Principal::Locked(identity) => Ok(Me {
+            caelum_security::session::SessionStatus::Locked(identity) => Ok(Me {
                 identity,
                 locked: true,
             }),
-            Principal::Anonymous | Principal::BreakGlass => {
-                Err(StationError::Auth(AuthError::NotSignedIn))
+            caelum_security::session::SessionStatus::SignedOut => {
+                Err(StationError::Denied(Denied {
+                    command: Command::AuthMe,
+                    reason: DeniedReason::SignInRequired,
+                }))
             }
         }
     }

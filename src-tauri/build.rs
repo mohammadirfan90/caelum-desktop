@@ -16,6 +16,8 @@ fn main() {
             "alarm_acknowledge",
             "alarm_silence",
             "alarm_escalate",
+            "setup_status",
+            "setup_create_administrator",
         ]));
     if let Err(error) = tauri_build::try_build(attributes) {
         panic!("tauri-build failed: {error:#}");

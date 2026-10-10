@@ -655,3 +655,57 @@ fn wristband_alerts_target_only_the_crew_members_wristbands() {
         [mine.to_string()]
     );
 }
+
+/// CR-007 §4: the first administrator can be created exactly once, on a new installation, and the
+/// creation is audited; afterwards the command is refused.
+#[test]
+fn the_first_administrator_is_created_once() {
+    let dir = DataDir::new();
+    let keys = MemoryKeyStore::default();
+    let mut station = open(&dir, &keys, &TestClock::default()).unwrap();
+    assert!(station.needs_first_administrator().unwrap());
+    assert!(matches!(
+        station.create_first_administrator("admin", "short"),
+        Err(StationError::Security(SecurityError::Policy(_)))
+    ));
+    station
+        .create_first_administrator("admin", "a long enough passphrase")
+        .unwrap();
+    assert!(!station.needs_first_administrator().unwrap());
+    assert_eq!(
+        denied(station.create_first_administrator("admin2", "another long passphrase")),
+        Some(DeniedReason::Role)
+    );
+    let me = station.login("admin", b"a long enough passphrase").unwrap();
+    assert_eq!(me.identity.role, Role::Administrator);
+    let created: Vec<_> = station
+        .db()
+        .audit_records()
+        .unwrap()
+        .into_iter()
+        .filter(|r| r.action == "user.create")
+        .map(|r| r.actor)
+        .collect();
+    assert_eq!(created, ["system"]);
+}
+
+/// ROLE_MATRIX §4: asking who is signed in is not activity; polling it cannot stop the auto-lock.
+#[test]
+fn polling_auth_me_does_not_keep_a_session_unlocked() {
+    let dir = DataDir::new();
+    let keys = MemoryKeyStore::default();
+    let clock = TestClock::default();
+    let mut station = open(&dir, &keys, &clock).unwrap();
+    add_user(&station, "cmo", Role::Cmo);
+    station
+        .login("cmo", secret_for(Role::Cmo).as_bytes())
+        .unwrap();
+    for _ in 0..20 {
+        clock.advance_s(30);
+        let _ = station.me();
+    }
+    assert!(
+        station.me().unwrap().locked,
+        "10 minutes without activity lock the session"
+    );
+}

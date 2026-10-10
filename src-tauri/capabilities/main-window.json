@@ -14,6 +14,8 @@
     "allow-ruleset-status",
     "allow-alarm-acknowledge",
     "allow-alarm-silence",
-    "allow-alarm-escalate"
+    "allow-alarm-escalate",
+    "allow-setup-status",
+    "allow-setup-create-administrator"
   ]
 }

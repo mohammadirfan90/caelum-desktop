@@ -35,6 +35,10 @@ export const commands = {
 	alarmSilence: (alarm: string, seconds: number) => typedError<number, CommandError>(__TAURI_INVOKE("alarm_silence", { alarm, seconds })),
 	/**  Escalates an alarm to its next stage now (F-ALM-05; audited). */
 	alarmEscalate: (alarm: string) => typedError<null, CommandError>(__TAURI_INVOKE("alarm_escalate", { alarm })),
+	/**  Whether this installation still needs its first administrator (public, CR-007 §4). */
+	setupStatus: () => typedError<boolean, CommandError>(__TAURI_INVOKE("setup_status")),
+	/**  Creates the first administrator; refused once any account exists (public, CR-007 §4; audited). */
+	setupCreateAdministrator: (username: string, secret: string) => typedError<null, CommandError>(__TAURI_INVOKE("setup_create_administrator", { username, secret })),
 };
 
 /** Events */
