@@ -28,3 +28,6 @@ Thumbs.db
 # Vitest browser-mode output (reviewed screenshots are copied to docs/gates/M5-screenshots/).
 /ui/tests/a11y/__screenshots__/
 /ui/.vitest/
+
+# Claude Code agent worktrees (local only).
+/.claude/worktrees/
