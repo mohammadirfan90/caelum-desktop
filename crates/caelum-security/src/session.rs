@@ -221,12 +221,13 @@ impl SessionManager {
         self.apply_idle_lock(log)?;
         let now = log.clock().monotonic_ns();
         Ok(match &mut self.session {
-            Some(s) if !s.locked => {
+            Some(s) if s.locked => Principal::Locked(s.identity.clone()),
+            Some(s) => {
                 s.last_activity_ns = now;
                 Principal::User(s.identity.clone())
             }
-            _ if self.break_glass => Principal::BreakGlass,
-            _ => Principal::Anonymous,
+            None if self.break_glass => Principal::BreakGlass,
+            None => Principal::Anonymous,
         })
     }
 
@@ -297,14 +298,19 @@ impl SessionManager {
         }
     }
 
-    /// Opens the emergency view without sign-in (SR-014). Never refused; always audited.
-    pub fn break_glass_open(&mut self, log: &AuditLog<'_>, station: &str) -> BreakGlassGrant {
+    /// Opens the emergency view without sign-in (SR-014). Never refused; always audited, with the
+    /// station's name as target when it is known.
+    pub fn break_glass_open(
+        &mut self,
+        log: &AuditLog<'_>,
+        station: Option<&str>,
+    ) -> BreakGlassGrant {
         self.break_glass = true;
         let audit_error = log
             .append(
                 &Actor::break_glass(),
                 AuditAction::BreakGlassOpened,
-                Some(station),
+                station,
                 &json!({}),
             )
             .err();

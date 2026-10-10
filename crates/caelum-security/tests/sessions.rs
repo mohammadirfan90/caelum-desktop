@@ -140,7 +140,10 @@ fn idle_session_locks_and_unlocks_with_reauth() {
         s.status(&f.log()).unwrap(),
         SessionStatus::Locked(_)
     ));
-    assert_eq!(s.principal(&f.log()).unwrap(), Principal::Anonymous);
+    assert!(matches!(
+        s.principal(&f.log()).unwrap(),
+        Principal::Locked(_)
+    ));
     assert!(actions(&f).iter().any(|a| a == "auth.auto_lock"));
 
     assert!(s.reauth(&f.log(), b"000000").is_err());
@@ -188,7 +191,7 @@ fn reauth_is_valid_for_two_minutes() {
 fn break_glass_opens_without_sign_in_and_is_audited() {
     let f = Fixture::new();
     let mut s = SessionManager::new(SessionConfig::default());
-    let grant = s.break_glass_open(&f.log(), "station-a");
+    let grant = s.break_glass_open(&f.log(), Some("station-a"));
     assert!(grant.audit_error.is_none());
     assert_eq!(s.principal(&f.log()).unwrap(), Principal::BreakGlass);
     let records = f.tmp.db.audit_records().unwrap();

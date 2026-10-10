@@ -78,6 +78,25 @@ describe("source scanning", () => {
     ]);
   });
 
+  it("records the operating system of tests gated with cfg", () => {
+    const text = [
+      "#[cfg(windows)]",
+      "#[test]",
+      "fn only_windows() {}",
+      "#[test]",
+      '#[cfg(target_os = "macos")]',
+      "fn only_macos() {}",
+      "#[test]",
+      "fn everywhere() {}",
+    ].join("\n");
+    const tests = scanRust("crates/x/tests/os.rs", "x", text);
+    assert.deepEqual(tests.map((t) => [t.name, t.platform]), [
+      ["only_windows", "windows"],
+      ["only_macos", "macos"],
+      ["everywhere", undefined],
+    ]);
+  });
+
   it("finds TS tests incl. it.each and template titles", () => {
     const text = [
       "// Contract (F-SYS-10).",
@@ -186,6 +205,16 @@ describe("trace rows and the gate", () => {
     const trace = buildTrace(catalog, [test("passes", ["F-ZZZ-99"]), test("missing", ["F-AAA-01"])], [{ file: "a.rs", ids: ["SR-999"] }], results);
     assert.deepEqual(trace.unknownIds.map((u) => u.id).sort(), ["F-ZZZ-99", "SR-999"]);
     assert.deepEqual(trace.notRun, ["tools/ci/test/x.test.ts › missing"]);
+  });
+
+  it("expects OS-gated tests only on their platform and never lets them decide a row", () => {
+    const gated: TestRef = { ...test("missing", ["F-AAA-01"]), platform: "windows" };
+    const elsewhere = buildTrace(catalog, [test("passes", ["F-AAA-01"]), gated], [], results, "linux");
+    assert.deepEqual(elsewhere.notRun, []);
+    assert.equal(elsewhere.rows.find((r) => r.id === "F-AAA-01")?.result, "PASS");
+    const here = buildTrace(catalog, [test("passes", ["F-AAA-01"]), gated], [], results, "windows");
+    assert.deepEqual(here.notRun, ["tools/ci/test/x.test.ts › missing"]);
+    assert.equal(toCsv(here), toCsv(elsewhere), "the CSV does not depend on the platform");
   });
 
   it("writes CSV with the documented columns and quotes fields with commas", () => {

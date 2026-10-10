@@ -310,6 +310,10 @@ dependencies = [
  "caelum-test-equipment",
  "caelum-vehicle",
  "cargo_metadata 0.23.1",
+ "serde_json",
+ "thiserror 2.0.21",
+ "uuid",
+ "zeroize",
 ]
 
 [[package]]
@@ -317,6 +321,7 @@ name = "caelum-desktop"
 version = "0.1.0"
 dependencies = [
  "caelum-core",
+ "caelum-domain",
  "serde",
  "serde_json",
  "specta",
@@ -324,6 +329,7 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tauri-specta",
+ "zeroize",
 ]
 
 [[package]]

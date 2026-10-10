@@ -9,6 +9,9 @@ import { extractIds, idsFromName } from "./ids.ts";
 
 export type Runner = "nextest" | "vitest" | "node";
 
+/** Operating system a test is compiled for, when it is gated with `#[cfg(...)]`. */
+export type Platform = "windows" | "macos" | "linux";
+
 export interface TestRef {
   readonly runner: Runner;
   /** Repository-relative source file. */
@@ -18,6 +21,8 @@ export interface TestRef {
   /** Rust: function name. TS: title as written (may contain %s or ${...}). */
   readonly name: string;
   readonly ids: readonly string[];
+  /** Set for Rust tests gated to one operating system (they run only in that OS's CI job). */
+  readonly platform?: Platform;
 }
 
 export interface ModuleRef {
@@ -49,6 +54,31 @@ function commentAbove(lines: readonly string[], index: number): string {
   return out.join("\n");
 }
 
+const PLATFORM_CFG: readonly [RegExp, Platform][] = [
+  [/^#\[cfg\((?:windows|target_os\s*=\s*"windows")\)\]$/, "windows"],
+  [/^#\[cfg\(target_os\s*=\s*"macos"\)\]$/, "macos"],
+  [/^#\[cfg\(target_os\s*=\s*"linux"\)\]$/, "linux"],
+];
+
+/** The OS gate among a test's attributes (the attribute lines around `#[test]`). */
+function platformOf(attributes: readonly string[]): Platform | undefined {
+  for (const a of attributes) {
+    for (const [pattern, platform] of PLATFORM_CFG) if (pattern.test(a)) return platform;
+  }
+  return undefined;
+}
+
+/** Attribute lines directly above `index`. */
+function attributesAbove(lines: readonly string[], index: number): string[] {
+  const out: string[] = [];
+  for (let i = index - 1; i >= 0; i -= 1) {
+    const t = (lines[i] ?? "").trim();
+    if (!t.startsWith("#[")) break;
+    out.push(t);
+  }
+  return out;
+}
+
 /** Rust tests: `#[test]` (optionally followed by more attributes) then `fn name(`. */
 export function scanRust(file: string, crate: string, text: string): TestRef[] {
   const lines = text.split(/\r?\n/);
@@ -56,12 +86,16 @@ export function scanRust(file: string, crate: string, text: string): TestRef[] {
   const tests: TestRef[] = [];
   lines.forEach((line, index) => {
     if (line.trim() !== "#[test]") return;
+    const attributes = attributesAbove(lines, index);
     for (let j = index + 1; j < Math.min(lines.length, index + 6); j += 1) {
+      const t = (lines[j] ?? "").trim();
+      if (t.startsWith("#[")) attributes.push(t);
       const fn = /^\s*(?:pub\s+)?(?:async\s+)?fn\s+([A-Za-z0-9_]+)\s*\(/.exec(lines[j] ?? "");
       if (fn?.[1] === undefined) continue;
       const name = fn[1];
       const ids = new Set([...idsFromName(name), ...extractIds(commentAbove(lines, index)), ...extractIds(header)]);
-      tests.push({ runner: "nextest", file, unit: crate, name, ids: [...ids].sort() });
+      const platform = platformOf(attributes);
+      tests.push({ runner: "nextest", file, unit: crate, name, ids: [...ids].sort(), ...(platform && { platform }) });
       return;
     }
   });

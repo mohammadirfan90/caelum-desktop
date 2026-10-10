@@ -56,7 +56,9 @@ lead (CR-003) until a licensed clinician advisor countersigns; it does not block
   plus key.
 - Re-authentication within the last 2 minutes is required for: signing an encounter, applying a
   configuration bundle or ruleset, changing users or roles, assigning a device to a crew member.
-- A locked session keeps alarms visible and audible (alarms never depend on login).
+- A locked session keeps alarms visible and audible (alarms never depend on login). While locked,
+  only `auth_me`, `auth_reauth` (which unlocks) and `auth_logout` are available; every
+  role-restricted command needs an unlocked session (CR-007 §3).
 
 ## 5. Decisions (delegated by the product owner, 2026-10-10)
 1. **Astronauts acknowledge and silence their own alarms; the CMO for anyone onboard.** BME, MCC

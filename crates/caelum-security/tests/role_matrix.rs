@@ -59,16 +59,20 @@ fn access_from_text(text: &str) -> (Access, Vec<Role>) {
     (Access::Roles(&[]), roles)
 }
 
+fn identity(role: Role) -> UserIdentity {
+    UserIdentity {
+        user_id: UserId::from_uuid(uuid::Uuid::nil()),
+        username: role.as_str().to_owned(),
+        role,
+        crew_member_id: None,
+    }
+}
+
+/// Anonymous, break-glass, and every role both unlocked and locked.
 fn principals() -> Vec<Principal> {
     let mut p = vec![Principal::Anonymous, Principal::BreakGlass];
-    p.extend(Role::ALL.into_iter().map(|role| {
-        Principal::User(UserIdentity {
-            user_id: UserId::from_uuid(uuid::Uuid::nil()),
-            username: role.as_str().to_owned(),
-            role,
-            crew_member_id: None,
-        })
-    }));
+    p.extend(Role::ALL.map(|r| Principal::User(identity(r))));
+    p.extend(Role::ALL.map(|r| Principal::Locked(identity(r))));
     p
 }
 
@@ -110,7 +114,7 @@ fn authorize_every_command_for_every_principal() {
         for principal in principals() {
             let expected = match (command.access(), &principal) {
                 (Access::Public, _) => true,
-                (Access::AnySignedIn, Principal::User(_)) => true,
+                (Access::AnySignedIn, Principal::User(_) | Principal::Locked(_)) => true,
                 (Access::Roles(roles), Principal::User(u)) => roles.contains(&u.role),
                 _ => false,
             };
@@ -135,6 +139,26 @@ fn break_glass_opens_without_sign_in_but_grants_nothing_else() {
             assert!(
                 command.authorize(&Principal::BreakGlass).is_err(),
                 "{}",
+                command.name()
+            );
+        }
+    }
+}
+
+/// ROLE_MATRIX.md §4: a locked session can only see who is signed in, unlock or sign out; every
+/// role-restricted command needs an unlocked session.
+#[test]
+fn a_locked_session_reaches_only_the_session_commands() {
+    let session_commands = [Command::AuthMe, Command::AuthReauth, Command::AuthLogout];
+    for role in Role::ALL {
+        let locked = Principal::Locked(identity(role));
+        for command in Command::ALL {
+            let expected =
+                command.access() == Access::Public || session_commands.contains(&command);
+            assert_eq!(
+                command.authorize(&locked).is_ok(),
+                expected,
+                "{} {role}",
                 command.name()
             );
         }

@@ -3,7 +3,7 @@
 // module → test names → result, and enforces it for milestones marked `complete`.
 import type { Catalog, CatalogEntry, Kind } from "./catalog.ts";
 import type { CaseResult } from "./junit.ts";
-import { type ModuleRef, type TestRef, titlePattern } from "./scan.ts";
+import { type ModuleRef, type Platform, type TestRef, titlePattern } from "./scan.ts";
 
 export type TestStatus = "PASS" | "FAIL" | "SKIPPED" | "NOT_RUN";
 export type RowResult = "PASS" | "FAIL" | "NOT_RUN" | "NO_TEST";
@@ -80,7 +80,24 @@ function idOrder(a: CatalogEntry, b: CatalogEntry): number {
   return KIND_ORDER[a.kind] - KIND_ORDER[b.kind] || a.id.localeCompare(b.id);
 }
 
-export function buildTrace(catalog: Catalog, tests: readonly TestRef[], modules: readonly ModuleRef[], results: Results): Trace {
+/** The operating system this process runs on, in scanner terms. */
+export function currentPlatform(): Platform | undefined {
+  const map: Partial<Record<NodeJS.Platform, Platform>> = { win32: "windows", darwin: "macos", linux: "linux" };
+  return map[process.platform];
+}
+
+/**
+ * Joins scanned tests with their results. Tests gated to one operating system run only in that
+ * OS's CI job: they must have a result on their own platform (`platform`), are not expected
+ * elsewhere, and never decide a row's result, so the CSV is the same on every platform.
+ */
+export function buildTrace(
+  catalog: Catalog,
+  tests: readonly TestRef[],
+  modules: readonly ModuleRef[],
+  results: Results,
+  platform: Platform | undefined = currentPlatform(),
+): Trace {
   const status = new Map(tests.map((t) => [t, testStatus(casesFor(t, results))]));
   const unknownIds: { id: string; where: string }[] = [];
   for (const t of tests) for (const id of t.ids) if (!catalog.entries.has(id)) unknownIds.push({ id, where: testLabel(t) });
@@ -88,7 +105,7 @@ export function buildTrace(catalog: Catalog, tests: readonly TestRef[], modules:
 
   const rows = [...catalog.entries.values()].sort(idOrder).map((entry): TraceRow => {
     const cited = tests.filter((t) => t.ids.includes(entry.id));
-    const statuses = cited.map((t) => status.get(t) ?? "NOT_RUN");
+    const statuses = cited.filter((t) => t.platform === undefined).map((t) => status.get(t) ?? "NOT_RUN");
     const result: RowResult =
       cited.length === 0
         ? "NO_TEST"
@@ -109,7 +126,11 @@ export function buildTrace(catalog: Catalog, tests: readonly TestRef[], modules:
     };
   });
 
-  const notRun = tests.filter((t) => status.get(t) === "NOT_RUN").map(testLabel).sort();
+  const expectedHere = (t: TestRef) => t.platform === undefined || t.platform === platform;
+  const notRun = tests
+    .filter((t) => expectedHere(t) && status.get(t) === "NOT_RUN")
+    .map(testLabel)
+    .sort();
   return { rows, unknownIds, notRun };
 }
 

@@ -7,8 +7,22 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 
 /** Commands */
 export const commands = {
-	/**  Returns the product name and version of this build. */
+	/**  Returns the product name and version of this build (public, shown before sign-in). */
 	appInfo: () => __TAURI_INVOKE<AppInfo>("app_info"),
+	/**  Signs in with a sign-in name and PIN or password (public; throttled; every attempt audited). */
+	authLogin: (username: string, secret: string) => typedError<SessionInfo, CommandError>(__TAURI_INVOKE("auth_login", { username, secret })),
+	/**  Signs out. */
+	authLogout: () => typedError<null, CommandError>(__TAURI_INVOKE("auth_logout")),
+	/**  The signed-in user's identity, role and scope, and whether the session is locked. */
+	authMe: () => typedError<SessionInfo, CommandError>(__TAURI_INVOKE("auth_me")),
+	/**  Re-authenticates before a sensitive action; also unlocks a locked session. */
+	authReauth: (secret: string) => typedError<null, CommandError>(__TAURI_INVOKE("auth_reauth", { secret })),
+	/**  Opens the emergency view without sign-in (SR-014; audited). */
+	breakGlassOpen: () => typedError<BreakGlass, CommandError>(__TAURI_INVOKE("break_glass_open")),
+	/**  Audit entries the caller's role may read, in chain order. */
+	auditList: () => typedError<AuditItem[], CommandError>(__TAURI_INVOKE("audit_list")),
+	/**  Audit chain and signature status. */
+	auditVerify: () => typedError<AuditStatus, CommandError>(__TAURI_INVOKE("audit_verify")),
 };
 
 /* Types */
@@ -19,4 +33,135 @@ export type AppInfo = {
 	/**  Application version, taken from the Cargo workspace (single source of truth). */
 	version: string,
 };
+
+/**  One audit entry. */
+export type AuditItem = {
+	/**  Chain position (decimal). */
+	seq: string,
+	/**  Entry ID. */
+	id: string,
+	/**  TAI nanoseconds since 1958-01-01 (decimal). */
+	atTai: string,
+	/**  Actor. */
+	actor: string,
+	/**  Actor's role. */
+	role: string,
+	/**  Action. */
+	action: string,
+	/**  Target. */
+	target: string | null,
+	/**  JSON details. */
+	details: string,
+};
+
+/**  Audit chain and signature status (`audit_verify`). */
+export type AuditStatus = {
+	/**  Entries checked (decimal). */
+	entries: string,
+	/**  True if every link, hash and signature checked out. */
+	intact: boolean,
+	/**  Problems found. */
+	problems: ChainProblem[],
+};
+
+/**  Result of opening the emergency view. */
+export type BreakGlass = {
+	/**  Always true: break-glass is never refused (SR-014). */
+	opened: boolean,
+	/**  False if the opening could not be audited (shown to the crew; never blocks the view). */
+	audited: boolean,
+};
+
+/**  A problem at one entry. */
+export type ChainProblem = {
+	/**  Chain position (decimal). */
+	seq: string,
+	/**  What is wrong. */
+	kind: ChainProblemKind,
+};
+
+/**  What is wrong at one entry. */
+export type ChainProblemKind = 
+/**  An entry is missing or was inserted. */
+"sequenceGap" | 
+/**  The link to the previous entry is broken. */
+"brokenLink" | 
+/**  The entry's content was changed. */
+"hashMismatch" | 
+/**  The signature is not the instance key's. */
+"badSignature";
+
+/**  A failed command, as the UI sees it. Messages never contain secrets. */
+export type CommandError = {
+	/**  Category. */
+	kind: ErrorKind,
+	/**  Human-readable reason. */
+	message: string,
+	/**  For `throttled`: seconds until the next attempt is accepted. */
+	retryAfterS: number | null,
+};
+
+/**  Why a command failed. */
+export type ErrorKind = 
+/**  Sign in first. */
+"signInRequired" | 
+/**  The session is locked; re-authenticate to unlock. */
+"locked" | 
+/**  Not available for this role. */
+"notPermitted" | 
+/**  Wrong sign-in name or secret. */
+"invalidCredentials" | 
+/**  Too many failures; see `retryAfterS`. */
+"throttled" | 
+/**  The account is disabled. */
+"accountDisabled" | 
+/**  The account cannot sign in interactively. */
+"notInteractive" | 
+/**  Re-authenticate first. */
+"reauthRequired" | 
+/**  CAELUM's records could not be opened. */
+"unavailable" | 
+/**  Any other failure (storage, keystore, clock). */
+"failed";
+
+/**  A role (`docs/ROLE_MATRIX.md` §1). */
+export type RoleName = 
+/**  Astronaut. */
+"astronaut" | 
+/**  Crew Medical Officer. */
+"cmo" | 
+/**  Flight Surgeon. */
+"flight_surgeon" | 
+/**  Biomedical Engineer. */
+"bme" | 
+/**  Mission Control Operator. */
+"mcc" | 
+/**  Administrator. */
+"administrator" | 
+/**  Device gateway (never signs in interactively). */
+"device_gateway";
+
+/**  The signed-in user. */
+export type SessionInfo = {
+	/**  Account ID. */
+	userId: string,
+	/**  Sign-in name. */
+	username: string,
+	/**  Role. */
+	role: RoleName,
+	/**  Crew member the account belongs to (scope of own data). */
+	crewMemberId: string | null,
+	/**  The session is locked. */
+	locked: boolean,
+};
+
+/* Tauri Specta runtime */
+async function typedError<T, E>(result: Promise<T>): Promise<{ status: "ok"; data: T } | { status: "error"; error: E }> {
+    try {
+        return { status: "ok", data: await result };
+    } catch (e) {
+        if (e instanceof Error) throw e;
+        return { status: "error", error: e as any };
+    }
+}
 

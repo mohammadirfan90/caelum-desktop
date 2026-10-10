@@ -2,5 +2,14 @@
   "identifier": "main-window",
   "description": "Least privilege for the main window: only CAELUM's own commands, no shell, file system, HTTP or updater access (docs/03_ARCHITECTURE.md §5).",
   "windows": ["main"],
-  "permissions": ["allow-app-info"]
+  "permissions": [
+    "allow-app-info",
+    "allow-auth-login",
+    "allow-auth-logout",
+    "allow-auth-me",
+    "allow-auth-reauth",
+    "allow-break-glass-open",
+    "allow-audit-list",
+    "allow-audit-verify"
+  ]
 }

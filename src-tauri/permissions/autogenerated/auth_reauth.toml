@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-auth-reauth"
+description = "Enables the auth_reauth command without any pre-configured scope."
+commands.allow = ["auth_reauth"]
+
+[[permission]]
+identifier = "deny-auth-reauth"
+description = "Denies the auth_reauth command without any pre-configured scope."
+commands.deny = ["auth_reauth"]

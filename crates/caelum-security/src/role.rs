@@ -105,10 +105,13 @@ pub struct UserIdentity {
 /// Who is calling a command.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Principal {
-    /// Nobody is signed in (or the session is locked).
+    /// Nobody is signed in.
     Anonymous,
     /// The emergency view was opened without sign-in (SR-014).
     BreakGlass,
+    /// A signed-in user whose session is locked: only the session commands (identity, unlock by
+    /// re-authentication, sign out) are available (`docs/ROLE_MATRIX.md` §4).
+    Locked(UserIdentity),
     /// A signed-in, unlocked user.
     User(UserIdentity),
 }
@@ -139,7 +142,7 @@ pub enum Command {
 pub enum Access {
     /// Anyone, without sign-in.
     Public,
-    /// Any signed-in user.
+    /// Any signed-in user, also while the session is locked (session commands only).
     AnySignedIn,
     /// Signed-in users with one of these roles.
     Roles(&'static [Role]),
@@ -201,7 +204,7 @@ impl Command {
     pub fn authorize(self, principal: &Principal) -> Result<(), Denied> {
         let allowed = match (self.access(), principal) {
             (Access::Public, _) => true,
-            (Access::AnySignedIn, Principal::User(_)) => true,
+            (Access::AnySignedIn, Principal::User(_) | Principal::Locked(_)) => true,
             (Access::Roles(roles), Principal::User(u)) => roles.contains(&u.role),
             (Access::AnySignedIn | Access::Roles(_), _) => false,
         };
@@ -210,7 +213,11 @@ impl Command {
         } else {
             Err(Denied {
                 command: self,
-                signed_in: matches!(principal, Principal::User(_)),
+                reason: match principal {
+                    Principal::User(_) => DeniedReason::Role,
+                    Principal::Locked(_) => DeniedReason::Locked,
+                    Principal::Anonymous | Principal::BreakGlass => DeniedReason::SignInRequired,
+                },
             })
         }
     }
@@ -218,10 +225,31 @@ impl Command {
 
 /// A refused command.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
-#[error("{} is not permitted{}", command.name(), if *signed_in { " for this role" } else { " without sign-in" })]
+#[error("{} is not permitted: {}", command.name(), reason.text())]
 pub struct Denied {
     /// The command.
     pub command: Command,
-    /// Whether the caller was signed in (else: sign-in required).
-    pub signed_in: bool,
+    /// Why.
+    pub reason: DeniedReason,
+}
+
+/// Why a command was refused.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DeniedReason {
+    /// Nobody is signed in.
+    SignInRequired,
+    /// The session is locked; unlock first.
+    Locked,
+    /// The signed-in role may not use this command.
+    Role,
+}
+
+impl DeniedReason {
+    const fn text(self) -> &'static str {
+        match self {
+            DeniedReason::SignInRequired => "sign-in required",
+            DeniedReason::Locked => "the session is locked",
+            DeniedReason::Role => "not available for this role",
+        }
+    }
 }

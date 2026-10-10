@@ -32,8 +32,18 @@ impl std::error::Error for BindingsError {}
 
 /// The single command registry. The invoke handler borrows it, and Tauri needs that borrow to be
 /// `'static`, so it lives for the whole process.
-static BUILDER: LazyLock<Builder<Wry>> =
-    LazyLock::new(|| Builder::<Wry>::new().commands(collect_commands![crate::commands::app_info]));
+static BUILDER: LazyLock<Builder<Wry>> = LazyLock::new(|| {
+    Builder::<Wry>::new().commands(collect_commands![
+        crate::commands::app_info,
+        crate::commands::auth_login,
+        crate::commands::auth_logout,
+        crate::commands::auth_me,
+        crate::commands::auth_reauth,
+        crate::commands::break_glass_open,
+        crate::commands::audit_list,
+        crate::commands::audit_verify,
+    ])
+});
 
 /// The invoke handler for every registered command.
 pub fn invoke_handler() -> impl Fn(Invoke<Wry>) -> bool + Send + Sync + 'static {

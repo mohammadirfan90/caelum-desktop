@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-break-glass-open"
+description = "Enables the break_glass_open command without any pre-configured scope."
+commands.allow = ["break_glass_open"]
+
+[[permission]]
+identifier = "deny-break-glass-open"
+description = "Denies the break_glass_open command without any pre-configured scope."
+commands.deny = ["break_glass_open"]

@@ -88,9 +88,21 @@ fn no_global_api_and_no_plugins() {
     );
 }
 
-/// 03 §5: every capability grants only CAELUM's own commands.
+/// The IPC command names of `docs/ROLE_MATRIX.md` §3, as the security core defines them.
+fn matrix_commands() -> Vec<&'static str> {
+    caelum_core::security::role::Command::ALL
+        .iter()
+        .map(|c| c.name())
+        .collect()
+}
+
+/// 03 §5: every capability grants only CAELUM's own commands: exactly those of the role matrix.
 #[test]
 fn capabilities_grant_only_app_commands() {
+    let expected: Vec<String> = matrix_commands()
+        .iter()
+        .map(|n| format!("allow-{}", n.replace('_', "-")))
+        .collect();
     let dir = crate_dir().join("capabilities");
     let mut files = 0;
     for entry in std::fs::read_dir(&dir).expect("capabilities directory") {
@@ -104,9 +116,34 @@ fn capabilities_grant_only_app_commands() {
             .as_array()
             .expect("permissions array");
         let names: Vec<&str> = permissions.iter().filter_map(Value::as_str).collect();
-        assert_eq!(names, ["allow-app-info"], "{}", path.display());
+        assert_eq!(names, expected, "{}", path.display());
     }
     assert_eq!(files, 1, "expected exactly one capability file");
+}
+
+/// Every command in the role matrix is in the build manifest (so it needs a permission) and in the
+/// generated bindings, and there are no others (R-SEC-02, CLAUDE.md rule 6).
+#[test]
+fn registered_commands_are_exactly_the_role_matrix_commands() {
+    let mut expected = matrix_commands();
+    expected.sort_unstable();
+
+    let build = std::fs::read_to_string(crate_dir().join("build.rs")).expect("build.rs");
+    let start = build.find(".commands(&[").expect("manifest command list");
+    let end = build[start..].find("])").expect("end of list") + start;
+    let mut manifest: Vec<&str> = build[start..end].split('"').skip(1).step_by(2).collect();
+    manifest.sort_unstable();
+    assert_eq!(manifest, expected, "build.rs app manifest");
+
+    let bindings =
+        std::fs::read_to_string(crate_dir().join("../ui/src/bindings.ts")).expect("bindings");
+    let mut invoked: Vec<&str> = bindings
+        .split("__TAURI_INVOKE")
+        .skip(2) // the import line, then one split per command
+        .filter_map(|part| part.split('"').nth(1))
+        .collect();
+    invoked.sort_unstable();
+    assert_eq!(invoked, expected, "ui/src/bindings.ts");
 }
 
 /// R-OPS-03, CR-004: MSI and per-machine NSIS installers. Development builds use WebView2 mode

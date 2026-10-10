@@ -2,8 +2,17 @@
 //! permission in `capabilities/` (least privilege, docs/03_ARCHITECTURE.md §5).
 
 fn main() {
-    let attributes = tauri_build::Attributes::new()
-        .app_manifest(tauri_build::AppManifest::new().commands(&["app_info"]));
+    let attributes =
+        tauri_build::Attributes::new().app_manifest(tauri_build::AppManifest::new().commands(&[
+            "app_info",
+            "auth_login",
+            "auth_logout",
+            "auth_me",
+            "auth_reauth",
+            "break_glass_open",
+            "audit_list",
+            "audit_verify",
+        ]));
     if let Err(error) = tauri_build::try_build(attributes) {
         panic!("tauri-build failed: {error:#}");
     }

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-auth-me"
+description = "Enables the auth_me command without any pre-configured scope."
+commands.allow = ["auth_me"]
+
+[[permission]]
+identifier = "deny-auth-me"
+description = "Denies the auth_me command without any pre-configured scope."
+commands.deny = ["auth_me"]
