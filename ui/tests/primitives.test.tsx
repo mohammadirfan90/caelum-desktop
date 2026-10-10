@@ -18,6 +18,7 @@ const raise = (alarm: string, priority: string, title: string) =>
   ({ type: "alarm", alarm, crewId: "c1", priority, category: "RESPIRATORY", state: "active", title }) as const;
 
 describe("LevelGlyph", () => {
+  // R-ALM-04: technical alarms have their own shape, never only a colour.
   it("gives every level its own shape, including the technical square", () => {
     const shapes = (["normal", "observe", "warning", "critical", "technical"] as const).map((level) => {
       const { container, unmount } = render(<LevelGlyph level={level} />);

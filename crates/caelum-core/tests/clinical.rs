@@ -237,6 +237,8 @@ fn f_cln_06_pvt_stores_the_median_or_nothing() {
     assert_eq!(pvt.observation.classification, "measured");
 }
 
+/// F-CLN-02, R-CLN-04: protocols are versioned and signed; an unsigned or altered library is
+/// refused.
 #[test]
 fn f_cln_02_protocols_are_signed_public_and_runs_are_audited_and_linked() {
     let mut w = world();

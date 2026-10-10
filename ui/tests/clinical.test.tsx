@@ -137,6 +137,7 @@ describe("Clinical files", () => {
     expect(await screen.findByText(/the ECG file does not open/)).toBeInTheDocument();
   });
 
+  // R-CLN-03: the medical officer and flight surgeon review recorded ECGs.
   it("reviews an ECG with keyboard-operable calipers that give the interval and rate (F-CLN-03)", async () => {
     const samples = Array.from({ length: 500 }, (_, i) => (i % 250 === 125 ? 1 : 0));
     const a = api({
@@ -156,6 +157,7 @@ describe("Clinical files", () => {
     expect(screen.queryByRole("region", { name: "ECG review: rest.edf" })).not.toBeInTheDocument();
   });
 
+  // R-CLN-03: imaging review.
   it("shows a DICOM frame with its size and window, and applies a window by hand (F-CLN-04)", async () => {
     const dicomView = vi.fn((_id: string, frame: number, window: { center: number | null; width: number | null } | null) =>
       ok({

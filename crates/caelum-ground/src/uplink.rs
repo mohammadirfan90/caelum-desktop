@@ -326,7 +326,7 @@ mod tests {
         assert_eq!(UplinkKind::from_path("uplink/config-/x"), None);
     }
 
-    /// F-GND-07, SR-009: the bundled ruleset verifies as an uplink with the built-in development
+    /// F-GND-07, SR-009, R-SEC-05: the bundled ruleset verifies as an uplink with the built-in development
     /// key in development builds; a tampered copy is refused.
     #[test]
     fn f_gnd_07_ruleset_uplink_reuses_ruleset_verification() {
@@ -361,7 +361,8 @@ mod tests {
         let _ = sign; // ruleset signing is exercised by caelum-alarms
     }
 
-    /// F-GND-07: model packages need a flight medical approver in release builds.
+    /// F-GND-07, R-SEC-05: model packages need a flight medical approver in release builds; an
+    /// untrusted signer is refused.
     #[test]
     fn f_gnd_07_models_need_medical_approval_in_flight() {
         let author = SigningKey::from_bytes(&[3; 32]);

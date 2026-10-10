@@ -18,6 +18,7 @@ ignore = [
     { id = "RUSTSEC-2024-0429", reason = "glib 0.18 VariantStrIter unsoundness: Linux-only (Tauri 2 GTK backend), API not used by CAELUM; fix needs gtk-rs >= 0.20, not yet adopted by Tauri 2" },
     { id = "RUSTSEC-2024-0370", reason = "proc-macro-error unmaintained: compile-time only, Linux-only via glib-macros (Tauri 2 GTK backend); no runtime code" },
     { id = "RUSTSEC-2024-0436", reason = "paste unmaintained: compile-time macro used by specta (tauri-specta); no runtime code, no known vulnerability" },
+    { id = "RUSTSEC-2021-0153", reason = "encoding unmaintained: used by dicom-encoding (dicom-rs, a stack item) to decode DICOM Specific Character Set text of imported files only; no known vulnerability; a malformed file is refused (CR-014 §2)" },
 ]
 
 [licenses]
@@ -47,6 +48,17 @@ exceptions = [
     { allow = ["MPL-2.0"], crate = "selectors" },
     { allow = ["MPL-2.0"], crate = "dtoa-short" },
     { allow = ["MPL-2.0"], crate = "option-ext" },
+    # CC0-1.0 (public-domain dedication, compatible with Apache-2.0): only the character-set
+    # tables of `encoding`, pulled in by dicom-rs (CR-014 §2; docs/third-party-risk.md).
+    { allow = ["CC0-1.0"], crate = "encoding-index-japanese" },
+    { allow = ["CC0-1.0"], crate = "encoding-index-korean" },
+    { allow = ["CC0-1.0"], crate = "encoding-index-simpchinese" },
+    { allow = ["CC0-1.0"], crate = "encoding-index-singlebyte" },
+    { allow = ["CC0-1.0"], crate = "encoding-index-tradchinese" },
+    { allow = ["CC0-1.0"], crate = "encoding_index_tests" },
+    # IJG: permissive; binary distribution must credit the Independent JPEG Group (NOTICE).
+    # Pulled in by dicom-rs's JPEG transfer syntaxes (CR-014 §2).
+    { allow = ["IJG"], crate = "jpeg-encoder" },
 ]
 
 [licenses.private]

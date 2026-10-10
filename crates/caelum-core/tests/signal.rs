@@ -189,3 +189,63 @@ fn sr_005_an_unusable_ecg_restarts_the_stream_and_raises_no_asystole() {
         "lead off is not asystole"
     );
 }
+
+/// One GHS observation body (class, length, flags, rest), as on the air (IEEE 11073-10206).
+fn ghs_body(class: u8, flags: u16, rest: &[u8]) -> Vec<u8> {
+    let len = u16::try_from(5 + rest.len()).unwrap();
+    let mut b = vec![class];
+    b.extend_from_slice(&len.to_le_bytes());
+    b.extend_from_slice(&flags.to_le_bytes());
+    b.extend_from_slice(rest);
+    b
+}
+
+/// M7 gate, F-ACQ-03, R-INT-03: a GHS ECG stream, as segmented notifications of the Live Health
+/// Observations characteristic, is joined, decoded, stored and returned by the waveform read
+/// command the Body screen draws from (`ui/tests/crew.test.tsx` renders such chunks).
+#[test]
+fn f_acq_03_a_ghs_ecg_stream_reaches_the_waveform_read_command() {
+    let (_d, clock, mut s, device) = setup();
+    // Lead II, µV, scale 1, offset 0, period 4 ms (250 Hz), 1 sample per period, 2 bytes each:
+    // one second with a 1 mV R wave at sample 125.
+    let mut rest = 0x0002_0102_u32.to_le_bytes().to_vec(); // MDC_ECG_ELEC_POTL_II
+    rest.extend_from_slice(&0x10B3_u16.to_le_bytes()); // MDC_DIM_MICRO_VOLT
+    rest.extend_from_slice(&[0x01, 0x00, 0x00, 0x00]); // scale 1
+    rest.extend_from_slice(&[0x00, 0x00, 0x00, 0x00]); // offset 0
+    rest.extend_from_slice(&[0x04, 0x00, 0x00, 0xFD]); // period 4 × 10^-3 s
+    rest.extend_from_slice(&[1, 2]);
+    rest.extend_from_slice(&250_u32.to_le_bytes());
+    for i in 0..250_u16 {
+        let uv: u16 = if i == 125 { 1000 } else { 0 };
+        rest.extend_from_slice(&uv.to_le_bytes());
+    }
+    let body = ghs_body(4, 0x0001, &rest); // class 4: sample array
+                                           // Three segments: first (bit 0), continuation, last (bit 1); counter in bits 2–7.
+    let parts: Vec<&[u8]> = body.chunks(200).collect();
+    assert_eq!(parts.len(), 3);
+    for (k, part) in parts.iter().enumerate() {
+        let first = u8::from(k == 0);
+        let last = if k == parts.len() - 1 { 0x02 } else { 0 };
+        let header = first | last | (u8::try_from(k).unwrap() << 2);
+        let mut seg = vec![header];
+        seg.extend_from_slice(part);
+        clock.0.tai.store(T0 + 1_000_000_000, Ordering::SeqCst);
+        s.ingest_notification(device, 0x2B8B, &seg).unwrap();
+    }
+    s.logout().unwrap();
+    s.login("cmo.b", b"135792").unwrap();
+    let chunks = s.waveform_recent(crew(), "ecg", 60).unwrap();
+    assert_eq!(chunks.len(), 1, "{chunks:?}");
+    let c = &chunks[0];
+    assert_eq!((c.encoding.as_str(), c.sample_rate), ("i16le", 250.0));
+    let samples: Vec<i16> = c
+        .data
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .map(|b| i16::from_le_bytes(*b))
+        .collect();
+    assert_eq!(samples.len(), 250);
+    assert_eq!(samples[125], 1000, "µV preserved from the device");
+    assert_eq!(samples.iter().filter(|&&v| v != 0).count(), 1);
+}

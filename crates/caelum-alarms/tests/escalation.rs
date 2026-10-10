@@ -110,6 +110,8 @@ fn record(delivered: &mut Vec<(Audience, u32)>, t: i64, notices: Vec<Notice>) {
 }
 
 /// M4 gate: the signed plans equal docs/06, and stages are delivered exactly at their times.
+/// R-ALM-01: a critical alarm's first stage (astronaut and CMO) is delivered at 0 s, in the call
+/// that raises it.
 #[test]
 fn escalation_timeline_matches_docs_06_exactly() {
     let rs = ruleset();
@@ -284,7 +286,7 @@ fn sr_007_restart_mid_escalation_resumes_at_the_correct_stage() {
     );
 }
 
-/// M4 gate, SR-008: silence is clamped to 2 min (critical), never stops escalation, and the alarm
+/// M4 gate, SR-008, R-ALM-05: silence is clamped to 2 min (critical), never stops escalation, and the alarm
 /// sounds again when it expires.
 #[test]
 fn sr_008_silence_expires_and_resounds_while_escalation_continues() {
@@ -333,6 +335,7 @@ fn sr_008_silence_expires_and_resounds_while_escalation_continues() {
     );
 }
 
+/// SR-008, R-ALM-05: silencing is time-limited per priority.
 #[test]
 fn sr_008_warning_silence_is_at_most_ten_minutes_and_observe_cannot_be_silenced() {
     let mut e = Escalator::new(ruleset().escalation);

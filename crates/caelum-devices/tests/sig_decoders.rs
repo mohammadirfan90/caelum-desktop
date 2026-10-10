@@ -1,4 +1,4 @@
-//! Bluetooth SIG profile decoders, each checked through ingest (F-ACQ-02, R-CLN-02, SR-017; M2
+//! Bluetooth SIG profile decoders, each checked through ingest (F-ACQ-02, R-CLN-02, R-INT-03, SR-017; M2
 //! gate: no defaults, demonstration/test readings rejected, no thermometer reading reaches
 //! core_temp).
 

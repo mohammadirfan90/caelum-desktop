@@ -289,7 +289,8 @@ mod tests {
         Apid::new(v).expect("valid apid")
     }
 
-    /// F-GND-01: primary header bit layout per CCSDS 133.0-B-2 §4.1.3, checked octet by octet.
+    /// F-GND-01, R-INT-01: primary header bit layout per CCSDS 133.0-B-2 §4.1.3, checked octet by
+    /// octet.
     #[test]
     fn f_gnd_01_primary_header_layout_matches_the_standard() {
         let t = TaiNs(2_000_000_000 * NS_PER_S + NS_PER_S / 2);

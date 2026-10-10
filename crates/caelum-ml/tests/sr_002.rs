@@ -206,6 +206,7 @@ fn forged(t: i64, value: f64, parameter: Parameter) -> AdvisoryResult {
     }
 }
 
+/// SR-002, R-ALM-06: models never suppress, delay or downgrade an absolute-limit alarm.
 #[test]
 fn sr_002_adversarial_model_outputs_never_change_absolute_alarm_decisions() {
     let (baseline, none) = run(|_, _, _| Vec::new());

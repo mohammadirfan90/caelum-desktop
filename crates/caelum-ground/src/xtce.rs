@@ -419,7 +419,8 @@ mod tests {
         (params, containers)
     }
 
-    /// F-GND-02: every downlinked catalog parameter is in the full MDB with its container.
+    /// F-GND-02, R-INT-01: every downlinked catalog parameter is in the full MDB (XTCE) with its
+    /// container.
     #[test]
     fn f_gnd_02_every_downlinked_parameter_is_defined() {
         let xml = generate(&plan(), "1", XtceScope::Full).expect("generates");

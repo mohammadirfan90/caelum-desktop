@@ -291,7 +291,7 @@ fn sr_006_thermal_group_spans_core_and_measured_temperature() {
     assert!(e.open_alarms().all(|a| a.rule_id == "temp.critical"));
 }
 
-/// SR-002: baseline notices are observe-level: an absolute alarm supersedes them and they never
+/// SR-002, R-ALM-06: baseline notices are observe-level: an absolute alarm supersedes them and they never
 /// block or delay it.
 #[test]
 fn sr_002_baselines_never_suppress_or_delay_absolute_alarms() {

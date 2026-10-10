@@ -433,7 +433,7 @@ export const en = {
   uplinkTitle: "Apply a signed item",
   uplinkHelp: "Uplinked or delivered on media: a ruleset, protocol library or configuration with its signature file. Nothing unsigned is accepted.",
   uplinkKind: "Item",
-  uplinkKinds: { ruleset: "Alarm ruleset", protocols: "Protocol library", crew: "Crew roster", vehicle: "Vehicle table", ground: "Ground configuration", mds: "Medical data system configuration" } as Record<string, string>,
+  uplinkKinds: { ruleset: "Alarm ruleset", protocols: "Protocol library", crew: "Crew roster", vehicle: "Vehicle table", ground: "Ground configuration", mds: "Medical data system configuration", cluster: "Fail-over and crew-LAN configuration (next start)" } as Record<string, string>,
   uplinkApply: "Verify and apply",
   uplinkDone: (version: string, later: boolean) => (later ? `Version ${version} verified. It takes effect at the next start.` : `Version ${version} verified and applied.`),
 

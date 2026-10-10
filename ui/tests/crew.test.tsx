@@ -79,6 +79,7 @@ function api(over: Partial<Api> = {}): Api {
 }
 
 describe("Home and Body", () => {
+  // R-CLN-01: vital signs with source device, measurement time and quality.
   it("shows values with source and time, and STALE / SIGNAL UNUSABLE / NO DATA otherwise (SR-004)", async () => {
     render(<Home ctx={{ api: api(), crewId: "c1", version: 0, alarms: [] }} />);
     expect(await screen.findByText("97")).toBeInTheDocument();
@@ -139,6 +140,7 @@ describe("Alerts", () => {
     expect(screen.queryByRole("region", { name: "Alarm history and fatigue report" })).not.toBeInTheDocument();
   });
 
+  // R-ALM-04: technical alarms are named as technical, apart from physiological ones.
   it("names technical alarms from the catalog", async () => {
     render(<Alerts api={api({ alarmList: () => ok([alarm({ kind: "technical", title: null, ruleId: "technical.low_battery.d1", priority: "advisory" })]) })} userRole="bme" crew={crew} version={0} />);
     expect(await screen.findByText("Device battery low")).toBeInTheDocument();

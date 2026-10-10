@@ -518,7 +518,8 @@ fn sr_007_restart_mid_escalation_resumes_from_the_records() {
     );
 }
 
-/// F-ALM-05, SR-008: acknowledgement and silence are recorded and survive a restart.
+/// F-ALM-05, SR-008, R-ALM-05: acknowledgement and silence are recorded (silence clamped to
+/// its limit) and survive a restart.
 #[test]
 fn acknowledgement_and_silence_are_recorded_and_survive_a_restart() {
     use caelum_alarms::escalation::Notice;

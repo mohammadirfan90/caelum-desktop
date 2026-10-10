@@ -19,3 +19,10 @@ registered United States trademark of Regenstrief Institute, Inc.
 Microsoft Edge WebView2 Runtime, Fixed Version 155.0.4283.45 (Windows builds)
 Copyright Microsoft Corporation. Redistributed unmodified under Microsoft's WebView2 Runtime
 distribution terms; it is not covered by the Apache License of this product.
+
+jpeg-encoder 0.6 (via dicom-rs, DICOM image support)
+This software is based in part on the work of the Independent JPEG Group. jpeg-encoder is
+licensed under (MIT OR Apache-2.0) AND IJG.
+
+encoding 0.2 character-set tables (encoding-index-*, via dicom-rs)
+Dedicated to the public domain under CC0 1.0 Universal.

@@ -29,7 +29,7 @@ pub struct UplinkResult {
 
 impl Station {
     /// `uplink_apply`: verifies and applies one uplinked item. `kind` is `ruleset`, `protocols`,
-    /// `crew`, `vehicle`, `ground` or `mds`. Administrator, re-authentication; audited.
+    /// `crew`, `vehicle`, `ground`, `mds` or `cluster`. Administrator, re-authentication; audited.
     pub fn uplink_apply(
         &mut self,
         kind: &str,
@@ -98,6 +98,11 @@ impl Station {
             "mds" => UplinkResult {
                 version: self.config_apply_mds(content, envelope)?,
                 at_next_start: false,
+            },
+            // The fail-over and crew-LAN configuration takes effect at the next start (CR-017 §4).
+            "cluster" => UplinkResult {
+                version: self.config_apply_cluster(content, envelope)?,
+                at_next_start: true,
             },
             other => return Err(rejected(format!("unknown uplink kind {other}"))),
         };

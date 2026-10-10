@@ -127,6 +127,7 @@ fn denied(r: Result<impl std::fmt::Debug, StationError>) -> Option<DeniedReason>
     }
 }
 
+/// SR-004, R-CLN-01: each current value comes with its source device, time and status.
 #[test]
 fn sr_004_vitals_show_source_and_freshness_and_stay_in_scope() {
     let mut w = world();
