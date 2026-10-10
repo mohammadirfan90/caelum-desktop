@@ -6,7 +6,8 @@
 
 use std::path::{Path, PathBuf};
 
-use caelum_alarms::escalation::Notice;
+use caelum_alarms::engine::Event;
+use caelum_alarms::escalation::{Notice, OpsEscalation};
 use caelum_alarms::signing::{built_in_keys, TrustPolicy};
 use caelum_domain::time::TaiNs;
 use caelum_ground::cfdp::CfdpConfig;
@@ -229,11 +230,86 @@ impl Station {
         Ok(config.version)
     }
 
-    /// Publishes the ground stage of escalations in `notices` and flushes the backlog. A failure
-    /// raises `technical.path_b`; success clears it. Never blocks onboard escalation.
+    /// The OPS fields of a stored alarm in `state` (docs/06 §3a); `None` for technical alarms
+    /// (advisory priority has no OPS code; instance status covers them).
+    fn ops_record(&self, id: &str, state: &'static str, at: TaiNs) -> Option<OpsEscalation> {
+        let a = self.db.alarm_view(id).ok()??;
+        let priority = match a.priority.as_str() {
+            "critical" => "critical",
+            "warning" => "warning",
+            "observe" => "observe",
+            _ => return None,
+        };
+        let category = match a.category.as_str() {
+            "CARDIO" => "CARDIO",
+            "RESPIRATORY" => "RESPIRATORY",
+            "THERMAL" => "THERMAL",
+            "ENVIRONMENT" => "ENVIRONMENT",
+            "TECHNICAL" => "TECHNICAL",
+            _ => return None,
+        };
+        Some(OpsEscalation {
+            crew_id: a.crew_member_id?.parse().ok()?,
+            priority,
+            category,
+            state,
+            stage: u8::try_from(a.escalation_stage).unwrap_or(u8::MAX),
+            created_at_tai: a.created_at_tai,
+            at_tai: at.0,
+        })
+    }
+
+    /// Path B records for engine events: every alarm state change (ICD-VEH §6).
+    fn ops_for_events(&self, events: &[Event], now: TaiNs) -> Vec<OpsEscalation> {
+        events
+            .iter()
+            .filter_map(|e| {
+                let (id, state) = match e {
+                    Event::Confirming(a) => (a.id.to_string(), "confirming"),
+                    Event::Raised(a) | Event::Reactivated(a) => (a.id.to_string(), "active"),
+                    Event::ClearedAwaitingAck(a) => (a.id.to_string(), "cleared_awaiting_ack"),
+                    Event::NotConfirmed(a) => (a.id.to_string(), "ended"),
+                    Event::Resolved { alarm, .. } | Event::Superseded { alarm, .. } => {
+                        (alarm.to_string(), "ended")
+                    }
+                    _ => return None,
+                };
+                self.ops_record(&id, state, now)
+            })
+            .collect()
+    }
+
+    /// Publishes alarm state changes and the ground stage of escalations, then flushes the
+    /// backlog. A failure raises `technical.path_b`; success clears it. Never blocks onboard
+    /// escalation (SR-015).
     pub(super) fn publish_ops(
         &mut self,
+        events: &[Event],
         notices: &[Notice],
+        now: TaiNs,
+    ) -> Result<(), StationError> {
+        let mut records = self.ops_for_events(events, now);
+        records.extend(notices.iter().filter_map(|n| match n {
+            Notice::Ops(e) => Some(e.clone()),
+            _ => None,
+        }));
+        self.publish_records(&records, now)
+    }
+
+    /// Publishes one alarm's state (acknowledgement) on path B.
+    pub(super) fn publish_alarm_state(
+        &mut self,
+        id: &str,
+        state: &'static str,
+        now: TaiNs,
+    ) -> Result<(), StationError> {
+        let records: Vec<OpsEscalation> = self.ops_record(id, state, now).into_iter().collect();
+        self.publish_records(&records, now)
+    }
+
+    fn publish_records(
+        &mut self,
+        records: &[OpsEscalation],
         now: TaiNs,
     ) -> Result<(), StationError> {
         let key = InstanceSigner(&self.key);
@@ -241,10 +317,8 @@ impl Station {
             return Ok(());
         };
         let mut failed = false;
-        for n in notices {
-            if let Notice::Ops(e) = n {
-                failed |= publisher.publish_escalation(e, &key).is_err();
-            }
+        for e in records {
+            failed |= publisher.publish_escalation(e, &key).is_err();
         }
         failed |= publisher.flush(now).map(|r| r.waiting > 0).unwrap_or(true);
         if failed != self.alarms.technical_open(PATH_B_RULE, None) {

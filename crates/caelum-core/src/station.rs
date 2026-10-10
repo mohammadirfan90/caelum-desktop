@@ -385,6 +385,9 @@ impl Station {
             Acknowledged::GroundStage => AuditAction::AlarmGroundAcknowledged,
             Acknowledged::Onboard(_) => AuditAction::AlarmAcknowledged,
         };
+        if matches!(result, Acknowledged::Onboard(_)) {
+            self.publish_alarm_state(&alarm.to_string(), "acknowledged", now)?;
+        }
         self.log().append(
             &Actor::user(&user),
             action,
@@ -454,7 +457,11 @@ impl Station {
             obs.measured_at,
         );
         self.apply_technical(changes, obs.measured_at)?;
-        Ok(self.alarms.observe(&self.db, obs, None)?)
+        let out = self.alarms.observe(&self.db, obs, None)?;
+        // ICD-VEH §6: every alarm state change also goes to the vehicle on path B.
+        let now = self.now()?;
+        self.publish_ops(&out.events, &out.notices, now)?;
+        Ok(out)
     }
 
     fn apply_technical(
@@ -521,7 +528,7 @@ impl Station {
         self.apply_technical(changes, now)?;
         let out = self.alarms.tick(&self.db, now)?;
         // SR-015: the ground stage goes to the vehicle on path B, never via the medical system.
-        self.publish_ops(&out.notices, now)?;
+        self.publish_ops(&out.events, &out.notices, now)?;
         Ok(out)
     }
 
