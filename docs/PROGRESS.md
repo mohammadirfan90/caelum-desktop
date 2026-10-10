@@ -75,3 +75,4 @@ Write exceptions: `docs/write-exceptions.md` (WX-001 CCCD enable, reviewed by th
 | 2026-10-10 | 05f16df..8d670c2 | M2: ingest, decoders, registry, acquisition, link supervision, serial, BLE with WX-001, pairing, clock sync, HID; trace handles OS- and feature-gated tests (CR-008) |
 | 2026-10-10 | 5a422b0..4e0a6c4 | M3: signed ruleset and signer, engine, alarm service with SR-009 fallback, coverage gates in CI, DEVELOPMENT RULESET banner (CR-009); M0 and M1 gates closed |
 | 2026-10-10 | 5ceaf9d.. | PROGRESS.md added; M3 independent review by Mohammad Irfan recorded; CI concurrency per commit so every pushed commit gets a complete run (pushes happen after every commit) |
+| 2026-10-10 | (this push) | rustfmt on the station test (CI run 38030239526 failed `cargo fmt --check` on Ubuntu); the run on this commit is the M2/M3 closing candidate |

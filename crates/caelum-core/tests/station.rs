@@ -321,7 +321,13 @@ fn sr_009_the_station_loads_the_ruleset_for_its_build() {
     let keys = MemoryKeyStore::default();
     let station = open(&dir, &keys, &TestClock::default()).unwrap();
     assert!(
-        matches!(station.ruleset_status(), RulesetStatus::Verified { development: true, .. }),
+        matches!(
+            station.ruleset_status(),
+            RulesetStatus::Verified {
+                development: true,
+                ..
+            }
+        ),
         "{:?}",
         station.ruleset_status()
     );
