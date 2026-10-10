@@ -76,6 +76,7 @@ replaces a stack item, or that is used in `caelum-alarms`, `caelum-ingest`, `cae
 ```bash
 pnpm install                       # UI dependencies
 cargo nextest run --workspace      # all Rust tests
+cargo nextest run -p caelum-store -p caelum-ingest -p caelum-core --features test-equipment  # test-equipment-only tests
 cargo clippy --workspace -- -D warnings
 pnpm -C ui typecheck && pnpm -C ui test
 pnpm tauri dev                     # run the desktop app

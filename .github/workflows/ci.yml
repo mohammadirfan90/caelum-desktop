@@ -48,6 +48,10 @@ jobs:
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: tests (nextest, JUnit)
         run: cargo nextest run --workspace --profile ci
+      # Tests compiled only with test equipment (simulated classification, emulated devices).
+      # Never a release build: the release guard and compile_error! keep the feature out of them.
+      - name: tests with test equipment
+        run: cargo nextest run -p caelum-store -p caelum-ingest -p caelum-core --features test-equipment
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:

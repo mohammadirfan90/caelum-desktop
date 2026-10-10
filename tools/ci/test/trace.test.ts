@@ -88,12 +88,20 @@ describe("source scanning", () => {
       "fn only_macos() {}",
       "#[test]",
       "fn everywhere() {}",
+      '#[cfg(feature = "test-equipment")]',
+      "#[test]",
+      "fn with_feature() {}",
+      '#[cfg(not(feature = "test-equipment"))]',
+      "#[test]",
+      "fn without_feature() {}",
     ].join("\n");
     const tests = scanRust("crates/x/tests/os.rs", "x", text);
-    assert.deepEqual(tests.map((t) => [t.name, t.platform]), [
-      ["only_windows", "windows"],
-      ["only_macos", "macos"],
-      ["everywhere", undefined],
+    assert.deepEqual(tests.map((t) => [t.name, t.platform, t.feature]), [
+      ["only_windows", "windows", undefined],
+      ["only_macos", "macos", undefined],
+      ["everywhere", undefined, undefined],
+      ["with_feature", undefined, "test-equipment"],
+      ["without_feature", undefined, undefined],
     ]);
   });
 
@@ -215,6 +223,13 @@ describe("trace rows and the gate", () => {
     const here = buildTrace(catalog, [test("passes", ["F-AAA-01"]), gated], [], results, "windows");
     assert.deepEqual(here.notRun, ["tools/ci/test/x.test.ts › missing"]);
     assert.equal(toCsv(here), toCsv(elsewhere), "the CSV does not depend on the platform");
+  });
+
+  it("does not expect feature-gated tests in the default suite", () => {
+    const gated: TestRef = { ...test("missing", ["F-AAA-01"]), feature: "test-equipment" };
+    const trace = buildTrace(catalog, [test("passes", ["F-AAA-01"]), gated], [], results, "windows");
+    assert.deepEqual(trace.notRun, []);
+    assert.equal(trace.rows.find((r) => r.id === "F-AAA-01")?.result, "PASS");
   });
 
   it("writes CSV with the documented columns and quotes fields with commas", () => {

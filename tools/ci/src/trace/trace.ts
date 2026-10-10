@@ -89,7 +89,8 @@ export function currentPlatform(): Platform | undefined {
 /**
  * Joins scanned tests with their results. Tests gated to one operating system run only in that
  * OS's CI job: they must have a result on their own platform (`platform`), are not expected
- * elsewhere, and never decide a row's result, so the CSV is the same on every platform.
+ * elsewhere, and never decide a row's result, so the CSV is the same on every platform. Tests
+ * gated on a Cargo feature (`test-equipment`) run in a separate CI step and are treated the same.
  */
 export function buildTrace(
   catalog: Catalog,
@@ -105,7 +106,9 @@ export function buildTrace(
 
   const rows = [...catalog.entries.values()].sort(idOrder).map((entry): TraceRow => {
     const cited = tests.filter((t) => t.ids.includes(entry.id));
-    const statuses = cited.filter((t) => t.platform === undefined).map((t) => status.get(t) ?? "NOT_RUN");
+    const statuses = cited
+      .filter((t) => t.platform === undefined && t.feature === undefined)
+      .map((t) => status.get(t) ?? "NOT_RUN");
     const result: RowResult =
       cited.length === 0
         ? "NO_TEST"
@@ -126,7 +129,9 @@ export function buildTrace(
     };
   });
 
-  const expectedHere = (t: TestRef) => t.platform === undefined || t.platform === platform;
+  // Feature-gated tests run in their own CI step, not in the default suite the trace joins.
+  const expectedHere = (t: TestRef) =>
+    t.feature === undefined && (t.platform === undefined || t.platform === platform);
   const notRun = tests
     .filter((t) => expectedHere(t) && status.get(t) === "NOT_RUN")
     .map(testLabel)

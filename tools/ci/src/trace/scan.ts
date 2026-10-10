@@ -23,6 +23,8 @@ export interface TestRef {
   readonly ids: readonly string[];
   /** Set for Rust tests gated to one operating system (they run only in that OS's CI job). */
   readonly platform?: Platform;
+  /** Set for Rust tests compiled only with a Cargo feature (run by a separate CI step). */
+  readonly feature?: string;
 }
 
 export interface ModuleRef {
@@ -68,6 +70,15 @@ function platformOf(attributes: readonly string[]): Platform | undefined {
   return undefined;
 }
 
+/** A `#[cfg(feature = "...")]` gate among a test's attributes (not `not(...)`, which runs by default). */
+function featureOf(attributes: readonly string[]): string | undefined {
+  for (const a of attributes) {
+    const m = /^#\[cfg\(feature\s*=\s*"([^"]+)"\)\]$/.exec(a);
+    if (m?.[1] !== undefined) return m[1];
+  }
+  return undefined;
+}
+
 /** Attribute lines directly above `index`. */
 function attributesAbove(lines: readonly string[], index: number): string[] {
   const out: string[] = [];
@@ -95,7 +106,16 @@ export function scanRust(file: string, crate: string, text: string): TestRef[] {
       const name = fn[1];
       const ids = new Set([...idsFromName(name), ...extractIds(commentAbove(lines, index)), ...extractIds(header)]);
       const platform = platformOf(attributes);
-      tests.push({ runner: "nextest", file, unit: crate, name, ids: [...ids].sort(), ...(platform && { platform }) });
+      const feature = featureOf(attributes);
+      tests.push({
+        runner: "nextest",
+        file,
+        unit: crate,
+        name,
+        ids: [...ids].sort(),
+        ...(platform && { platform }),
+        ...(feature && { feature }),
+      });
       return;
     }
   });
