@@ -74,7 +74,6 @@ fn clock_name(c: ClockState) -> &'static str {
 pub fn start_vehicle_bridge(app: AppHandle) {
     app.manage(VehicleState::default());
     tauri::async_runtime::spawn(async move {
-        let mut bound: Option<String> = None;
         loop {
             let config = app
                 .state::<AppState>()
@@ -86,10 +85,6 @@ pub fn start_vehicle_bridge(app: AppHandle) {
                 tokio::time::sleep(CHECK).await;
                 continue;
             };
-            if bound.as_deref() == Some(config.version.as_str()) {
-                tokio::time::sleep(CHECK).await;
-                continue;
-            }
             let version = config.version.clone();
             let Ok(leap) = LeapSeconds::bundled() else {
                 set_status(&app, |s| {
@@ -121,7 +116,6 @@ pub fn start_vehicle_bridge(app: AppHandle) {
                     continue;
                 }
             };
-            bound = Some(version.clone());
             set_status(&app, |s| {
                 *s = VehicleLink {
                     running: true,
@@ -179,7 +173,6 @@ pub fn start_vehicle_bridge(app: AppHandle) {
                     .flatten()
                     .map(|c| c.version);
                 if current.as_deref() != Some(version.as_str()) {
-                    bound = None;
                     break;
                 }
             }

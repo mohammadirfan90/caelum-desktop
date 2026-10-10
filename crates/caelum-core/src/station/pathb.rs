@@ -181,7 +181,7 @@ impl Station {
         };
         let queue = DownlinkQueue::open(
             store,
-            config.apids.clone(),
+            config.apids,
             AllowLists::from_catalog(),
             ContactSchedule::default(),
             cfdp,
@@ -290,7 +290,7 @@ impl Station {
     ) -> Result<(), StationError> {
         let mut records = self.ops_for_events(events, now);
         records.extend(notices.iter().filter_map(|n| match n {
-            Notice::Ops(e) => Some(e.clone()),
+            Notice::Ops(e) => Some(*e),
             _ => None,
         }));
         self.publish_records(&records, now)

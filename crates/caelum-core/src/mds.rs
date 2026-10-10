@@ -222,7 +222,7 @@ pub struct MdsStatus {
 enum Running {
     Idle(DbMdsStore),
     Connected {
-        connector: MdsConnector<DbMdsStore>,
+        connector: Box<MdsConnector<DbMdsStore>>,
         config: MdsConfig,
     },
 }
@@ -314,7 +314,7 @@ impl MdsService {
                     });
                     return config;
                 }
-                connector.into_store()
+                (*connector).into_store()
             }
             Running::Idle(s) => s,
         };
@@ -324,7 +324,7 @@ impl MdsService {
                     Ok(connector) => {
                         self.problem = None;
                         self.state = Some(Running::Connected {
-                            connector,
+                            connector: Box::new(connector),
                             config: c.clone(),
                         });
                         Some(c)

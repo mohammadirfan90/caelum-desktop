@@ -21,7 +21,7 @@ function station() {
   let signedIn = false;
   let handler: ((e: AlarmBusEvent) => void) | undefined;
   const api: Partial<Api> = {
-    appInfo: () => Promise.resolve({ productName: "CAELUM", version: "0.1.0" }),
+    appInfo: () => Promise.resolve({ productName: "CAELUM", version: "0.1.0", kiosk: false }),
     rulesetStatus: () => Promise.resolve({ status: "ok", data: { state: "verified", version: "1.0.0", development: false, reason: null } }),
     setupStatus: () => Promise.resolve({ status: "ok", data: false }),
     authMe: () => Promise.resolve(signedIn ? { status: "ok", data: astronaut } : signInRequired),

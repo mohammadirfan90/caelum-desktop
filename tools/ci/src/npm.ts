@@ -12,6 +12,7 @@ export const ALLOWED_LICENSES: ReadonlySet<string> = new Set([
   "MIT",
   "BSD-2-Clause",
   "BSD-3-Clause",
+  "ISC",
   "Unicode-3.0",
   "Zlib",
 ]);

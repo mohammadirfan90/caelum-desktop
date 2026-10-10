@@ -407,7 +407,7 @@ impl Station {
                 "a PVT run needs at least {PVT_MIN_RESPONSES} responses"
             )));
         }
-        if reaction_ms.iter().any(|&r| r < 100 || r > 30_000) {
+        if reaction_ms.iter().any(|&r| !(100..=30_000).contains(&r)) {
             return Err(rejected(
                 "reaction times must be 100 ms to 30 s (false starts are not counted)",
             ));

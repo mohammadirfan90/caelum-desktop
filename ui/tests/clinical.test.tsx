@@ -185,10 +185,14 @@ describe("Environment, Ground and kiosk", () => {
           pathBProblem: "no signed ground configuration",
           vehicle: { running: false, version: null, problem: null, datagrams: 0, readings: 0, rejected: [], clock: null, latestOffsetMs: null },
         }),
+      mdsStatus: () => ok({ configured: false, version: null, health: "not_configured", pending: 0, held: 0, problem: null }),
     });
     render(<Ground api={a} version={0} />);
-    expect(await screen.findByText("Not configured")).toBeInTheDocument();
+    const pathB = await screen.findByRole("region", { name: "Status to the vehicle (path B)" });
+    expect(within(pathB).getByText("Not configured")).toBeInTheDocument();
     expect(screen.getByText("Not receiving")).toBeInTheDocument();
+    const mds = screen.getByRole("region", { name: "Medical data system (path A)" });
+    expect(await within(mds).findByText("Not configured")).toBeInTheDocument();
   });
 
   it("shows model validation status as text, with the development badge (F-ML-01)", async () => {

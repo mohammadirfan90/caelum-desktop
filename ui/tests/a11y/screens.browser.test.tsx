@@ -21,7 +21,12 @@ import { Administration } from "../../src/screens/Admin";
 import { Alerts } from "../../src/screens/Alerts";
 import { Audit } from "../../src/screens/Audit";
 import { Body, Home } from "../../src/screens/Crew";
+import { Checks } from "../../src/screens/Checks";
 import { Devices } from "../../src/screens/Devices";
+import { Environment } from "../../src/screens/Environment";
+import { Ground } from "../../src/screens/Ground";
+import { Medical } from "../../src/screens/Medical";
+import { KioskBoard } from "../../src/screens/Windows";
 import { Locked, SignIn } from "../../src/screens/Access";
 import { EmergencyView, Shell } from "../../src/screens/Shell";
 import { applyPrefs, DEFAULT_PREFS, type Prefs } from "../../src/settings";
@@ -100,6 +105,46 @@ const api = {
       status: "ok" as const,
       data: [{ seq: "1", id: "e1", atTai: "1", atUtcMs: Date.UTC(2026, 9, 10, 12), actor: "system", role: "system", action: "key.create", target: null, details: "{}" }],
     }),
+  crewOverview: () =>
+    Promise.resolve({
+      status: "ok" as const,
+      data: [
+        {
+          crewMemberId: "c1",
+          name: "Fixture Astronaut A",
+          topPriority: "warning",
+          vitals: [
+            { reading: { parameter: "heart_rate", value: 72, text: null, unit: "/min", measuredAtTai: "1", measuredAtUtcMs: Date.UTC(2026, 9, 10, 12), quality: "good", classification: "measured", deviceId: "d1" }, status: "live" as const },
+          ],
+        },
+      ],
+    }),
+  encounterList: () =>
+    Promise.resolve({
+      status: "ok" as const,
+      data: [
+        { id: "e1", crewMemberId: "c1", author: "u0", subjective: "Fixture note", objective: null, assessment: null, plan: null, vitals: "[]", createdAtUtcMs: Date.UTC(2026, 9, 10, 11), signedAtUtcMs: Date.UTC(2026, 9, 10, 11, 30), attachments: [] },
+      ],
+    }),
+  attachmentList: () => Promise.resolve({ status: "ok" as const, data: [] }),
+  checkinList: () => Promise.resolve({ status: "ok" as const, data: [] }),
+  medicationLog: () => Promise.resolve({ status: "ok" as const, data: [] }),
+  protocolList: () =>
+    Promise.resolve({ status: "ok" as const, data: [{ id: "p1", version: "1", title: "Fixture protocol", rules: [], steps: ["Fixture step one", "Fixture step two"] }] }),
+  checklistList: () => Promise.resolve({ status: "ok" as const, data: [] }),
+  modelList: () => Promise.resolve({ status: "ok" as const, data: [] }),
+  groundStatus: () =>
+    Promise.resolve({
+      status: "ok" as const,
+      data: {
+        pathBConfigured: true,
+        groundVersion: "1",
+        pathBWaiting: 0,
+        pathBProblem: null,
+        vehicle: { running: true, version: "1", problem: null, datagrams: 120, readings: 360, rejected: [], clock: "set", latestOffsetMs: 12.5 },
+      },
+    }),
+  mdsStatus: () => Promise.resolve({ status: "ok" as const, data: { configured: true, version: "1", health: "connected", pending: 2, held: 0, problem: null } }),
 } as unknown as Api;
 
 const crew = [{ id: "c1", name: "Fixture Astronaut A", position: "flight engineer", mission: "TEST-1", active: true }];
@@ -143,6 +188,11 @@ const SCREENS: Record<string, () => ReactElement> = {
   alerts: () => <Alerts api={api} userRole="cmo" crew={crew} version={0} />,
   devices: () => <Devices api={api} userRole="cmo" crew={crew} version={0} />,
   audit: () => <Audit api={api} version={0} />,
+  medical: () => <Medical api={api} userRole="cmo" self="u0" crewId="c1" crew={crew} version={0} />,
+  checks: () => <Checks api={api} crewId="c1" isAstronaut />,
+  environment: () => <Environment api={api} crewId="c1" version={0} />,
+  ground: () => <Ground api={api} version={0} />,
+  kiosk: () => <KioskBoard alarms={alarms} />,
 };
 
 const VARIANTS: Record<string, Prefs> = {

@@ -8,7 +8,7 @@ import { type Api, App } from "../src/App";
 import type { AudioLike } from "../src/alarmSound";
 import type { AlarmBusEvent, AppInfo, CommandError, SessionInfo } from "../src/bindings";
 
-const info: AppInfo = { productName: "CAELUM", version: "0.1.0" };
+const info: AppInfo = { productName: "CAELUM", version: "0.1.0", kiosk: false };
 
 const err = (kind: CommandError["kind"], retryAfterS: number | null = null) => ({
   status: "error" as const,
