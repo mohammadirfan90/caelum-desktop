@@ -55,6 +55,8 @@
     "allow-config-apply-ground",
     "allow-ground-status",
     "allow-model-list",
-    "allow-window-open-waveform"
+    "allow-window-open-waveform",
+    "allow-export-fhir",
+    "allow-export-csv"
   ]
 }

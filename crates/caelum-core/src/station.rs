@@ -26,6 +26,7 @@ use crate::alarms::{AlarmService, AlarmServiceError, Output, RulesetStatus};
 mod admin;
 pub mod clinical;
 pub use clinical::{CrewOverviewItem, PvtResult, PROTOCOLS_KIND};
+pub mod export;
 pub mod pathb;
 pub mod reads;
 mod runtime;

@@ -171,6 +171,25 @@ impl Database {
         Ok(rows.collect::<Result<_, _>>()?)
     }
 
+    /// Every observation of a crew member in `[from, to]`, oldest first (export, F-SYS-08).
+    pub fn observations_for_crew_between(
+        &self,
+        crew: &str,
+        from_tai: i64,
+        to_tai: i64,
+    ) -> Result<Vec<ObservationRecord>, StoreError> {
+        let mut stmt = self.connection().prepare(&format!(
+            "SELECT {OBSERVATION_COLUMNS} FROM observation
+             WHERE crew_member_id = ?1 AND measured_at_tai BETWEEN ?2 AND ?3
+             ORDER BY measured_at_tai, id"
+        ))?;
+        let rows = stmt.query_map(
+            rusqlite::params![crew, from_tai, to_tai],
+            observation_from_row,
+        )?;
+        Ok(rows.collect::<Result<_, _>>()?)
+    }
+
     /// The newest observation of a parameter reported by a device (battery, link metrics).
     pub fn latest_device_observation(
         &self,

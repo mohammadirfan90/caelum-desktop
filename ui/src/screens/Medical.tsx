@@ -454,6 +454,81 @@ function SharedCheckins({ api, crewId }: { readonly api: Api; readonly crewId: s
   );
 }
 
+const EXPORT_S = 7 * 24 * 3600;
+const EXPORT_PARAMS = ["heart_rate", "spo2", "respiration_rate", "body_temp_measured", "bp_systolic", "bp_diastolic", "weight", "pvt_median_rt"];
+
+/** Saves text the core produced as a file (no file-system access is granted to the window). */
+function download(name: string, type: string, text: string) {
+  const url = URL.createObjectURL(new Blob([text], { type }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/** Export (F-SYS-08): FHIR R4 bundle and per-parameter CSV, both audited. */
+function Export({ api, crewId }: { readonly api: Api; readonly crewId: string }) {
+  const paramId = useId();
+  const [parameter, setParameter] = useState("heart_rate");
+  const [notice, setNotice] = useState<Notice>(null);
+  const run = (name: string, type: string, p: ReturnType<Api["exportFhir"]>) => {
+    void p.then((r) => {
+      if (r.status === "error") setNotice({ kind: "error", text: errorText(r.error) });
+      else {
+        download(name, type, r.data);
+        setNotice({ kind: "ok", text: strings.exportDone(name) });
+      }
+    });
+  };
+  return (
+    <Card label={strings.exportTitle}>
+      <SectionHead title={strings.exportTitle} />
+      <p className="mt-2 text-sm text-ink-3">{strings.exportHelp}</p>
+      <div className="mt-3 flex flex-wrap items-end gap-3">
+        <button
+          type="button"
+          className="btn btn-soft"
+          onClick={() => {
+            run(`caelum-${crewId}.fhir.json`, "application/fhir+json", api.exportFhir(crewId, EXPORT_S));
+          }}
+        >
+          {strings.exportFhir}
+        </button>
+        <div className="flex flex-col gap-1">
+          <label htmlFor={paramId} className="text-sm font-semibold">
+            {strings.exportParameter}
+          </label>
+          <select
+            id={paramId}
+            className="min-h-12 rounded-lg border border-ink-3 bg-surface px-3"
+            value={parameter}
+            onChange={(e) => {
+              setParameter(e.target.value);
+            }}
+          >
+            {EXPORT_PARAMS.map((p) => (
+              <option key={p} value={p}>
+                {strings.parameter[p] ?? p}
+              </option>
+            ))}
+          </select>
+        </div>
+        <button
+          type="button"
+          className="btn btn-soft"
+          onClick={() => {
+            run(`caelum-${crewId}-${parameter}.csv`, "text/csv", api.exportCsv(crewId, parameter, EXPORT_S));
+          }}
+        >
+          {strings.exportCsv}
+        </button>
+      </div>
+      <NoticeLine notice={notice} />
+    </Card>
+  );
+}
+
 /** Medical (docs/07 §4): crew overview, encounters, attachments, check-ins, medication, protocols. */
 export function Medical({
   api,
@@ -480,6 +555,7 @@ export function Medical({
           <Encounters api={api} crewId={crewId} self={self} />
           <Attachments api={api} crewId={crewId} />
           <SharedCheckins api={api} crewId={crewId} />
+          <Export api={api} crewId={crewId} />
         </>
       )}
       <Medication api={api} userRole={userRole} crew={crew} />

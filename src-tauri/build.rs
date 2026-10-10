@@ -57,6 +57,8 @@ fn main() {
             "ground_status",
             "model_list",
             "window_open_waveform",
+            "export_fhir",
+            "export_csv",
         ]));
     if let Err(error) = tauri_build::try_build(attributes) {
         panic!("tauri-build failed: {error:#}");

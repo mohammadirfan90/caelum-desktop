@@ -249,6 +249,10 @@ pub enum Command {
     ModelList,
     /// Open the waveform viewer window (F-SYS-13).
     WindowOpenWaveform,
+    /// Export a crew member's observations as a FHIR R4 bundle (F-SYS-08).
+    ExportFhir,
+    /// Export one parameter as CSV (F-SYS-08).
+    ExportCsv,
 }
 
 /// Who may call a command.
@@ -264,7 +268,7 @@ pub enum Access {
 
 impl Command {
     /// Every command.
-    pub const ALL: [Command; 53] = [
+    pub const ALL: [Command; 55] = [
         Command::AppInfo,
         Command::AuthLogin,
         Command::AuthLogout,
@@ -318,6 +322,8 @@ impl Command {
         Command::GroundStatus,
         Command::ModelList,
         Command::WindowOpenWaveform,
+        Command::ExportFhir,
+        Command::ExportCsv,
     ];
 
     /// The IPC command name.
@@ -376,6 +382,8 @@ impl Command {
             Command::GroundStatus => "ground_status",
             Command::ModelList => "model_list",
             Command::WindowOpenWaveform => "window_open_waveform",
+            Command::ExportFhir => "export_fhir",
+            Command::ExportCsv => "export_csv",
         }
     }
 
@@ -467,6 +475,8 @@ impl Command {
             Command::GroundStatus => Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon, Role::Bme, Role::Mcc, Role::Administrator]),
             Command::ModelList => Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon, Role::Bme]),
             Command::WindowOpenWaveform => Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon, Role::Bme]),
+            Command::ExportFhir => Access::Roles(&[Role::Cmo, Role::FlightSurgeon]),
+            Command::ExportCsv => Access::Roles(&[Role::Cmo, Role::FlightSurgeon, Role::Bme]),
         }
     }
 

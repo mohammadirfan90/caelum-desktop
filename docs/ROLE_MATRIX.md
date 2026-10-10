@@ -96,6 +96,8 @@ lead (CR-003) until a licensed clinician advisor countersigns; it does not block
 | `ground_status` | Astronaut, CMO, Flight Surgeon, BME, MCC, Admin | Configuration, backlog counts and link state only (docs/06 §3a) |
 | `model_list` | Astronaut, CMO, Flight Surgeon, BME | Validation status shown in the UI (F-ML-01, CR-018); never MCC |
 | `window_open_waveform` | Astronaut, CMO, Flight Surgeon, BME | Second window on the same session; its data still comes from authorised commands (F-SYS-13) |
+| `export_fhir` | CMO, Flight Surgeon | At most 30 days; simulated data never exported (docs/05 §3); audited |
+| `export_csv` | CMO, Flight Surgeon, BME | RFC 4180, UTC times; simulated data never exported; audited |
 
 ## 4. Sessions
 - Onboard: PIN plus device-bound key; auto-lock after 10 minutes (configurable). Ground: password

@@ -105,11 +105,13 @@ pub enum AuditAction {
     ChecklistCompleted,
     /// Attachment imported (F-CLN-04).
     AttachmentImported,
+    /// Clinical data exported (F-SYS-08).
+    ExportCreated,
 }
 
 impl AuditAction {
     /// Every action.
-    pub const ALL: [AuditAction; 27] = [
+    pub const ALL: [AuditAction; 28] = [
         AuditAction::Login,
         AuditAction::LoginFailed,
         AuditAction::Logout,
@@ -137,6 +139,7 @@ impl AuditAction {
         AuditAction::ChecklistStep,
         AuditAction::ChecklistCompleted,
         AuditAction::AttachmentImported,
+        AuditAction::ExportCreated,
     ];
 
     /// Stored name.
@@ -169,6 +172,7 @@ impl AuditAction {
             AuditAction::ChecklistStep => "checklist.step",
             AuditAction::ChecklistCompleted => "checklist.complete",
             AuditAction::AttachmentImported => "attachment.import",
+            AuditAction::ExportCreated => "export.create",
         }
     }
 
@@ -207,7 +211,8 @@ impl AuditAction {
             | AuditAction::ChecklistStarted
             | AuditAction::ChecklistStep
             | AuditAction::ChecklistCompleted
-            | AuditAction::AttachmentImported => AuditCategory::Clinical,
+            | AuditAction::AttachmentImported
+            | AuditAction::ExportCreated => AuditCategory::Clinical,
         }
     }
 }

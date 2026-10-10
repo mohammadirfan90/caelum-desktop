@@ -559,3 +559,28 @@ pub async fn attachment_get(
 ) -> Result<Vec<u8>, CommandError> {
     state.with(|s| Ok(s.attachment_get(&id)?.1))
 }
+
+/// A FHIR R4 bundle (JSON) of a crew member's observations over the last `window_s`.
+#[tauri::command]
+#[specta::specta]
+pub async fn export_fhir(
+    state: State<'_, AppState>,
+    crew_member_id: String,
+    window_s: u32,
+) -> Result<String, CommandError> {
+    let c = crew(&crew_member_id)?;
+    state.with(|s| Ok(s.export_fhir(c, window_s)?))
+}
+
+/// One parameter over the last `window_s` as CSV.
+#[tauri::command]
+#[specta::specta]
+pub async fn export_csv(
+    state: State<'_, AppState>,
+    crew_member_id: String,
+    parameter: String,
+    window_s: u32,
+) -> Result<String, CommandError> {
+    let c = crew(&crew_member_id)?;
+    state.with(|s| Ok(s.export_csv(c, &parameter, window_s)?))
+}

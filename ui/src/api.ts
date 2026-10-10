@@ -106,6 +106,9 @@ export interface Api {
   readonly groundStatus: () => Promise<Res<GroundStatus>>;
   readonly modelList: () => Promise<Res<ModelItem[]>>;
   readonly windowOpenWaveform: () => Promise<Res<null>>;
+  // Export (F-SYS-08)
+  readonly exportFhir: (crewMemberId: string, windowS: number) => Promise<Res<string>>;
+  readonly exportCsv: (crewMemberId: string, parameter: string, windowS: number) => Promise<Res<string>>;
 }
 
 /** Subscriptions to the value-free change events (new readings, device changes). */

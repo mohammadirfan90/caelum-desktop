@@ -434,6 +434,14 @@ export const en = {
   waveformWindowTitle: "ECG viewer",
   openWaveformWindow: "Open the ECG in its own window",
 
+  // Export (F-SYS-08)
+  exportTitle: "Export",
+  exportHelp: "Exports are audited. Test-equipment data is never exported.",
+  exportFhir: "Download FHIR bundle (last 7 days)",
+  exportCsv: "Download CSV (last 7 days)",
+  exportParameter: "Parameter for CSV",
+  exportDone: (name: string) => `${name} is ready.`,
+
   // Settings (F-SYS-10)
   settingsTitle: "Display",
   theme: "Theme",

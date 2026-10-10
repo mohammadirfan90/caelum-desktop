@@ -120,6 +120,10 @@ export const commands = {
 	modelList: () => typedError<ModelItem[], CommandError>(__TAURI_INVOKE("model_list")),
 	/**  Opens (or focuses) the waveform viewer window. */
 	windowOpenWaveform: () => typedError<null, CommandError>(__TAURI_INVOKE("window_open_waveform")),
+	/**  A FHIR R4 bundle (JSON) of a crew member's observations over the last `window_s`. */
+	exportFhir: (crewMemberId: string, windowS: number) => typedError<string, CommandError>(__TAURI_INVOKE("export_fhir", { crewMemberId, windowS })),
+	/**  One parameter over the last `window_s` as CSV. */
+	exportCsv: (crewMemberId: string, parameter: string, windowS: number) => typedError<string, CommandError>(__TAURI_INVOKE("export_csv", { crewMemberId, parameter, windowS })),
 };
 
 /** Events */
