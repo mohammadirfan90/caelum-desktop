@@ -9,10 +9,11 @@ picture). Last updated: 2026-10-10 (M3 independent review recorded; CI runs no l
 |---|---|---|---|
 | M0 Repository and tooling | **complete** (13292b4) | `docs/gates/M0.md`, CI run 38023371185 | Physical network-off install test moved to M13 (CR-005) |
 | M1 Domain, storage, security core | **complete** (13292b4) | `docs/gates/M1.md` | First-administrator enrolment arrives with the M3/M6 login screen (CR-007 §4) |
-| M2 Ingest pipeline and device framework | code complete; closes on the next all-green CI run | `docs/gates/M2.md` | Physical devices on the hardware-in-the-loop bench (docs/09) |
-| M3 Alarm engine | gate items met; closes on the next all-green CI run | `docs/gates/M3.md` (independent review: Mohammad Irfan, 2026-10-10) | ⚕ clinical content stays DRAFT |
+| M2 Ingest pipeline and device framework | **complete** (8550faf) | `docs/gates/M2.md` | Physical devices on the hardware-in-the-loop bench (docs/09) |
+| M3 Alarm engine | **complete** (8550faf) | `docs/gates/M3.md` (independent review: Mohammad Irfan, 2026-10-10) | ⚕ clinical content stays DRAFT |
 | M4 Escalation, technical alarms, notifications, self-test | gate items met; closes on the next all-green CI run | `docs/gates/M4.md` | Wristband against a real device on the HIL bench; device runtime wiring with the Devices screen (M6) |
-| M5–M13 | not started | | |
+| M5 UI shell and design system | **in progress**: localisation catalog, primitives, alarm store | | |
+| M6–M13 | not started | | |
 
 Status of record: the table in `docs/10_BUILD_PLAN.md` (the trace enforces milestones marked
 `complete` there).
@@ -86,3 +87,4 @@ reviewed by Mohammad Irfan, product owner, 2026-10-10). Third-party risks: `docs
 | 2026-10-10 | (this push) | M4 step 4b: alarm event bus to the UI (typed tauri-specta event AlarmBusEvent: alarm state, ended, stage, sound on/off; never values or why); 4 Hz tick thread in the app; alarm actions push their sound changes; restored sounds after a restart |
 | 2026-10-10 | (this push) | M4 step 4c: alarm sounds generated deterministically (tools/sounds, IEC 60601-1-8 style bursts: high 10 pulses repeating, medium 3, low 2, technical 1) and played on the station from the alarm bus, highest priority first, stopped by acknowledge, silence or end; independent of any wristband |
 | 2026-10-10 | (this push) | M4 step 5: wristband alert (WX-002, Immediate Alert Level, reviewed by Mohammad Irfan) and wristband targeting by crew member; M4 gate evidence written |
+| 2026-10-10 | (this push) | M2 and M3 closed (CI run 38030464043 on 8550faf all green incl. release-windows); M5 started: localisation catalog, LevelGlyph, NoData/Stat (no number without a source), cards, AlarmBar, EscalationTracker, alarm store |

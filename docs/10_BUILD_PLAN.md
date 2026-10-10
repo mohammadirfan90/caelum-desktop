@@ -14,10 +14,10 @@ marked `complete` (`09` §3).
 |---|---|---|---|
 | M0 | complete | 2026-10-10 | 13292b4 (evidence: docs/gates/M0.md) |
 | M1 | complete | 2026-10-10 | 13292b4 (evidence: docs/gates/M1.md) |
-| M2 | in progress | 2026-10-10 | |
-| M3 | in progress | 2026-10-10 | |
-| M4 | not started | | |
-| M5 | not started | | |
+| M2 | complete | 2026-10-10 | 8550faf (evidence: docs/gates/M2.md) |
+| M3 | complete | 2026-10-10 | 8550faf (evidence: docs/gates/M3.md) |
+| M4 | in progress | 2026-10-10 | |
+| M5 | in progress | 2026-10-10 | |
 | M6 | not started | | |
 | M7 | not started | | |
 | M8 | not started | | |
