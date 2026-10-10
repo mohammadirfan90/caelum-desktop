@@ -9,6 +9,7 @@
     "check:writes": "node check-writes.ts",
     "check:npm-licenses": "node check-npm-licenses.ts",
     "check": "node check-release-features.ts && node check-writes.ts && node check-npm-licenses.ts",
+    "coverage": "node check-coverage.ts",
     "sbom": "node sbom.ts",
     "trace": "node trace.ts",
     "trace:check": "node trace.ts --check",

@@ -174,28 +174,6 @@ mod platform {
             )),
         }
     }
-
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[test]
-        fn windows_statuses_map_to_outcomes() {
-            assert_eq!(outcome(S::Paired), PairingOutcome::Paired);
-            assert_eq!(outcome(S::AlreadyPaired), PairingOutcome::AlreadyPaired);
-            for s in [
-                S::AuthenticationTimeout,
-                S::AuthenticationFailure,
-                S::NotReadyToPair,
-                S::Failed,
-            ] {
-                assert!(
-                    matches!(outcome(s), PairingOutcome::NeedsOsPairing(_)),
-                    "{s:?}"
-                );
-            }
-        }
-    }
 }
 
 #[cfg(target_os = "linux")]
@@ -250,6 +228,27 @@ mod tests {
             "A:C1:38:0B:2D:FF0",
         ] {
             assert_eq!(BtAddress::parse(bad), None, "{bad}");
+        }
+    }
+
+    /// F-ACQ-01: Windows pairing statuses map to outcomes; anything but success guides the user.
+    #[cfg(windows)]
+    #[test]
+    fn windows_statuses_map_to_outcomes() {
+        use windows::Devices::Enumeration::DevicePairingResultStatus as S;
+        let outcome = super::platform::outcome;
+        assert_eq!(outcome(S::Paired), PairingOutcome::Paired);
+        assert_eq!(outcome(S::AlreadyPaired), PairingOutcome::AlreadyPaired);
+        for s in [
+            S::AuthenticationTimeout,
+            S::AuthenticationFailure,
+            S::NotReadyToPair,
+            S::Failed,
+        ] {
+            assert!(
+                matches!(outcome(s), PairingOutcome::NeedsOsPairing(_)),
+                "{s:?}"
+            );
         }
     }
 

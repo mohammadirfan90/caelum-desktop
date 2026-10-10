@@ -248,3 +248,189 @@ fn sr_005_unusable_signal_raises_and_resolves_a_technical_alarm() {
         t.alarms()
     );
 }
+
+fn observation(
+    crew: CrewMemberId,
+    device: caelum_domain::ids::DeviceId,
+    parameter: caelum_domain::parameters::Parameter,
+    value: f64,
+    s: i64,
+    mode: caelum_domain::observation::MeasurementMode,
+) -> caelum_ingest::Observation {
+    caelum_ingest::Observation {
+        crew_member_id: crew,
+        device_id: device,
+        parameter,
+        value: caelum_ingest::Value::Number(value),
+        unit: parameter.spec().unit,
+        measured_at: TaiNs(T.0 + s * 1_000_000_000),
+        received_at: TaiNs(T.0 + s * 1_000_000_000),
+        quality: caelum_domain::observation::Quality::Good,
+        classification: caelum_domain::observation::Classification::Measured,
+        mode,
+        provenance: caelum_ingest::Provenance {
+            time: caelum_ingest::TimeSource::Receipt,
+            original: None,
+            site: None,
+        },
+    }
+}
+
+fn state_of(t: &TempDb, rule: &str) -> Vec<String> {
+    let mut stmt =
+        t.db.connection()
+            .prepare("SELECT state FROM alarm WHERE rule_id = ?1 ORDER BY created_at_tai")
+            .unwrap();
+    stmt.query_map([rule], |r| r.get(0))
+        .unwrap()
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap()
+}
+
+/// Every alarm transition is persisted: confirming → active (recheck timeout on the tick),
+/// cleared awaiting ack, not confirmed, superseded and resolved.
+#[test]
+fn every_alarm_transition_is_persisted() {
+    use caelum_domain::observation::MeasurementMode::{Continuous, Spot};
+    use caelum_domain::parameters::Parameter;
+    let t = TempDb::new();
+    let (crew, device) = crew_and_device(&t);
+    let mut s = load(&t.db, BUNDLED_RULESET, TrustPolicy::Development);
+
+    // Spot breach → confirming; no repeat within 120 s → active on the tick.
+    s.observe(
+        &t.db,
+        &observation(crew, device, Parameter::Spo2, 80.0, 0, Spot),
+        None,
+    )
+    .unwrap();
+    assert_eq!(state_of(&t, "spo2.critical"), ["confirming"]);
+    s.tick(&t.db, TaiNs(T.0 + 120 * 1_000_000_000)).unwrap();
+    assert_eq!(state_of(&t, "spo2.critical"), ["active"]);
+    // One clear spot reading → cleared awaiting acknowledgement.
+    s.observe(
+        &t.db,
+        &observation(crew, device, Parameter::Spo2, 95.0, 130, Spot),
+        None,
+    )
+    .unwrap();
+    assert_eq!(state_of(&t, "spo2.critical"), ["cleared_awaiting_ack"]);
+
+    // Thermometer: a breach then a normal repeat → not confirmed.
+    s.observe(
+        &t.db,
+        &observation(crew, device, Parameter::BodyTempMeasured, 38.4, 200, Spot),
+        None,
+    )
+    .unwrap();
+    s.observe(
+        &t.db,
+        &observation(crew, device, Parameter::BodyTempMeasured, 36.8, 220, Spot),
+        None,
+    )
+    .unwrap();
+    assert_eq!(state_of(&t, "bodytemp.warning"), ["not_confirmed"]);
+
+    // Heart rate 140 → warning; 190 → critical supersedes it (SR-006).
+    for k in 0..=120 {
+        s.observe(
+            &t.db,
+            &observation(
+                crew,
+                device,
+                Parameter::HeartRate,
+                140.0,
+                300 + k,
+                Continuous,
+            ),
+            None,
+        )
+        .unwrap();
+    }
+    assert_eq!(state_of(&t, "hr.warning.high"), ["active"]);
+    for k in 121..=151 {
+        s.observe(
+            &t.db,
+            &observation(
+                crew,
+                device,
+                Parameter::HeartRate,
+                190.0,
+                300 + k,
+                Continuous,
+            ),
+            None,
+        )
+        .unwrap();
+    }
+    assert_eq!(state_of(&t, "hr.warning.high"), ["superseded"]);
+    assert_eq!(state_of(&t, "hr.critical.high"), ["active"]);
+
+    // Observe-level AF notice: fires after 300 s and resolves itself after 600 s below 0.5.
+    for k in 0..=300 {
+        s.observe(
+            &t.db,
+            &observation(
+                crew,
+                device,
+                Parameter::AfProbability,
+                0.9,
+                1_000 + k,
+                Continuous,
+            ),
+            None,
+        )
+        .unwrap();
+    }
+    assert_eq!(state_of(&t, "af.observe"), ["active"]);
+    for k in 301..=901 {
+        s.observe(
+            &t.db,
+            &observation(
+                crew,
+                device,
+                Parameter::AfProbability,
+                0.2,
+                1_000 + k,
+                Continuous,
+            ),
+            None,
+        )
+        .unwrap();
+    }
+    assert_eq!(state_of(&t, "af.observe"), ["resolved"]);
+
+    // Absence of QRS with good ECG SQI, via events and the gate.
+    s.observe(
+        &t.db,
+        &observation(crew, device, Parameter::SqiEcg, 0.9, 3_000, Continuous),
+        None,
+    )
+    .unwrap();
+    s.event(&t.db, crew, "qrs", TaiNs(T.0 + 3_000 * 1_000_000_000))
+        .unwrap();
+    s.observe(
+        &t.db,
+        &observation(crew, device, Parameter::SqiEcg, 0.9, 3_007, Continuous),
+        None,
+    )
+    .unwrap();
+    assert_eq!(state_of(&t, "asystole.critical"), ["active"]);
+}
+
+/// Enumerated values do not reach the engine, and in safe state nothing is evaluated.
+#[test]
+fn states_are_not_evaluated_and_safe_state_evaluates_nothing() {
+    use caelum_domain::observation::MeasurementMode::Continuous;
+    use caelum_domain::parameters::Parameter;
+    let t = TempDb::new();
+    let (crew, device) = crew_and_device(&t);
+    let mut s = load(&t.db, BUNDLED_RULESET, TrustPolicy::Development);
+    let mut obs = observation(crew, device, Parameter::SleepStage, 0.0, 0, Continuous);
+    obs.value = caelum_ingest::Value::State("rem");
+    assert!(s.observe(&t.db, &obs, None).unwrap().is_empty());
+    let mut safe = load(&t.db, BUNDLED_RULESET, TrustPolicy::Flight);
+    let low = observation(crew, device, Parameter::Spo2, 70.0, 0, Continuous);
+    assert!(safe.observe(&t.db, &low, None).unwrap().is_empty());
+    assert!(safe.event(&t.db, crew, "qrs", T).unwrap().is_empty());
+}

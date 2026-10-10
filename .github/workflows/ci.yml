@@ -123,10 +123,18 @@ jobs:
       - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
         with:
           tool: cargo-nextest@0.9.148,cargo-llvm-cov
-      # Gates (caelum-alarms >= 95 % region, other core crates >= 85 % line) apply to a crate from
-      # the milestone that implements it (docs/09 §4); M0 crates are empty, so this only reports.
-      - name: coverage report (stable)
-        run: cargo llvm-cov nextest --workspace --lcov --output-path target/lcov.info
+      # Gates (docs/09 §4): caelum-alarms >= 95 % region, other core crates >= 85 % line, over the
+      # whole workspace run, per crate (tools/ci/src/coverage.ts).
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.11.0
+      - name: coverage (stable)
+        run: |
+          cargo llvm-cov nextest --workspace --no-report
+          cargo llvm-cov report --lcov --output-path target/lcov.info
+          cargo llvm-cov report --json --summary-only --output-path target/llvm-cov-summary.json
+      - name: coverage gates
+        run: node tools/ci/check-coverage.ts target/llvm-cov-summary.json
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-lcov
