@@ -11,7 +11,7 @@ picture). Last updated: 2026-10-10 (M3 independent review recorded; CI runs no l
 | M1 Domain, storage, security core | **complete** (13292b4) | `docs/gates/M1.md` | First-administrator enrolment arrives with the M3/M6 login screen (CR-007 §4) |
 | M2 Ingest pipeline and device framework | code complete; closes on the next all-green CI run | `docs/gates/M2.md` | Physical devices on the hardware-in-the-loop bench (docs/09) |
 | M3 Alarm engine | gate items met; closes on the next all-green CI run | `docs/gates/M3.md` (independent review: Mohammad Irfan, 2026-10-10) | ⚕ clinical content stays DRAFT |
-| M4 Escalation, technical alarms, notifications, self-test | **in progress**: escalation, acknowledgement, silence, restart, technical alarms and self-test done; next: watchdog loop and event bus, sounds, wristband (WX-002) | | Wristband alert needs a reviewed write-exception entry (category c) |
+| M4 Escalation, technical alarms, notifications, self-test | **in progress**: escalation, acknowledgement, silence, restart, technical alarms and self-test done; next: wristband alert (WX-002, needs review), M4 gate | | Wristband alert needs a reviewed write-exception entry (category c) |
 | M5–M13 | not started | | |
 
 Status of record: the table in `docs/10_BUILD_PLAN.md` (the trace enforces milestones marked
@@ -84,3 +84,4 @@ Write exceptions: `docs/write-exceptions.md` (WX-001 CCCD enable, reviewed by th
 | 2026-10-10 | (this push) | M4 step 3: technical-alarm monitor (low battery, device lost, stale data, clock drift, storage low) and the start-up self-test (database, audit chain, ruleset, clock and leap table, storage) raising technical alarms (CR-011) |
 | 2026-10-10 | (this push) | M4 step 4a: Station::tick runs engine, escalation, technical monitor and watchdogs (clock backwards SR-012, storage every 10 s); observations refresh staleness and battery |
 | 2026-10-10 | (this push) | M4 step 4b: alarm event bus to the UI (typed tauri-specta event AlarmBusEvent: alarm state, ended, stage, sound on/off; never values or why); 4 Hz tick thread in the app; alarm actions push their sound changes; restored sounds after a restart |
+| 2026-10-10 | (this push) | M4 step 4c: alarm sounds generated deterministically (tools/sounds, IEC 60601-1-8 style bursts: high 10 pulses repeating, medium 3, low 2, technical 1) and played on the station from the alarm bus, highest priority first, stopped by acknowledge, silence or end; independent of any wristband |

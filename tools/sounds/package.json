@@ -1,0 +1,8 @@
+{
+  "name": "@caelum/tools-sounds",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "description": "Alarm sound generator (docs/06 §2); typechecked and tested from tools/ci"
+}

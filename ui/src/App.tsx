@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
-import { commands, type AppInfo } from "./bindings";
+import { AlarmSounder, type AudioLike } from "./alarmSound";
+import { type AlarmBusEvent, commands, events, type AppInfo } from "./bindings";
 import { RulesetBanner, type RulesetResult, TechnicalGlyph } from "./RulesetBanner";
 import { strings } from "./strings";
 
@@ -20,7 +21,18 @@ export interface AppProps {
   readonly loadAppInfo?: () => Promise<AppInfo>;
   /** Source of the alarm ruleset status (SR-009 banner); the generated IPC command by default. */
   readonly loadRuleset?: () => Promise<RulesetResult>;
+  /** Subscription to the alarm bus; the generated typed event by default. Returns an unsubscribe. */
+  readonly subscribeAlarms?: (handler: (e: AlarmBusEvent) => void) => Promise<() => void>;
+  /** Audio factory for alarm sounds. */
+  readonly makeAudio?: (src: string) => AudioLike;
 }
+
+const newAudio = (src: string): AudioLike => new Audio(src);
+
+const listenAlarms = (handler: (e: AlarmBusEvent) => void) =>
+  events.alarmBusEvent.listen((e) => {
+    handler(e.payload);
+  });
 
 function describe(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -28,8 +40,33 @@ function describe(error: unknown): string {
   return "unknown error";
 }
 
-export function App({ loadAppInfo = commands.appInfo, loadRuleset = commands.rulesetStatus }: AppProps) {
+export function App({
+  loadAppInfo = commands.appInfo,
+  loadRuleset = commands.rulesetStatus,
+  subscribeAlarms = listenAlarms,
+  makeAudio = newAudio,
+}: AppProps) {
   const [load, setLoad] = useState<Load>({ state: "loading" });
+
+  // Alarm sound on this station (SR-015): independent of sign-in and of any wristband.
+  useEffect(() => {
+    const sounder = new AlarmSounder(makeAudio);
+    let unsubscribe: (() => void) | undefined;
+    let current = true;
+    subscribeAlarms((e) => {
+      sounder.handle(e);
+    }).then(
+      (stop) => {
+        if (current) unsubscribe = stop;
+        else stop();
+      },
+      () => undefined,
+    );
+    return () => {
+      current = false;
+      unsubscribe?.();
+    };
+  }, [subscribeAlarms, makeAudio]);
 
   useEffect(() => {
     let current = true;
