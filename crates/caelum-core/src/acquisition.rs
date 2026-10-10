@@ -43,6 +43,11 @@ pub struct Outcome {
     pub rejected: Vec<Rejection>,
     /// Set if the payload could not be decoded (then nothing was stored).
     pub malformed: Option<DecodeError>,
+    /// Waveforms of a completed GHS observation (F-ACQ-03), with the crew member they belong to.
+    pub waveforms: Vec<(
+        caelum_domain::ids::CrewMemberId,
+        caelum_devices::ghs::Waveform,
+    )>,
 }
 
 /// Acquisition state: the leap-second table for device timestamps, each device's measured clock
@@ -51,6 +56,8 @@ pub struct Acquisition {
     leap: LeapSeconds,
     offsets: HashMap<DeviceId, ClockOffset>,
     dropped: HashMap<(DeviceId, &'static str), u64>,
+    /// GHS observation segments being joined, per device (F-ACQ-03).
+    ghs: HashMap<DeviceId, caelum_devices::ghs::Reassembler>,
 }
 
 impl Acquisition {
@@ -60,6 +67,7 @@ impl Acquisition {
             leap: LeapSeconds::bundled()?,
             offsets: HashMap::new(),
             dropped: HashMap::new(),
+            ghs: HashMap::new(),
         })
     }
 
@@ -98,22 +106,68 @@ impl Acquisition {
             .device(&device.to_string())?
             .ok_or(RegistryError::UnknownDevice(device))?;
         registry.record_status(device, DeviceStatus::Connected, Some(received_at), None)?;
-        let measurement = match sig::decode(characteristic, payload, &self.leap) {
-            Ok(m) => m,
-            Err(e) => {
-                self.count(device, "malformed");
-                return Ok(Outcome {
-                    malformed: Some(e),
-                    ..Outcome::default()
-                });
-            }
-        };
-        let owner = registry.owner(device, measurement.device_user)?;
+        // GHS (F-ACQ-03): segments are joined first; a completed observation carries readings
+        // and waveforms. Every other supported characteristic is a Bluetooth SIG profile.
+        let (readings, mode, device_user, waveforms) =
+            if characteristic == sig::LIVE_HEALTH_OBSERVATIONS {
+                let joined = self.ghs.entry(device).or_default().push(payload);
+                let body = match joined {
+                    Ok(Some(body)) => body,
+                    Ok(None) => return Ok(Outcome::default()),
+                    Err(e) => {
+                        self.count(device, "malformed");
+                        return Ok(Outcome {
+                            malformed: Some(e),
+                            ..Outcome::default()
+                        });
+                    }
+                };
+                match caelum_devices::ghs::decode_observation(&body, &self.leap) {
+                    // ACOM observations are continuous unless the device marks them spot.
+                    Ok(m) => (
+                        m.readings,
+                        m.mode.unwrap_or(MeasurementMode::Continuous),
+                        m.patient,
+                        m.waveforms,
+                    ),
+                    Err(e) => {
+                        self.count(device, "malformed");
+                        return Ok(Outcome {
+                            malformed: Some(e),
+                            ..Outcome::default()
+                        });
+                    }
+                }
+            } else {
+                match sig::decode(characteristic, payload, &self.leap) {
+                    Ok(m) => (m.readings, m.mode, m.device_user, Vec::new()),
+                    Err(e) => {
+                        self.count(device, "malformed");
+                        return Ok(Outcome {
+                            malformed: Some(e),
+                            ..Outcome::default()
+                        });
+                    }
+                }
+            };
+        let owner = registry.owner(device, device_user)?;
         let emulated = record.adapter == TEST_EQUIPMENT_ADAPTER;
         let offset = self.offsets.get(&device).copied();
         let mut outcome = Outcome::default();
-        for decoded in measurement.readings {
-            let mut raw = raw_reading(decoded, device, received_at, measurement.mode);
+        if let Some(crew) = owner {
+            outcome.waveforms = waveforms
+                .into_iter()
+                // SR-017: demonstration or test waveforms never reach a release build's records.
+                .filter(|w| {
+                    emulated
+                        || !(w.flags.demonstration || w.flags.test_data)
+                        || cfg!(feature = "test-equipment")
+                })
+                .map(|w| (crew, w))
+                .collect();
+        }
+        for decoded in readings {
+            let mut raw = raw_reading(decoded, device, received_at, mode);
             if emulated {
                 raw.flags.test_data = true;
             }

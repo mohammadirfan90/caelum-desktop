@@ -31,6 +31,7 @@ pub mod mds_link;
 pub mod pathb;
 pub mod reads;
 mod runtime;
+mod signal;
 pub mod uplink;
 pub mod vehicle;
 pub use admin::{RosterApplied, UserSummary, CREW_KIND};
@@ -104,6 +105,18 @@ pub struct Station {
     /// Advisory models (F-ML-01, CR-018). Empty until signed packages are installed; outputs
     /// are advisory only and never reach the rules except through the observe-only gate.
     models: caelum_ml::registry::Registry,
+    /// Running ECG streams per device (F-SIG-01).
+    ecg: std::collections::HashMap<caelum_domain::ids::DeviceId, signal::EcgStream>,
+    /// Personal baselines in force (F-ALM-08).
+    baselines: std::collections::HashMap<
+        (
+            caelum_domain::ids::CrewMemberId,
+            caelum_domain::parameters::Parameter,
+        ),
+        caelum_alarms::engine::BaselineStats,
+    >,
+    /// When baselines were last estimated (TAI ns).
+    baselines_at: Option<i64>,
 }
 
 /// Watchdog state between ticks (F-SYS-09).
@@ -187,6 +200,9 @@ impl Station {
             .map_err(|e| StationError::Rejected(e.to_string()))?,
             path_b: None,
             models: caelum_ml::registry::Registry::new(),
+            ecg: std::collections::HashMap::new(),
+            baselines: std::collections::HashMap::new(),
+            baselines_at: None,
             acquisition: crate::acquisition::Acquisition::new()
                 .map_err(|e| StationError::Rejected(format!("leap-second table: {e}")))?,
         };
@@ -465,7 +481,8 @@ impl Station {
             obs.measured_at,
         );
         self.apply_technical(changes, obs.measured_at)?;
-        let out = self.alarms.observe(&self.db, obs, None)?;
+        let baseline = self.baseline_for(obs.crew_member_id, obs.parameter);
+        let out = self.alarms.observe(&self.db, obs, baseline)?;
         // ICD-VEH §6: every alarm state change also goes to the vehicle on path B.
         let now = self.now()?;
         self.publish_ops(&out.events, &out.notices, now)?;
@@ -534,6 +551,7 @@ impl Station {
             }
         }
         self.apply_technical(changes, now)?;
+        self.refresh_baselines(now)?;
         let out = self.alarms.tick(&self.db, now)?;
         // SR-015: the ground stage goes to the vehicle on path B, never via the medical system.
         self.publish_ops(&out.events, &out.notices, now)?;

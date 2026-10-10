@@ -367,6 +367,9 @@ impl Engine {
         }
         let key = (input.crew, input.device, input.parameter);
         if !input.quality.usable_for_rules() {
+            // SR-005: an unusable reading of a gate parameter (e.g. `sqi_ecg` with the lead off)
+            // closes the gate now; it must not keep an absence rule armed on the last good value.
+            self.gates.remove(&(input.crew, input.parameter));
             if self.paused.insert(key, input.quality).is_none() {
                 events.push(Event::SignalUnusable {
                     crew: input.crew,

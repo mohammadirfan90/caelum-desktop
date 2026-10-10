@@ -19,12 +19,12 @@ marked `complete` (`09` §3).
 | M4 | complete | 2026-10-10 | 7c782a7 (evidence: docs/gates/M4.md) |
 | M5 | complete | 2026-10-10 | 7c782a7 (evidence: docs/gates/M5.md) |
 | M6 | in progress | 2026-10-10 | |
-| M7 | not started | | |
-| M8 | not started | | |
-| M9 | not started | | |
-| M10 | not started | | |
+| M7 | in progress | 2026-10-10 | |
+| M8 | in progress | 2026-10-10 | |
+| M9 | in progress | 2026-10-10 | |
+| M10 | in progress | 2026-10-10 | |
 | M11 | not started | | |
-| M12 | not started | | |
+| M12 | in progress | 2026-10-10 | |
 | M13 | not started | | |
 
 Items marked ⚕ in CR-002/CR-003 are DRAFT clinical content approved by the provisional medical

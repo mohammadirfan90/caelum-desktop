@@ -209,6 +209,47 @@ impl Database {
             .optional()?)
     }
 
+    /// Stores a waveform chunk (F-ACQ-03; docs/03 §3 step 3: 1 s chunks).
+    pub fn insert_waveform_chunk(
+        &self,
+        crew: &str,
+        chunk: &WaveformChunkRecord,
+    ) -> Result<(), StoreError> {
+        self.connection().execute(
+            "INSERT INTO waveform_chunk (id, crew_member_id, device_id, signal, start_tai, sample_rate, encoding, data, quality)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+            rusqlite::params![
+                uuid_like(crew, chunk.start_tai, &chunk.signal),
+                crew,
+                chunk.device_id,
+                chunk.signal,
+                chunk.start_tai,
+                chunk.sample_rate,
+                chunk.encoding,
+                chunk.data,
+                chunk.quality
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Stores (replaces) a crew member's personal baseline for a parameter (F-ALM-08).
+    pub fn upsert_baseline(
+        &self,
+        crew: &str,
+        parameter: &str,
+        b: &BaselineRecord,
+    ) -> Result<(), StoreError> {
+        self.connection().execute(
+            "INSERT INTO baseline (crew_member_id, parameter, median, mad, n, window, status, method_version)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+             ON CONFLICT (crew_member_id, parameter) DO UPDATE SET median = excluded.median, mad = excluded.mad,
+                 n = excluded.n, window = excluded.window, status = excluded.status, method_version = excluded.method_version",
+            rusqlite::params![crew, parameter, b.median, b.mad, b.n, b.window, b.status, b.method_version],
+        )?;
+        Ok(())
+    }
+
     /// A crew member's personal baseline for a parameter, if one was estimated.
     pub fn baseline(
         &self,
@@ -311,4 +352,9 @@ impl Database {
         })?;
         Ok(rows.collect::<Result<_, _>>()?)
     }
+}
+
+/// A stable chunk ID from its crew member, start and signal (one chunk per signal and start).
+fn uuid_like(crew: &str, start: i64, signal: &str) -> String {
+    format!("{crew}/{signal}/{start}")
 }

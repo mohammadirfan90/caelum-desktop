@@ -46,6 +46,11 @@ pub const GLUCOSE_MEASUREMENT: u16 = 0x2A18;
 /// Current Time (Current Time Service), read for clock synchronisation (F-ACQ-11).
 pub const CURRENT_TIME: u16 = 0x2A2B;
 
+/// Generic Health Sensor: Live Health Observations (F-ACQ-03, decoded by [`crate::ghs`]).
+/// Value per the Bluetooth Assigned Numbers as understood at M7; to be confirmed against a real
+/// GHS device on the hardware-in-the-loop bench (docs/09) before flight use.
+pub const LIVE_HEALTH_OBSERVATIONS: u16 = 0x2B8B;
+
 /// Every characteristic with a decoder.
 pub const SUPPORTED: [u16; 7] = [
     HEART_RATE_MEASUREMENT,

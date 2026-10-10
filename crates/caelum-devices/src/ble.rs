@@ -113,7 +113,9 @@ pub fn measurement_characteristics<'a>(
     let mut out: BTreeSet<u16> = BTreeSet::new();
     for (uuid, can_notify_or_indicate) in characteristics {
         if let Some(short) = short_uuid(uuid) {
-            if can_notify_or_indicate && sig::SUPPORTED.contains(&short) {
+            if can_notify_or_indicate
+                && (sig::SUPPORTED.contains(&short) || short == sig::LIVE_HEALTH_OBSERVATIONS)
+            {
                 out.insert(short);
             }
         }

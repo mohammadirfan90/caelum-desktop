@@ -70,6 +70,13 @@ impl Station {
             ingested.output.events.extend(out.events);
             ingested.output.notices.extend(out.notices);
         }
+        // ECG waveforms (GHS, F-ACQ-03): stored, QRS → asystole events, SQI and HR derived.
+        if let Some((crew, _)) = outcome.waveforms.first() {
+            ingested.crew = Some(crew.to_string());
+        }
+        let out = self.ingest_waveforms(device, outcome.waveforms)?;
+        ingested.output.events.extend(out.events);
+        ingested.output.notices.extend(out.notices);
         Ok(ingested)
     }
 

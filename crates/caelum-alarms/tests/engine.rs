@@ -640,6 +640,37 @@ fn absence_rules_wait_while_the_gate_is_closed_or_stale() {
     }
 }
 
+/// SR-005: an unusable reading of the gate parameter (ECG lead off) closes the gate at once: the
+/// absence rule must not fire on the last good SQI while the electrode is disconnected.
+#[test]
+fn sr_005_an_unusable_gate_reading_closes_the_absence_gate() {
+    let mut e = only("asystole.critical");
+    for t in 0..=3 {
+        sqi(&mut e, 0.9, t);
+        qrs(&mut e, t * 1_000);
+    }
+    let mut lead_off = cont(Parameter::SqiEcg, 0.0, 4);
+    lead_off.quality = Quality::Unusable;
+    let ev = e.evaluate(&lead_off, None);
+    assert!(matches!(ev[..], [Event::SignalUnusable { .. }]), "{ev:?}");
+    for t in 4..=20 {
+        assert!(
+            e.tick(TaiNs(T0 + t * S)).is_empty(),
+            "no asystole at {t} s with the lead off"
+        );
+    }
+    // The lead is back with a good signal and no beats: the absence rule runs again.
+    let mut fired = false;
+    for t in 21..=28 {
+        let mut ev = sqi(&mut e, 0.9, t);
+        ev.extend(e.tick(TaiNs(T0 + t * S)));
+        fired |= ev
+            .iter()
+            .any(|x| matches!(x, Event::Raised(a) if a.rule_id == "asystole.critical"));
+    }
+    assert!(fired);
+}
+
 /// F-ALM-08: spot baselines fire on k of the last n deviating readings and clear when none deviate.
 #[test]
 fn spot_baseline_uses_k_of_n_and_clears_when_none_deviate() {

@@ -107,7 +107,7 @@ name, rule id or free text; it never goes on OPS. Full detail follows on MEDICAL
 |---|---|---|---|
 | H-01 | Missed life-threatening event | Rule bug, data loss, suppressed alarm, app crash, wristband out of range, single spot reading never persisting | SR-001/002/007, spot confirmation (SR-019), crew stations always sound (SR-015), fail-over, watchdog, test corpus |
 | H-02 | False reassurance from wrong/old value | Stale, fabricated or device-demonstration data; defaulted context | SR-004, SR-017, SR-018, R-CLN-02, staleness UI |
-| H-03 | Alarm fatigue | Flicker, artefacts | SR-003/005, alarm statistics (F-ALM-09) |
+| H-03 | Alarm fatigue | Flicker, artefacts; false asystole on a disconnected ECG lead | SR-003/005, alarm statistics (F-ALM-09); an unusable gate reading closes the absence-rule gate at once (engine, M7; test `sr_005_an_unusable_gate_reading_closes_the_absence_gate`), and the lead-off raises the signal technical alarm instead |
 | H-04 | Wrong crew member | Device mis-assignment | Registry assignment by CMO, pairing check, name on every alarm |
 | H-05 | Privacy breach | Physiology on ops channel | R-SEC-06 allow-lists and physiology definition (§3a), encryption |
 | H-06 | Malicious or corrupted update | Unsigned ruleset/model; dev-signed ruleset in a release build | R-SEC-05, SR-009 |
