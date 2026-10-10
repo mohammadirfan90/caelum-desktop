@@ -6,6 +6,7 @@
 //! Implemented in M2, M7 and M8: F-ACQ-01..11.
 
 pub mod ble;
+pub mod files;
 pub mod hid;
 pub mod link;
 pub mod pairing;
