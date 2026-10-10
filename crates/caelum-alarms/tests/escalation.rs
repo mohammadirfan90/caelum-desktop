@@ -1,6 +1,7 @@
 //! M4 gate: the escalation timeline matches docs/06 exactly; a restart mid-escalation resumes at
 //! the correct stage; silence expires and re-sounds; crew stations sound without any wristband
-//! (F-ALM-04, F-ALM-05; SR-007, SR-008, SR-015; docs/06 §3a OPS fields).
+//! (F-ALM-03 priorities and their sound patterns, F-ALM-04, F-ALM-05; SR-007, SR-008, SR-015;
+//! docs/06 §3a OPS fields).
 
 #![allow(clippy::expect_used, clippy::unwrap_used, clippy::panic)] // test code
 

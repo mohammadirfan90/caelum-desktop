@@ -1,4 +1,4 @@
-//! Ruleset loading (SR-009): the bundled ruleset matches docs/06 §3, verifies under development
+//! Ruleset loading (F-ALM-02, SR-009): the bundled ruleset matches docs/06 §3, verifies under development
 //! keys only, and any tampering or invalid content rejects it (M3 gate: tampered ruleset rejected;
 //! release build rejects a development-signed ruleset).
 

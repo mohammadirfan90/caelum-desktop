@@ -1,4 +1,4 @@
-// M5 primitives (docs/07 §2, F-SYS-10): level shapes, no value without a source (CLAUDE.md rule 2),
+// M5 primitives (docs/07 §2, F-SYS-10; F-ALM-03 shape-coded levels): level shapes, no value without a source (CLAUDE.md rule 2),
 // alarm bar and escalation tracker from the alarm bus, alarm store.
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";

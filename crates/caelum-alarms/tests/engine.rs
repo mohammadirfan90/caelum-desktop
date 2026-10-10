@@ -1,5 +1,6 @@
-//! Rule engine tests (M3 gate): table-driven over every rule of the bundled ruleset, named tests
-//! for SR-001..006, SR-010, SR-018 and SR-019, and property tests.
+//! Rule engine tests (M3 gate; F-ALM-01 deterministic engine, F-ALM-08 baseline notices):
+//! table-driven over every rule of the bundled ruleset, named tests for SR-001..006, SR-010,
+//! SR-018 and SR-019, and property tests.
 
 #![allow(clippy::expect_used, clippy::unwrap_used, clippy::panic)] // test code
 
