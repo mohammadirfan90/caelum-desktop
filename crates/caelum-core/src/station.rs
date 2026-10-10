@@ -23,6 +23,9 @@ use serde_json::json;
 
 use crate::alarms::{AlarmService, AlarmServiceError, Output, RulesetStatus};
 
+mod admin;
+pub use admin::{RosterApplied, UserSummary, CREW_KIND};
+
 /// How an acknowledgement was applied.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Acknowledged {
@@ -53,6 +56,9 @@ pub enum StationError {
     /// The alarm service could not record its state.
     #[error(transparent)]
     Alarms(#[from] AlarmServiceError),
+    /// The request was refused for the reason given (invalid input, signature, policy).
+    #[error("{0}")]
+    Rejected(String),
 }
 
 impl From<caelum_store::StoreError> for StationError {

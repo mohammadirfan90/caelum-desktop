@@ -5,7 +5,13 @@
 //! ruleset-signer pubkey --key <private-key-file>
 //! ruleset-signer sign   --ruleset <ruleset.toml> --key <private-key-file> --role author|medical_approver
 //! ruleset-signer verify --ruleset <ruleset.toml> [--policy development|flight]
+//! ruleset-signer sign-config   --kind crew --file <crew.toml> --version <v> --key <private-key-file>
+//! ruleset-signer verify-config --kind crew --file <crew.toml> [--policy development|flight]
 //! ```
+//!
+//! `sign-config` signs a configuration bundle as its author (F-SYS-07, CR-012 §2) and writes
+//! `<file>.sig.toml` next to it (`crew.sig.toml`); `--version` must equal the version inside the
+//! bundle, which CAELUM checks when it applies it.
 //!
 //! `sign` writes `<ruleset>.sig.toml` next to the ruleset (`ruleset.sig.toml`), adding the
 //! signature to an existing envelope for the same bytes, or starting a new one when the bytes
@@ -16,7 +22,8 @@ use std::process::ExitCode;
 
 use caelum_alarms::ruleset::Ruleset;
 use caelum_alarms::signing::{
-    built_in_keys, digest, hex, key_id, sign, verify, Envelope, SignerRole, TrustPolicy,
+    built_in_keys, digest, hex, key_id, sign, sign_config, verify, verify_config, ConfigEnvelope,
+    Envelope, SignerRole, TrustPolicy,
 };
 use ed25519_dalek::SigningKey;
 use zeroize::Zeroizing;
@@ -64,6 +71,14 @@ fn read_key(path: &str) -> Result<SigningKey, String> {
 
 fn sig_path(ruleset: &str) -> PathBuf {
     Path::new(ruleset).with_extension("sig.toml")
+}
+
+fn policy(args: &[String]) -> Result<TrustPolicy, String> {
+    match arg(args, "--policy").as_deref() {
+        None | Some("development") => Ok(TrustPolicy::Development),
+        Some("flight") => Ok(TrustPolicy::Flight),
+        Some(other) => Err(format!("unknown policy {other}")),
+    }
 }
 
 fn run(args: &[String]) -> Result<String, String> {
@@ -134,11 +149,7 @@ fn run(args: &[String]) -> Result<String, String> {
         }
         Some("verify") => {
             let ruleset_path = need(args, "--ruleset")?;
-            let policy = match arg(args, "--policy").as_deref() {
-                None | Some("development") => TrustPolicy::Development,
-                Some("flight") => TrustPolicy::Flight,
-                Some(other) => return Err(format!("unknown policy {other}")),
-            };
+            let policy = policy(args)?;
             let bytes = std::fs::read(&ruleset_path).map_err(|e| e.to_string())?;
             let envelope =
                 std::fs::read_to_string(sig_path(&ruleset_path)).map_err(|e| e.to_string())?;
@@ -155,7 +166,43 @@ fn run(args: &[String]) -> Result<String, String> {
                 }
             ))
         }
-        _ => Err("usage: ruleset-signer keygen|pubkey|sign|verify (see source header)".into()),
+        Some("sign-config") => {
+            let kind = need(args, "--kind")?;
+            let file = need(args, "--file")?;
+            let version = need(args, "--version")?;
+            let key = read_key(&need(args, "--key")?)?;
+            let bytes = std::fs::read(&file).map_err(|e| e.to_string())?;
+            let envelope = ConfigEnvelope {
+                kind: kind.clone(),
+                version: version.clone(),
+                sha256: digest(&bytes),
+                signatures: vec![sign_config(&kind, &bytes, &version, &key)],
+            };
+            let out = sig_path(&file);
+            let header = "# Signature of a CAELUM configuration bundle (CR-012). Written by tools/ruleset-signer; do not edit.
+";
+            let body = toml::to_string(&envelope).map_err(|e| e.to_string())?;
+            std::fs::write(&out, format!("{header}{body}")).map_err(|e| e.to_string())?;
+            Ok(format!("signed {kind} bundle {file} v{version} → {}", out.display()))
+        }
+        Some("verify-config") => {
+            let kind = need(args, "--kind")?;
+            let file = need(args, "--file")?;
+            let policy = policy(args)?;
+            let bytes = std::fs::read(&file).map_err(|e| e.to_string())?;
+            let envelope = std::fs::read_to_string(sig_path(&file)).map_err(|e| e.to_string())?;
+            let v = verify_config(&kind, &bytes, &envelope, &built_in_keys(), policy)
+                .map_err(|e| e.to_string())?;
+            Ok(format!(
+                "verified {kind} bundle v{}{}",
+                v.version,
+                if v.development { " (development keys)" } else { "" }
+            ))
+        }
+        _ => Err(
+            "usage: ruleset-signer keygen|pubkey|sign|verify|sign-config|verify-config (see source header)"
+                .into(),
+        ),
     }
 }
 

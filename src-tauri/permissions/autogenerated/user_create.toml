@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-user-create"
+description = "Enables the user_create command without any pre-configured scope."
+commands.allow = ["user_create"]
+
+[[permission]]
+identifier = "deny-user-create"
+description = "Denies the user_create command without any pre-configured scope."
+commands.deny = ["user_create"]

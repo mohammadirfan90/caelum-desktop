@@ -19,7 +19,7 @@ export const en = {
   rulesetSafeState: "Physiological alarm rules are not running: no verified ruleset",
   rulesetUnknown: "Alarm ruleset status unavailable",
 
-  // Levels (docs/06 Â§2)
+  // Levels (docs/06 §2)
   level: {
     normal: "Normal",
     observe: "Observe",
@@ -65,7 +65,7 @@ export const en = {
   emptyTitle: "Nothing here yet",
   screenNoData: "No data for this screen on this station yet.",
 
-  // Shell (docs/07 Â§3)
+  // Shell (docs/07 §3)
   skipToContent: "Skip to content",
   navLabel: "Screens",
   screen: {
@@ -127,7 +127,43 @@ export const en = {
     reauthRequired: "Confirm with your PIN or password first.",
     unavailable: "The station's records are unavailable.",
     failed: "The action failed.",
+    rejected: (reason: string) => `Refused: ${reason}.`,
   },
+
+  // Administration (F-SYS-07, CR-012 §2–3, CR-007 §4)
+  adminTitle: "Administration",
+  rosterTitle: "Crew roster",
+  rosterHelp: "Apply a signed crew roster: the roster file and its signature file (.sig.toml).",
+  rosterFile: "Roster file",
+  rosterSignature: "Signature file",
+  rosterApply: "Apply roster",
+  rosterApplied: (version: string, n: number) => `Roster ${version} applied: ${String(n)} crew members on the roster.`,
+  rosterDevelopment: "Signed with development keys: not for operational use.",
+  rosterEmpty: "No crew roster has been applied on this station.",
+  rosterChooseFiles: "Choose the roster file and its signature file.",
+  rosterReadFailed: "The files could not be read.",
+  crewColumns: { name: "Name", position: "Position", mission: "Mission", status: "Status" },
+  crewActive: "On the roster",
+  crewInactive: "No longer on the roster",
+  usersTitle: "Accounts",
+  userColumns: { username: "Sign-in name", role: "Role", crew: "Crew member", status: "Status", action: "Action" },
+  userActive: "Active",
+  userDisabled: "Disabled",
+  userDisable: "Disable",
+  userDisableLabel: (name: string) => `Disable account ${name}`,
+  userDisabledDone: (name: string) => `Account ${name} disabled.`,
+  userNoCrew: "—",
+  newUserTitle: "New account",
+  newUserRole: "Role",
+  newUserCrew: "Crew member",
+  newUserCrewChoose: "Choose a crew member",
+  newUserSecret: "Initial PIN or password",
+  newUserCreate: "Create account",
+  userCreated: (name: string) => `Account ${name} created.`,
+  reauthTitle: "Confirm it is you",
+  reauthHelp: "This change needs your PIN or password, entered within the last 2 minutes.",
+  reauthConfirm: "Confirm and continue",
+  reauthCancel: "Cancel",
 
   // Settings (F-SYS-10)
   settingsTitle: "Display",

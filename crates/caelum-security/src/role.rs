@@ -140,7 +140,7 @@ pub enum Principal {
     User(UserIdentity),
 }
 
-/// The M1 IPC commands (`docs/ROLE_MATRIX.md` §3).
+/// The IPC commands (`docs/ROLE_MATRIX.md` §3).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Command {
     /// Product name and version.
@@ -171,6 +171,16 @@ pub enum Command {
     SetupStatus,
     /// Create the first administrator (only while no account exists).
     SetupCreateAdministrator,
+    /// Crew roster (CR-012 §2): own entry for an astronaut, all for the others.
+    CrewList,
+    /// Apply a signed crew-roster bundle (F-SYS-07); re-authentication required.
+    ConfigApplyCrew,
+    /// Accounts: all for CMO, flight surgeon, BME and administrator; self otherwise.
+    UserList,
+    /// Create an account (CR-007 §4); re-authentication required.
+    UserCreate,
+    /// Disable an account; re-authentication required.
+    UserDisable,
 }
 
 /// Who may call a command.
@@ -186,7 +196,7 @@ pub enum Access {
 
 impl Command {
     /// Every command.
-    pub const ALL: [Command; 14] = [
+    pub const ALL: [Command; 19] = [
         Command::AppInfo,
         Command::AuthLogin,
         Command::AuthLogout,
@@ -201,6 +211,11 @@ impl Command {
         Command::AlarmEscalate,
         Command::SetupStatus,
         Command::SetupCreateAdministrator,
+        Command::CrewList,
+        Command::ConfigApplyCrew,
+        Command::UserList,
+        Command::UserCreate,
+        Command::UserDisable,
     ];
 
     /// The IPC command name.
@@ -220,6 +235,11 @@ impl Command {
             Command::AlarmEscalate => "alarm_escalate",
             Command::SetupStatus => "setup_status",
             Command::SetupCreateAdministrator => "setup_create_administrator",
+            Command::CrewList => "crew_list",
+            Command::ConfigApplyCrew => "config_apply_crew",
+            Command::UserList => "user_list",
+            Command::UserCreate => "user_create",
+            Command::UserDisable => "user_disable",
         }
     }
 
@@ -258,6 +278,25 @@ impl Command {
             Command::AlarmSilence | Command::AlarmEscalate => {
                 Access::Roles(&[Role::Astronaut, Role::Cmo])
             }
+            // CR-012 §2–4. Crew scope (own / all) and OPS-only views are applied per call.
+            Command::CrewList => Access::Roles(&[
+                Role::Astronaut,
+                Role::Cmo,
+                Role::FlightSurgeon,
+                Role::Bme,
+                Role::Administrator,
+            ]),
+            Command::ConfigApplyCrew | Command::UserCreate | Command::UserDisable => {
+                Access::Roles(&[Role::Administrator])
+            }
+            Command::UserList => Access::Roles(&[
+                Role::Astronaut,
+                Role::Cmo,
+                Role::FlightSurgeon,
+                Role::Bme,
+                Role::Mcc,
+                Role::Administrator,
+            ]),
         }
     }
 

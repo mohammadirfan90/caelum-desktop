@@ -16,6 +16,11 @@
     "allow-alarm-silence",
     "allow-alarm-escalate",
     "allow-setup-status",
-    "allow-setup-create-administrator"
+    "allow-setup-create-administrator",
+    "allow-crew-list",
+    "allow-config-apply-crew",
+    "allow-user-list",
+    "allow-user-create",
+    "allow-user-disable"
   ]
 }

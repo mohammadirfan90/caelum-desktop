@@ -1,12 +1,14 @@
 import { useState } from "react";
 
 import type { AlarmView } from "../alarmStore";
+import type { Api } from "../api";
 import type { SessionInfo } from "../bindings";
 import { EmptyState, NoData } from "../components/Values";
 import { type Level, LevelGlyph } from "../components/LevelGlyph";
 import { type Screen, screensFor } from "../navigation";
 import { type Prefs, TEXT_SCALES, type Theme } from "../settings";
 import { strings } from "../strings";
+import { Administration } from "./Admin";
 
 /** Crew-wide emergency view (F-ALM-07, SR-014): every active alarm on this station. */
 export function EmergencyView({
@@ -121,11 +123,13 @@ export function SettingsScreen({ prefs, onChange }: { readonly prefs: Prefs; rea
  * status footer. Values not yet available on this station show NO DATA, never a placeholder.
  */
 export function Shell({
+  api,
   session,
   prefs,
   onPrefs,
   onSignOut,
 }: {
+  readonly api: Api;
   readonly session: SessionInfo;
   readonly prefs: Prefs;
   readonly onPrefs: (p: Prefs) => void;
@@ -165,7 +169,10 @@ export function Shell({
         </section>
         <main id="content" tabIndex={-1} className="flex-1 overflow-auto p-6">
           {screen === "settings" ? (
-            <SettingsScreen prefs={prefs} onChange={onPrefs} />
+            <div className="flex flex-col gap-10">
+              <SettingsScreen prefs={prefs} onChange={onPrefs} />
+              {session.role === "administrator" ? <Administration api={api} self={session.userId} /> : null}
+            </div>
           ) : (
             <section aria-labelledby="screen-title" className="flex flex-col gap-2">
               <h2 id="screen-title" className="text-2xl font-semibold">

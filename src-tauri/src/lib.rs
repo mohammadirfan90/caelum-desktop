@@ -13,6 +13,7 @@ compile_error!(
 
 use tauri::Manager;
 
+pub mod admin;
 pub mod commands;
 pub mod events;
 pub mod ipc;

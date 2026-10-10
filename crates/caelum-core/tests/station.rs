@@ -4,110 +4,21 @@
 #![allow(clippy::expect_used, clippy::unwrap_used)] // test code
 
 use std::collections::HashMap;
-use std::path::PathBuf;
-use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::atomic::Ordering;
 
 use caelum_core::security::audit::Actor;
-use caelum_core::security::clock::{Clock, ClockError};
 use caelum_core::security::keys::{DB_KEY_ENTRY, INSTANCE_KEY_ENTRY};
-use caelum_core::security::keystore::{KeyStore, KeyStoreError};
+use caelum_core::security::keystore::KeyStore;
 use caelum_core::security::role::{Access, Command, DeniedReason, Role};
-use caelum_core::security::session::{AuthError, SessionConfig};
+use caelum_core::security::session::AuthError;
 use caelum_core::security::users::{create_user, NewUser};
 use caelum_core::security::SecurityError;
 use caelum_core::station::{Station, StationError, DATABASE_FILE};
 use caelum_domain::ids::CrewMemberId;
 use caelum_domain::time::TaiNs;
-use zeroize::Zeroizing;
 
-#[derive(Default)]
-struct MemoryKeyStore(Mutex<HashMap<String, Vec<u8>>>);
-
-impl KeyStore for MemoryKeyStore {
-    fn get(&self, name: &str) -> Result<Option<Zeroizing<Vec<u8>>>, KeyStoreError> {
-        Ok(self
-            .0
-            .lock()
-            .unwrap()
-            .get(name)
-            .cloned()
-            .map(Zeroizing::new))
-    }
-    fn set(&self, name: &str, secret: &[u8]) -> Result<(), KeyStoreError> {
-        self.0
-            .lock()
-            .unwrap()
-            .insert(name.to_owned(), secret.to_vec());
-        Ok(())
-    }
-    fn delete(&self, name: &str) -> Result<(), KeyStoreError> {
-        self.0.lock().unwrap().remove(name);
-        Ok(())
-    }
-}
-
-#[derive(Default)]
-struct Times {
-    tai: AtomicI64,
-    mono: AtomicU64,
-}
-
-#[derive(Clone, Default)]
-struct TestClock(Arc<Times>);
-
-impl TestClock {
-    #[allow(clippy::cast_possible_wrap)]
-    fn advance_s(&self, s: u64) {
-        self.0.mono.fetch_add(s * 1_000_000_000, Ordering::SeqCst);
-        self.0
-            .tai
-            .fetch_add(i64::try_from(s).unwrap() * 1_000_000_000, Ordering::SeqCst);
-    }
-}
-
-impl Clock for TestClock {
-    fn now_tai(&self) -> Result<TaiNs, ClockError> {
-        Ok(TaiNs(self.0.tai.load(Ordering::SeqCst)))
-    }
-    fn monotonic_ns(&self) -> u64 {
-        self.0.mono.load(Ordering::SeqCst)
-    }
-}
-
-/// A data directory removed on drop.
-struct DataDir(PathBuf);
-
-impl DataDir {
-    fn new() -> Self {
-        let dir = std::env::temp_dir().join(format!("caelum-core-{}", uuid::Uuid::new_v4()));
-        Self(dir)
-    }
-}
-
-impl Drop for DataDir {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.0);
-    }
-}
-
-fn open(dir: &DataDir, keys: &MemoryKeyStore, clock: &TestClock) -> Result<Station, StationError> {
-    Station::open(
-        &dir.0,
-        keys,
-        Box::new(clock.clone()),
-        Some("station-a".to_owned()),
-        SessionConfig::default(),
-    )
-}
-
-fn secret_for(role: Role) -> &'static str {
-    if role.is_onboard_crew() {
-        "246813"
-    } else {
-        "ground station passphrase"
-    }
-}
+mod common;
+use common::{open, secret_for, DataDir, MemoryKeyStore, TestClock};
 
 fn add_user(station: &Station, username: &str, role: Role) {
     let crew = role.is_onboard_crew().then(|| {

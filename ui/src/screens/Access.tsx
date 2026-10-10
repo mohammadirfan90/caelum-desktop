@@ -11,6 +11,8 @@ export function errorText(e: CommandError): string {
   switch (e.kind) {
     case "throttled":
       return strings.errors.throttled(e.retryAfterS ?? 0);
+    case "rejected":
+      return strings.errors.rejected(e.message);
     case "signInRequired":
     case "locked":
     case "notPermitted":

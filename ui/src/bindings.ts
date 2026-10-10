@@ -39,6 +39,19 @@ export const commands = {
 	setupStatus: () => typedError<boolean, CommandError>(__TAURI_INVOKE("setup_status")),
 	/**  Creates the first administrator; refused once any account exists (public, CR-007 §4; audited). */
 	setupCreateAdministrator: (username: string, secret: string) => typedError<null, CommandError>(__TAURI_INVOKE("setup_create_administrator", { username, secret })),
+	/**  The crew roster in scope (astronaut: own entry). */
+	crewList: () => typedError<CrewMember[], CommandError>(__TAURI_INVOKE("crew_list")),
+	/**
+	 *  Applies a signed crew roster: the bundle text and its signature file (administrator,
+	 *  re-authentication required).
+	 */
+	configApplyCrew: (bundle: string, signature: string) => typedError<RosterResult, CommandError>(__TAURI_INVOKE("config_apply_crew", { bundle, signature })),
+	/**  Accounts in scope. */
+	userList: () => typedError<UserItem[], CommandError>(__TAURI_INVOKE("user_list")),
+	/**  Creates an account with an initial secret (administrator, re-authentication required). */
+	userCreate: (username: string, role: RoleName, crewMemberId: string | null, secret: string) => typedError<string, CommandError>(__TAURI_INVOKE("user_create", { username, role, crewMemberId, secret })),
+	/**  Disables an account (administrator, re-authentication required). */
+	userDisable: (userId: string) => typedError<null, CommandError>(__TAURI_INVOKE("user_disable", { userId })),
 };
 
 /** Events */
@@ -176,6 +189,20 @@ export type CommandError = {
 	retryAfterS: number | null,
 };
 
+/**  A crew member on the roster (no health data). */
+export type CrewMember = {
+	/**  Crew member ID. */
+	id: string,
+	/**  Name as written in the roster. */
+	name: string,
+	/**  Crew position. */
+	position: string,
+	/**  Mission. */
+	mission: string,
+	/**  On the roster in force. */
+	active: boolean,
+};
+
 /**  Why a command failed. */
 export type ErrorKind = 
 /**  Sign in first. */
@@ -194,6 +221,8 @@ export type ErrorKind =
 "notInteractive" | 
 /**  Re-authenticate first. */
 "reauthRequired" | 
+/**  The request was refused; the message says why (invalid input, signature, policy). */
+"rejected" | 
 /**  CAELUM's records could not be opened. */
 "unavailable" | 
 /**  Any other failure (storage, keystore, clock). */
@@ -215,6 +244,16 @@ export type RoleName =
 "administrator" | 
 /**  Device gateway (never signs in interactively). */
 "device_gateway";
+
+/**  A roster that was applied. */
+export type RosterResult = {
+	/**  Roster version. */
+	version: string,
+	/**  Active crew members. */
+	members: number,
+	/**  Signed with development keys only. */
+	development: boolean,
+};
 
 /**  The ruleset banner (SR-009, docs/07 §3). */
 export type RulesetInfo = {
@@ -249,6 +288,20 @@ export type SessionInfo = {
 	crewMemberId: string | null,
 	/**  The session is locked. */
 	locked: boolean,
+};
+
+/**  An account (never its credential). */
+export type UserItem = {
+	/**  Account ID. */
+	id: string,
+	/**  Sign-in name. */
+	username: string,
+	/**  Role. */
+	role: RoleName,
+	/**  Crew member (crew roles). */
+	crewMemberId: string | null,
+	/**  Cannot sign in. */
+	disabled: boolean,
 };
 
 /* Tauri Specta runtime */

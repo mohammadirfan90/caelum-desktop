@@ -18,6 +18,11 @@ fn main() {
             "alarm_escalate",
             "setup_status",
             "setup_create_administrator",
+            "crew_list",
+            "config_apply_crew",
+            "user_list",
+            "user_create",
+            "user_disable",
         ]));
     if let Err(error) = tauri_build::try_build(attributes) {
         panic!("tauri-build failed: {error:#}");

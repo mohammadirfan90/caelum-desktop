@@ -127,6 +127,25 @@ impl Database {
         Ok(user)
     }
 
+    /// Every account, by sign-in name.
+    pub fn users(&self) -> Result<Vec<UserRecord>, StoreError> {
+        let conn = self.connection();
+        let mut stmt = conn.prepare(&format!(
+            "SELECT {USER_COLUMNS} FROM user ORDER BY username"
+        ))?;
+        let rows = stmt.query_map([], user_from_row)?;
+        Ok(rows.collect::<Result<_, _>>()?)
+    }
+
+    /// Enables or disables an account; `false` if there is no such account.
+    pub fn set_user_disabled(&self, id: &str, disabled: bool) -> Result<bool, StoreError> {
+        let n = self.connection().execute(
+            "UPDATE user SET disabled = ?2 WHERE id = ?1",
+            (id, i64::from(disabled)),
+        )?;
+        Ok(n == 1)
+    }
+
     /// Number of user accounts.
     pub fn user_count(&self) -> Result<i64, StoreError> {
         Ok(self

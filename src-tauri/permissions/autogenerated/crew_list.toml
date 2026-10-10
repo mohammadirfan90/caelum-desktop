@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-crew-list"
+description = "Enables the crew_list command without any pre-configured scope."
+commands.allow = ["crew_list"]
+
+[[permission]]
+identifier = "deny-crew-list"
+description = "Denies the crew_list command without any pre-configured scope."
+commands.deny = ["crew_list"]

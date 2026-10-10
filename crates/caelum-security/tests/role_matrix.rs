@@ -79,7 +79,7 @@ fn principals() -> Vec<Principal> {
 /// Every command in §3 exists in code and every code command is in §3, with the same access.
 #[test]
 fn every_command_matches_role_matrix_section_3() {
-    let rows = table_rows("## 3. M1 commands");
+    let rows = table_rows("## 3. Commands");
     let mut documented = Vec::new();
     for row in &rows {
         let name = row[0].trim_matches('`');

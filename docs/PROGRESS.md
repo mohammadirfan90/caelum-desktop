@@ -13,7 +13,8 @@ picture). Last updated: 2026-10-10 (M5 gate evidence written: axe and keyboard w
 | M3 Alarm engine | **complete** (8550faf) | `docs/gates/M3.md` (independent review: Mohammad Irfan, 2026-10-10) | ⚕ clinical content stays DRAFT |
 | M4 Escalation, technical alarms, notifications, self-test | gate items met; closes on the next all-green CI run | `docs/gates/M4.md` | Wristband against a real device on the HIL bench; device runtime wiring with the Devices screen (M6) |
 | M5 UI shell and design system | gate items met; closes on the next all-green CI run | `docs/gates/M5.md`, screenshots in `docs/gates/M5-screenshots/` | Screenshot review by the milestone reviewer (Mohammad Irfan); screen-reader usability session (docs/09) |
-| M6–M13 | not started | | |
+| M6 Core crew screens | **in progress**: CR-012; step 1 done (signed crew roster, user administration, Administration screen) | | Read commands, device runtime, crew screens, end-to-end gate |
+| M7–M13 | not started | | |
 
 Status of record: the table in `docs/10_BUILD_PLAN.md` (the trace enforces milestones marked
 `complete` there).
@@ -91,3 +92,4 @@ reviewed by Mohammad Irfan, product owner, 2026-10-10). Third-party risks: `docs
 | 2026-10-10 | (this push) | Trace fix: with M3 enforced, F-ALM-01/02/03/08 must be cited by their tests; headers of the engine, ruleset, escalation and UI primitive tests now cite them (the previous push left trace.csv failing the gate) |
 | 2026-10-10 | (this push) | M5 step 2: window states (enrolment, sign-in, lock, emergency, shell), role-based nav (ROLE_MATRIX §6), display settings (themes, text to 200 %, glove, reduced motion), first-administrator commands (CR-007 §4), auth_me no longer counts as activity, i18n gate test (no literal text outside the catalog) |
 | 2026-10-10 | (this push) | M5 step 3: axe (WCAG 2.1 AA) and a keyboard-only walkthrough in Vitest browser mode (Chromium via Playwright) on every screen and theme and at 200 % with glove mode; the screenshot review found px type sizes, a truncated alarm title and focus lost after sign-in, all fixed and covered by tests; the trace and CI run the browser suite; Chromium for air-gapped checks is in the tool cache; M5 gate evidence |
+| 2026-10-10 | (this push) | M6 step 1 (CR-012): signed configuration bundles (own signing domain, same keys and trust policy as the ruleset), crew roster apply (inactive, never deleted), user list/create/disable with re-authentication, Administration screen with the confirm step; roster fixtures signed with the development key; mojibake in three comments repaired |

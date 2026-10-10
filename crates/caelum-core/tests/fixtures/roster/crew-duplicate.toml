@@ -1,0 +1,14 @@
+# Test fixture: the same crew ID twice.
+[roster]
+version = "4"
+mission = "TEST-1"
+
+[[crew]]
+id = "0b6f3c1e-6a59-4c3e-9a51-6f7c1d2e3a41"
+name = "Fixture Astronaut A"
+position = "flight engineer"
+
+[[crew]]
+id = "0b6f3c1e-6a59-4c3e-9a51-6f7c1d2e3a41"
+name = "Fixture Astronaut A again"
+position = "flight engineer"

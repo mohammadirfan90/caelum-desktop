@@ -13,6 +13,9 @@ use crate::ruleset::{Ruleset, RulesetError};
 
 /// Domain separation for ruleset signatures.
 const TAG: &[u8] = b"CAELUM-RULESET-1";
+/// Domain separation for configuration bundles (CR-012 §2): a ruleset signature never verifies
+/// as a configuration signature, nor one kind of configuration as another.
+const CONFIG_TAG: &[u8] = b"CAELUM-CONFIG-1";
 
 /// Development public keys (hex, one per line, `#` comments).
 const DEV_KEYS: &str = include_str!("../keys/dev.pub");
@@ -258,5 +261,132 @@ pub fn verify(
         ruleset,
         development: !(all_flight && flight_medical),
         sha256: sha,
+    })
+}
+
+/// The `*.sig.toml` envelope of a configuration bundle (F-SYS-07, CR-012 §2).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ConfigEnvelope {
+    /// Bundle kind (`crew`, ...).
+    pub kind: String,
+    /// Bundle version the signatures cover.
+    pub version: String,
+    /// SHA-256 of the bundle bytes, hex.
+    pub sha256: String,
+    /// Signatures.
+    #[serde(rename = "signature", default)]
+    pub signatures: Vec<SignatureEntry>,
+}
+
+/// A configuration bundle whose signatures verified (the content is parsed by its owner).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VerifiedConfig {
+    /// Signed version.
+    pub version: String,
+    /// SHA-256 of the bytes (hex).
+    pub sha256: String,
+    /// Signed with development keys only.
+    pub development: bool,
+}
+
+/// Why a configuration bundle was not accepted.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+pub enum ConfigVerifyError {
+    /// The envelope does not parse.
+    #[error("signature file does not parse: {0}")]
+    Envelope(String),
+    /// The envelope is for another kind of bundle.
+    #[error("signature file is for a `{found}` bundle, not `{expected}`")]
+    WrongKind {
+        /// Expected kind.
+        expected: String,
+        /// Kind in the envelope.
+        found: String,
+    },
+    /// The bytes are not the signed ones.
+    #[error("bundle digest does not match its signatures (tampered or not re-signed)")]
+    DigestMismatch,
+    /// No signatures.
+    #[error("bundle is not signed")]
+    Unsigned,
+    /// A signature names a key this build does not trust.
+    #[error("signature by untrusted key {0}")]
+    UntrustedKey(String),
+    /// A signature does not verify.
+    #[error("signature by key {0} does not verify")]
+    BadSignature(String),
+    /// No author signature.
+    #[error("bundle has no author signature")]
+    NoAuthor,
+}
+
+fn config_message(kind: &str, sha256: &str, version: &str) -> Vec<u8> {
+    let mut m = CONFIG_TAG.to_vec();
+    for part in [kind, sha256, version] {
+        m.extend((part.len() as u64).to_be_bytes());
+        m.extend(part.as_bytes());
+    }
+    m
+}
+
+/// Signs a configuration bundle as its author (used by `tools/ruleset-signer sign-config`).
+pub fn sign_config(kind: &str, bytes: &[u8], version: &str, key: &SigningKey) -> SignatureEntry {
+    let sha = digest(bytes);
+    SignatureEntry {
+        role: SignerRole::Author,
+        key_id: key_id(&key.verifying_key()),
+        signature: hex(&key.sign(&config_message(kind, &sha, version)).to_bytes()),
+    }
+}
+
+/// Verifies a configuration bundle of `kind` against `keys` under `policy` (release builds:
+/// flight keys only). Any failure rejects it.
+pub fn verify_config(
+    kind: &str,
+    bytes: &[u8],
+    envelope_text: &str,
+    keys: &[TrustedKey],
+    policy: TrustPolicy,
+) -> Result<VerifiedConfig, ConfigVerifyError> {
+    let envelope: ConfigEnvelope =
+        toml::from_str(envelope_text).map_err(|e| ConfigVerifyError::Envelope(e.to_string()))?;
+    if envelope.kind != kind {
+        return Err(ConfigVerifyError::WrongKind {
+            expected: kind.to_owned(),
+            found: envelope.kind,
+        });
+    }
+    let sha = digest(bytes);
+    if sha != envelope.sha256 {
+        return Err(ConfigVerifyError::DigestMismatch);
+    }
+    if envelope.signatures.is_empty() {
+        return Err(ConfigVerifyError::Unsigned);
+    }
+    let msg = config_message(kind, &envelope.sha256, &envelope.version);
+    let mut all_flight = true;
+    let mut author = false;
+    for s in &envelope.signatures {
+        let key = keys
+            .iter()
+            .find(|k| key_id(&k.key) == s.key_id)
+            .filter(|k| policy == TrustPolicy::Development || k.class == KeyClass::Flight)
+            .ok_or_else(|| ConfigVerifyError::UntrustedKey(s.key_id.clone()))?;
+        let sig = unhex::<64>(&s.signature)
+            .ok_or_else(|| ConfigVerifyError::BadSignature(s.key_id.clone()))?;
+        key.key
+            .verify_strict(&msg, &Signature::from_bytes(&sig))
+            .map_err(|_| ConfigVerifyError::BadSignature(s.key_id.clone()))?;
+        all_flight &= key.class == KeyClass::Flight;
+        author |= s.role == SignerRole::Author;
+    }
+    if !author {
+        return Err(ConfigVerifyError::NoAuthor);
+    }
+    Ok(VerifiedConfig {
+        version: envelope.version,
+        sha256: sha,
+        development: !all_flight,
     })
 }

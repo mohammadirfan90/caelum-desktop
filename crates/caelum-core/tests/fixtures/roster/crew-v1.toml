@@ -1,0 +1,15 @@
+# Test fixture (CR-012 §2): a crew roster signed with the development key. Names are fixture
+# labels, not people.
+[roster]
+version = "1"
+mission = "TEST-1"
+
+[[crew]]
+id = "0b6f3c1e-6a59-4c3e-9a51-6f7c1d2e3a41"
+name = "Fixture Astronaut A"
+position = "flight engineer"
+
+[[crew]]
+id = "0b6f3c1e-6a59-4c3e-9a51-6f7c1d2e3a42"
+name = "Fixture Officer B"
+position = "crew medical officer"

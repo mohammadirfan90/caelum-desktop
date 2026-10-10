@@ -421,8 +421,10 @@ dependencies = [
  "caelum-vehicle",
  "cargo_metadata 0.23.1",
  "fs4",
+ "serde",
  "serde_json",
  "thiserror 2.0.21",
+ "toml 1.1.8+spec-1.1.0",
  "uuid",
  "zeroize",
 ]

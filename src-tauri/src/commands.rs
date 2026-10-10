@@ -9,9 +9,10 @@ use caelum_core::alarms::RulesetStatus;
 use caelum_core::security::audit::{AuditEntry, ChainStatus, ProblemKind};
 use caelum_core::security::role::{DeniedReason, Role};
 use caelum_core::security::session::AuthError;
+use caelum_core::security::SecurityError;
 use caelum_core::station::{Acknowledged, Me, StationError};
 use caelum_domain::ids::AlarmId;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use specta::Type;
 use tauri::{AppHandle, State};
 use tauri_specta::Event as _;
@@ -62,6 +63,8 @@ pub enum ErrorKind {
     NotInteractive,
     /// Re-authenticate first.
     ReauthRequired,
+    /// The request was refused; the message says why (invalid input, signature, policy).
+    Rejected,
     /// CAELUM's records could not be opened.
     Unavailable,
     /// Any other failure (storage, keystore, clock).
@@ -102,6 +105,9 @@ impl From<StationError> for CommandError {
                 AuthError::ReauthRequired => ErrorKind::ReauthRequired,
                 AuthError::Security(_) => ErrorKind::Failed,
             },
+            StationError::Rejected(_) | StationError::Security(SecurityError::Policy(_)) => {
+                ErrorKind::Rejected
+            }
             StationError::Security(_) | StationError::Io(_) | StationError::Alarms(_) => {
                 ErrorKind::Failed
             }
@@ -115,7 +121,7 @@ impl From<StationError> for CommandError {
 }
 
 /// A role (`docs/ROLE_MATRIX.md` §1).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Type)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type)]
 #[serde(rename_all = "snake_case")]
 pub enum RoleName {
     /// Astronaut.
@@ -144,6 +150,20 @@ impl From<Role> for RoleName {
             Role::Mcc => RoleName::Mcc,
             Role::Administrator => RoleName::Administrator,
             Role::DeviceGateway => RoleName::DeviceGateway,
+        }
+    }
+}
+
+impl From<RoleName> for Role {
+    fn from(r: RoleName) -> Self {
+        match r {
+            RoleName::Astronaut => Role::Astronaut,
+            RoleName::Cmo => Role::Cmo,
+            RoleName::FlightSurgeon => Role::FlightSurgeon,
+            RoleName::Bme => Role::Bme,
+            RoleName::Mcc => Role::Mcc,
+            RoleName::Administrator => Role::Administrator,
+            RoleName::DeviceGateway => Role::DeviceGateway,
         }
     }
 }

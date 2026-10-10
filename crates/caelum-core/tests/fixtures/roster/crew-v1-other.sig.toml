@@ -1,0 +1,9 @@
+# Signature of a CAELUM configuration bundle (CR-012). Written by tools/ruleset-signer; do not edit.
+kind = "crew"
+version = "1"
+sha256 = "8404ec624b2d3793e40052bd914a4f1a4a4ca88f6a570c05d626fb602cc74c3d"
+
+[[signature]]
+role = "author"
+key_id = "5811d4225220dff7"
+signature = "98bff2b9b47c94c49918588a646cb47612ff13ffaaed65d53f8d17dc1a1338e04291017f3920580db895de5b4199cab92bf68460cc7e01bcd17fe617dfff7a01"

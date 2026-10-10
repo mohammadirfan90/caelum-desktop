@@ -77,11 +77,21 @@ pub enum AuditAction {
     AlarmSilenced,
     /// Alarm escalated by hand (F-ALM-05).
     AlarmEscalated,
+    /// User account disabled (CR-012 §3).
+    UserDisabled,
+    /// Signed configuration bundle applied (F-SYS-07, CR-012 §2).
+    ConfigApplied,
+    /// Device paired and registered (F-ACQ-01).
+    DevicePaired,
+    /// Device assigned to a crew member (F-ACQ-09).
+    DeviceAssigned,
+    /// Device assignment removed (F-ACQ-09).
+    DeviceUnassigned,
 }
 
 impl AuditAction {
     /// Every action.
-    pub const ALL: [AuditAction; 13] = [
+    pub const ALL: [AuditAction; 18] = [
         AuditAction::Login,
         AuditAction::LoginFailed,
         AuditAction::Logout,
@@ -95,6 +105,11 @@ impl AuditAction {
         AuditAction::AlarmGroundAcknowledged,
         AuditAction::AlarmSilenced,
         AuditAction::AlarmEscalated,
+        AuditAction::UserDisabled,
+        AuditAction::ConfigApplied,
+        AuditAction::DevicePaired,
+        AuditAction::DeviceAssigned,
+        AuditAction::DeviceUnassigned,
     ];
 
     /// Stored name.
@@ -113,6 +128,11 @@ impl AuditAction {
             AuditAction::AlarmGroundAcknowledged => "alarm.ground_acknowledge",
             AuditAction::AlarmSilenced => "alarm.silence",
             AuditAction::AlarmEscalated => "alarm.escalate",
+            AuditAction::UserDisabled => "user.disable",
+            AuditAction::ConfigApplied => "config.apply",
+            AuditAction::DevicePaired => "device.pair",
+            AuditAction::DeviceAssigned => "device.assign",
+            AuditAction::DeviceUnassigned => "device.unassign",
         }
     }
 
@@ -132,7 +152,13 @@ impl AuditAction {
             | AuditAction::ReauthFailed
             | AuditAction::BreakGlassOpened
             | AuditAction::UserCreated
+            | AuditAction::UserDisabled
             | AuditAction::KeyCreated => AuditCategory::Security,
+            AuditAction::ConfigApplied => AuditCategory::Configuration,
+            // Device work is technical: BME reads it (ROLE_MATRIX §2, "Audit log").
+            AuditAction::DevicePaired
+            | AuditAction::DeviceAssigned
+            | AuditAction::DeviceUnassigned => AuditCategory::Technical,
             AuditAction::AlarmAcknowledged
             | AuditAction::AlarmGroundAcknowledged
             | AuditAction::AlarmSilenced

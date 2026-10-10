@@ -15,7 +15,9 @@ import type { AlarmBusEvent, SessionInfo } from "../../src/bindings";
 import { AlarmBar } from "../../src/components/AlarmBar";
 import { LevelBadge } from "../../src/components/LevelGlyph";
 import { Card, EmptyState, NoData, SectionHead, Stat } from "../../src/components/Values";
+import type { Api } from "../../src/api";
 import { RulesetBanner } from "../../src/RulesetBanner";
+import { Administration } from "../../src/screens/Admin";
 import { Locked, SignIn } from "../../src/screens/Access";
 import { EmergencyView, Shell } from "../../src/screens/Shell";
 import { applyPrefs, DEFAULT_PREFS, type Prefs } from "../../src/settings";
@@ -31,6 +33,27 @@ const events: AlarmBusEvent[] = [
 const alarms = ranked(events.reduce<AlarmMap>(reduce, new Map()));
 
 const session: SessionInfo = { userId: "u1", username: "cmo.one", role: "cmo", crewMemberId: "c1", locked: false };
+
+/** Station answers for the screens that read data (fixtures, shown as such). */
+const api = {
+  crewList: () =>
+    Promise.resolve({
+      status: "ok" as const,
+      data: [
+        { id: "c1", name: "Fixture Astronaut A", position: "flight engineer", mission: "TEST-1", active: true },
+        { id: "c2", name: "Fixture Officer B", position: "crew medical officer", mission: "TEST-1", active: false },
+      ],
+    }),
+  userList: () =>
+    Promise.resolve({
+      status: "ok" as const,
+      data: [
+        { id: "u0", username: "admin", role: "administrator" as const, crewMemberId: null, disabled: false },
+        { id: "u1", username: "astro.a", role: "astronaut" as const, crewMemberId: "c1", disabled: false },
+        { id: "u2", username: "cmo.b", role: "cmo" as const, crewMemberId: "c2", disabled: true },
+      ],
+    }),
+} as unknown as Api;
 
 function Gallery() {
   return (
@@ -65,6 +88,7 @@ const SCREENS: Record<string, () => ReactElement> = {
     <RulesetBanner load={() => Promise.resolve({ status: "ok", data: { state: "fallback", version: "1.0.0-draft.2", development: true, reason: "digest mismatch" } })} />
   ),
   gallery: () => <Gallery />,
+  administration: () => <Administration api={api} self="u0" />,
 };
 
 const VARIANTS: Record<string, Prefs> = {
@@ -134,14 +158,14 @@ describe("accessibility (axe, WCAG 2.1 AA)", () => {
     }
     it(`signed-in shell in ${variant}`, async () => {
       applyPrefs(prefs);
-      render(<Shell session={session} prefs={prefs} onPrefs={() => undefined} onSignOut={() => undefined} />);
+      render(<Shell api={api} session={session} prefs={prefs} onPrefs={() => undefined} onSignOut={() => undefined} />);
       await settle();
       expect(await violations()).toEqual([]);
       if (variant === "200-glove") await page.screenshot({ path: "__screenshots__/shell-200-glove.png" });
     });
   }
 
-  const shell = () => <Shell session={session} prefs={DEFAULT_PREFS} onPrefs={() => undefined} onSignOut={() => undefined} />;
+  const shell = () => <Shell api={api} session={session} prefs={DEFAULT_PREFS} onPrefs={() => undefined} onSignOut={() => undefined} />;
   for (const [name, make] of [...Object.entries(SCREENS), ["shell", shell] as const]) {
     it(`${name}: text doubles at 200 % and nothing is clipped (docs/07 §5)`, async () => {
       applyPrefs(DEFAULT_PREFS);

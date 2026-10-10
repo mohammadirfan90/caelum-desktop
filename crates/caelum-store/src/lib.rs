@@ -10,8 +10,10 @@ mod db;
 mod key;
 mod repo;
 mod repo_acquisition;
+mod repo_crew;
 
 pub use db::{Database, StoreError};
 pub use key::DbKey;
 pub use repo::{AuditRecord, ChainHead, UserRecord};
 pub use repo_acquisition::{AlarmRecord, DeviceRecord, ObservationRecord, OpenAlarmRecord};
+pub use repo_crew::CrewMemberRecord;

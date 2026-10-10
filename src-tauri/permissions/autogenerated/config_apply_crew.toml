@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-config-apply-crew"
+description = "Enables the config_apply_crew command without any pre-configured scope."
+commands.allow = ["config_apply_crew"]
+
+[[permission]]
+identifier = "deny-config-apply-crew"
+description = "Denies the config_apply_crew command without any pre-configured scope."
+commands.deny = ["config_apply_crew"]

@@ -39,7 +39,7 @@ lead (CR-003) until a licensed clinician advisor countersigns; it does not block
 | Ground: downlink queue, uplink preparation | — | — | R/W | R/W | R (OPS queue) | R | — |
 | Model outputs (advisory) | R own | R all | R all | R all | — | — | — |
 
-## 3. M1 commands
+## 3. Commands
 | Command | Roles allowed | Notes |
 |---|---|---|
 | `app_info` | public (no login) | Product name and version only |
@@ -56,6 +56,11 @@ lead (CR-003) until a licensed clinician advisor countersigns; it does not block
 | `setup_status` | public | Whether this installation has any account yet (CR-007 §4) |
 | `setup_create_administrator` | public, only while no account exists | Creates the first administrator once; refused as soon as any account exists; audited (CR-007 §4) |
 | `ruleset_status` | public | Ruleset version in force and the DEVELOPMENT RULESET / fallback / safe-state banner (SR-009); safety information shown before sign-in, no clinical content |
+| `crew_list` | Astronaut (self); CMO, Flight Surgeon, BME, Admin (all) | Roster names and positions only, no health data (CR-012 §2) |
+| `config_apply_crew` | Admin | Signed crew-roster bundle (F-SYS-07); re-authentication (§4); audited |
+| `user_list` | Astronaut (self); MCC (self); CMO, Flight Surgeon, BME, Admin (all) | §2 "Users and roles"; never credentials |
+| `user_create` | Admin | Re-authentication (§4); CR-007 policy; audited |
+| `user_disable` | Admin | Re-authentication (§4); never the caller's own account, so never the last administrator; audited |
 
 ## 4. Sessions
 - Onboard: PIN plus device-bound key; auto-lock after 10 minutes (configurable). Ground: password

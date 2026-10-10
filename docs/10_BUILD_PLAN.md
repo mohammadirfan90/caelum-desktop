@@ -18,7 +18,7 @@ marked `complete` (`09` §3).
 | M3 | complete | 2026-10-10 | 8550faf (evidence: docs/gates/M3.md) |
 | M4 | in progress | 2026-10-10 | |
 | M5 | in progress | 2026-10-10 | |
-| M6 | not started | | |
+| M6 | in progress | 2026-10-10 | |
 | M7 | not started | | |
 | M8 | not started | | |
 | M9 | not started | | |
