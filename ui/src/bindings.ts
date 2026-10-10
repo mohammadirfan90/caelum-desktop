@@ -181,6 +181,22 @@ export const commands = {
 	ecgExportSegment: (id: string, fromS: number | null, toS: number | null) => typedError<number[], CommandError>(__TAURI_INVOKE("ecg_export_segment", { id, fromS, toS })),
 	/**  Applies the signed contact-window schedule (administrator, re-authentication; CR-024). */
 	configApplyContact: (bundle: string, signature: string) => typedError<string, CommandError>(__TAURI_INVOKE("config_apply_contact", { bundle, signature })),
+	/**  Applies the signed ground-console configuration (administrator, re-authentication). */
+	configApplyConsole: (bundle: string, signature: string) => typedError<string, CommandError>(__TAURI_INVOKE("config_apply_console", { bundle, signature })),
+	/**  Downlinked summaries of a crew member over the last `window_s` (flight surgeon). */
+	consoleSummaries: (crewMemberId: string, windowS: number) => typedError<GroundSummary[], CommandError>(__TAURI_INVOKE("console_summaries", { crewMemberId, windowS })),
+	/**  Received files (flight surgeon). */
+	consoleFiles: () => typedError<GroundFile[], CommandError>(__TAURI_INVOKE("console_files")),
+	/**  Downlinked OPS records of the last `window_s` (flight surgeon, BME, MCC), as JSON text. */
+	consoleOps: (kind: string, windowS: number) => typedError<string[], CommandError>(__TAURI_INVOKE("console_ops", { kind, windowS })),
+	/**  Drafts or edits a private medical conference record (flight surgeon, author). */
+	pmcSave: (id: string | null, crewMemberId: string, heldUtcMs: number | null, notes: string) => typedError<string, CommandError>(__TAURI_INVOKE("pmc_save", { id, crewMemberId, heldUtcMs, notes })),
+	/**  Signs a private medical conference record (author, re-authentication). */
+	pmcSign: (id: string) => typedError<null, CommandError>(__TAURI_INVOKE("pmc_sign", { id })),
+	/**  A crew member's private medical conference records (flight surgeon). */
+	pmcList: (crewMemberId: string) => typedError<Pmc[], CommandError>(__TAURI_INVOKE("pmc_list", { crewMemberId })),
+	/**  The content of a received file, as text (event packets are JSON; flight surgeon). */
+	consoleFile: (id: string) => typedError<string, CommandError>(__TAURI_INVOKE("console_file", { id })),
 };
 
 /** Events */
@@ -681,6 +697,18 @@ export type Freshness =
 /**  Marked unusable by the device. */
 "unusable";
 
+/**  One received file. */
+export type GroundFile = {
+	/**  ID. */
+	id: string,
+	/**  Name as sent. */
+	name: string,
+	/**  `event_packet` or `file`. */
+	kind: string,
+	/**  Received, UTC ms. */
+	receivedUtcMs: number | null,
+};
+
 /**  Path B and vehicle-bridge status. */
 export type GroundStatus = {
 	/**  A signed ground configuration is in force and path B is open. */
@@ -705,6 +733,26 @@ export type GroundStatus = {
 	downlinkInContact: boolean,
 	/**  Items waiting for a contact window. */
 	downlinkWaiting: number,
+};
+
+/**  One downlinked summary. */
+export type GroundSummary = {
+	/**  Parameter key. */
+	parameter: string,
+	/**  Window end, UTC ms. */
+	windowEndUtcMs: number | null,
+	/**  Worst quality in the window. */
+	quality: string,
+	/**  Minimum. */
+	min: number | null,
+	/**  Mean. */
+	mean: number | null,
+	/**  Maximum. */
+	max: number | null,
+	/**  Last state (enumerated parameters). */
+	state: string | null,
+	/**  Readings in the window. */
+	count: number,
 };
 
 /**  Link status (counts only). */
@@ -830,6 +878,20 @@ deviceId: string } |
 reason: string; 
 /**  Steps for this platform. */
 steps: string[] };
+
+/**  One private medical conference record. */
+export type Pmc = {
+	/**  ID. */
+	id: string,
+	/**  Author (user ID). */
+	author: string,
+	/**  Held, UTC ms. */
+	heldUtcMs: number | null,
+	/**  Notes. */
+	notes: string,
+	/**  Signed. */
+	signed: boolean,
+};
 
 /**  A protocol. */
 export type ProtocolItem = {

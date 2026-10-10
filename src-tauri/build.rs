@@ -78,6 +78,14 @@ fn main() {
             "schedule_next",
             "ecg_export_segment",
             "config_apply_contact",
+            "config_apply_console",
+            "console_summaries",
+            "console_files",
+            "console_ops",
+            "pmc_save",
+            "pmc_sign",
+            "pmc_list",
+            "console_file",
         ]));
     if let Err(error) = tauri_build::try_build(attributes) {
         panic!("tauri-build failed: {error:#}");

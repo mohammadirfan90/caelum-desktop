@@ -76,6 +76,14 @@
     "allow-config-apply-schedule",
     "allow-schedule-next",
     "allow-ecg-export-segment",
-    "allow-config-apply-contact"
+    "allow-config-apply-contact",
+    "allow-config-apply-console",
+    "allow-console-summaries",
+    "allow-console-files",
+    "allow-console-ops",
+    "allow-pmc-save",
+    "allow-pmc-sign",
+    "allow-pmc-list",
+    "allow-console-file"
   ]
 }

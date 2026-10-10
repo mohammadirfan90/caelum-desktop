@@ -17,6 +17,7 @@ pub mod admin;
 pub mod clinical;
 pub mod cluster;
 pub mod commands;
+pub mod console;
 pub mod crewlan;
 pub mod devices;
 pub mod events;
@@ -56,6 +57,7 @@ pub fn run() -> tauri::Result<()> {
             cluster::start_cluster(app.handle().clone(), &data_dir);
             crewlan::start_crew_lan(app.handle().clone(), &data_dir);
             clinical::start_folder_watch(app.handle().clone());
+            console::start_console(app.handle().clone());
             Ok(())
         })
         .invoke_handler(ipc::invoke_handler())

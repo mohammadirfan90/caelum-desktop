@@ -9,6 +9,9 @@ import type {
   EcgRecordingView,
   FhirImportResult,
   NextCheck,
+  GroundFile,
+  GroundSummary,
+  Pmc,
   Checkin,
   CheckinEntry,
   ChecklistRun,
@@ -124,6 +127,14 @@ export interface Api {
   readonly exportCsv: (crewMemberId: string, parameter: string, windowS: number) => Promise<Res<string>>;
   // Clinical files and schedule (CR-022)
   readonly scheduleNext: () => Promise<Res<NextCheck | null>>;
+  // Ground console profile (F-GND-08, CR-025)
+  readonly consoleSummaries: (crewMemberId: string, windowS: number) => Promise<Res<GroundSummary[]>>;
+  readonly consoleFiles: () => Promise<Res<GroundFile[]>>;
+  readonly consoleFile: (id: string) => Promise<Res<string>>;
+  readonly consoleOps: (kind: string, windowS: number) => Promise<Res<string[]>>;
+  readonly pmcSave: (id: string | null, crewMemberId: string, heldUtcMs: number, notes: string) => Promise<Res<string>>;
+  readonly pmcSign: (id: string) => Promise<Res<null>>;
+  readonly pmcList: (crewMemberId: string) => Promise<Res<Pmc[]>>;
   readonly ecgExportSegment: (id: string, fromS: number, toS: number) => Promise<Res<number[]>>;
 }
 

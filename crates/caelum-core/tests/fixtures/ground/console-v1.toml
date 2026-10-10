@@ -1,0 +1,15 @@
+# Test fixture (CR-025): a ground console, signed with the development key.
+[console]
+version = "1"
+receive = "127.0.0.1:47820"
+ack_to = "127.0.0.1:47821"
+gateway = "127.0.0.1:47822"
+[console.apids]
+ops_instance_status = 0x300
+ops_crew_status = 0x301
+ops_alarm = 0x302
+medical_summary = 0x310
+cfdp = 0x320
+[console.cfdp]
+local_entity_id = 10
+ground_entity_id = 1

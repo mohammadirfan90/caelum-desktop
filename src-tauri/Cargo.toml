@@ -20,9 +20,11 @@ caelum-alarms.workspace = true
 caelum-core.workspace = true
 caelum-domain.workspace = true
 # Device runtime channels and timers (the runtime Tauri already uses).
-tokio = { version = "1", features = ["sync", "time"] }
+tokio = { version = "1", features = ["net", "sync", "time"] }
 # Fail-over pair and crew LAN (CR-017).
 caelum-cluster.workspace = true
+# Ground console gateway for Open MCT (CR-025; same version and features as caelum-cluster, plus query).
+axum = { version = "0.8", default-features = false, features = ["http1", "json", "query", "tokio", "ws"] }
 # Crew-station client over the crew LAN (CR-017; same versions as caelum-cluster).
 futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
 tokio-tungstenite = { version = "0.29", default-features = false, features = ["handshake"] }

@@ -109,6 +109,14 @@ static BUILDER: LazyLock<Builder<Wry>> = LazyLock::new(|| {
             crate::clinical::schedule_next,
             crate::clinical::ecg_export_segment,
             crate::ground::config_apply_contact,
+            crate::console::config_apply_console,
+            crate::console::console_summaries,
+            crate::console::console_files,
+            crate::console::console_ops,
+            crate::console::pmc_save,
+            crate::console::pmc_sign,
+            crate::console::pmc_list,
+            crate::console::console_file,
         ])
         .events(collect_events![
             crate::events::AlarmBusEvent,

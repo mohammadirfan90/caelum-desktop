@@ -59,6 +59,10 @@ OS keystore. Attachment file store: AES-256-GCM.
 | cluster_state | key, value: highest fence seen, crew-LAN identity (certificate chain and key), capture on/off, seeded |
 | cluster_outbox | seq, tbl, key: rows changed on the primary while capture is on (V9 triggers), waiting to become log entries |
 | audit_replica | origin node, then the audit entry columns: the primary's audit chain held on the standby, apart from the standby's own |
+| ground_summary | ground profile: downlinked MEDICAL summaries (crew, parameter, window, quality, min/mean/max or state, count), de-duplicated (CR-025) |
+| ground_ops | ground profile: downlinked OPS records (alarm, crew status, instance status) as JSON, de-duplicated by APID, sequence and time |
+| ground_file | ground profile: files received completely by CFDP (event packets) |
+| pmc_record | ground profile: private medical conference record by the flight surgeon; immutable once signed |
 
 ## 3. Provenance and simulation guard
 `Observation.classification` is an enum with no "simulated" variant in release builds. In

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-console-file"
+description = "Enables the console_file command without any pre-configured scope."
+commands.allow = ["console_file"]
+
+[[permission]]
+identifier = "deny-console-file"
+description = "Denies the console_file command without any pre-configured scope."
+commands.deny = ["console_file"]

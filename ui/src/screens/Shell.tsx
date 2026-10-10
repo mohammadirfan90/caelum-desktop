@@ -16,6 +16,7 @@ import { Checks } from "./Checks";
 import { Body, type CrewContext, Home } from "./Crew";
 import { Devices } from "./Devices";
 import { Environment } from "./Environment";
+import { Console } from "./Console";
 import { Ground } from "./Ground";
 import { Medical } from "./Medical";
 
@@ -314,6 +315,7 @@ export function Shell({
               ) : null}
               {screen === "env" ? <Environment api={api} crewId={crewId} version={observed} /> : null}
               {screen === "ground" ? <Ground api={api} version={deviceVersion} /> : null}
+              {screen === "ground" && session.role !== "administrator" ? <Console api={api} role={session.role} crewId={crewId} /> : null}
             </section>
           )}
         </main>

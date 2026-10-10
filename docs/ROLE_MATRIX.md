@@ -117,6 +117,14 @@ lead (CR-003) until a licensed clinician advisor countersigns; it does not block
 | `schedule_next` | Astronaut, CMO, Flight Surgeon | No physiology; NO DATA without a signed schedule |
 | `ecg_export_segment` | CMO, Flight Surgeon | At most 10 min; needs the stated start time; audited |
 | `config_apply_contact` | Admin | Signed bundle kind contact-schedule; re-authentication (§4); audited |
+| `config_apply_console` | Admin | Signed bundle kind ground-console; re-authentication (§4); audited |
+| `console_summaries` | Flight Surgeon | Ground profile; physiology (MEDICAL channel) |
+| `console_files` | Flight Surgeon | Ground profile; physiology (MEDICAL channel) |
+| `console_ops` | Flight Surgeon, BME, MCC | OPS fields only, no physiology |
+| `pmc_save` | Flight Surgeon | Author only; audited |
+| `pmc_sign` | Flight Surgeon | Author only; re-authentication (§4); immutable after; audited |
+| `pmc_list` | Flight Surgeon | Never to MCC |
+| `console_file` | Flight Surgeon | Ground profile; physiology (MEDICAL channel) |
 
 ## 4. Sessions
 - Onboard: PIN plus device-bound key; auto-lock after 10 minutes (configurable). Ground: password

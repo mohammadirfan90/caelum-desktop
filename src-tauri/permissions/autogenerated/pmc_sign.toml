@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-pmc-sign"
+description = "Enables the pmc_sign command without any pre-configured scope."
+commands.allow = ["pmc_sign"]
+
+[[permission]]
+identifier = "deny-pmc-sign"
+description = "Denies the pmc_sign command without any pre-configured scope."
+commands.deny = ["pmc_sign"]

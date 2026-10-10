@@ -291,6 +291,22 @@ pub enum Command {
     EcgExportSegment,
     /// Apply the signed contact-window schedule (F-GND-05, CR-024).
     ConfigApplyContact,
+    /// Make this installation a ground console (F-GND-08, CR-025).
+    ConfigApplyConsole,
+    /// Downlinked MEDICAL summaries of a crew member (F-GND-08).
+    ConsoleSummaries,
+    /// Files received by CFDP (event packets; F-GND-08).
+    ConsoleFiles,
+    /// Downlinked OPS records (F-GND-08).
+    ConsoleOps,
+    /// Draft a private medical conference record (F-GND-08).
+    PmcSave,
+    /// Sign a private medical conference record (F-GND-08).
+    PmcSign,
+    /// Private medical conference records of a crew member (F-GND-08).
+    PmcList,
+    /// The content of a received file (F-GND-08).
+    ConsoleFile,
 }
 
 /// Who may call a command.
@@ -306,7 +322,7 @@ pub enum Access {
 
 impl Command {
     /// Every command.
-    pub const ALL: [Command; 74] = [
+    pub const ALL: [Command; 82] = [
         Command::AppInfo,
         Command::AuthLogin,
         Command::AuthLogout,
@@ -381,6 +397,14 @@ impl Command {
         Command::ScheduleNext,
         Command::EcgExportSegment,
         Command::ConfigApplyContact,
+        Command::ConfigApplyConsole,
+        Command::ConsoleSummaries,
+        Command::ConsoleFiles,
+        Command::ConsoleOps,
+        Command::PmcSave,
+        Command::PmcSign,
+        Command::PmcList,
+        Command::ConsoleFile,
     ];
 
     /// The IPC command name.
@@ -460,6 +484,14 @@ impl Command {
             Command::ScheduleNext => "schedule_next",
             Command::EcgExportSegment => "ecg_export_segment",
             Command::ConfigApplyContact => "config_apply_contact",
+            Command::ConfigApplyConsole => "config_apply_console",
+            Command::ConsoleSummaries => "console_summaries",
+            Command::ConsoleFiles => "console_files",
+            Command::ConsoleOps => "console_ops",
+            Command::PmcSave => "pmc_save",
+            Command::PmcSign => "pmc_sign",
+            Command::PmcList => "pmc_list",
+            Command::ConsoleFile => "console_file",
         }
     }
 
@@ -572,6 +604,14 @@ impl Command {
             Command::ScheduleNext => Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon]),
             Command::EcgExportSegment => Access::Roles(&[Role::Cmo, Role::FlightSurgeon]),
             Command::ConfigApplyContact => Access::Roles(&[Role::Administrator]),
+            Command::ConfigApplyConsole => Access::Roles(&[Role::Administrator]),
+            Command::ConsoleSummaries => Access::Roles(&[Role::FlightSurgeon]),
+            Command::ConsoleFiles => Access::Roles(&[Role::FlightSurgeon]),
+            Command::ConsoleOps => Access::Roles(&[Role::FlightSurgeon, Role::Bme, Role::Mcc]),
+            Command::PmcSave => Access::Roles(&[Role::FlightSurgeon]),
+            Command::PmcSign => Access::Roles(&[Role::FlightSurgeon]),
+            Command::PmcList => Access::Roles(&[Role::FlightSurgeon]),
+            Command::ConsoleFile => Access::Roles(&[Role::FlightSurgeon]),
         }
     }
 

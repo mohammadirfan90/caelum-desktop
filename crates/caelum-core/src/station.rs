@@ -27,6 +27,7 @@ mod admin;
 pub mod clinical;
 mod cluster_link;
 pub use clinical::{CrewOverviewItem, PvtResult, PROTOCOLS_KIND};
+pub mod console;
 pub mod downlink;
 pub mod export;
 pub mod files;
@@ -174,6 +175,8 @@ pub struct Station {
     models: caelum_ml::registry::Registry,
     /// Sensor-kit signal buffers per device (F-ACQ-05, F-SIG-03/04/07).
     kit: std::collections::HashMap<caelum_domain::ids::DeviceId, kit::KitDevice>,
+    /// Ground console: the CFDP receiving entity (CR-025).
+    console_cfdp: Option<caelum_ground::cfdp::CfdpEntity>,
     /// The ground downlink (CR-024).
     ground: Option<downlink::GroundLink>,
     /// When retention last ran (CR-022).
@@ -269,6 +272,7 @@ impl Station {
             core_temp: std::collections::HashMap::new(),
             retention_at: None,
             ground: None,
+            console_cfdp: None,
             baselines: std::collections::HashMap::new(),
             baselines_at: None,
             acquisition: crate::acquisition::Acquisition::new()
