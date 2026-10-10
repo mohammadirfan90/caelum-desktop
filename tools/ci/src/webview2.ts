@@ -31,22 +31,34 @@ export interface Signature {
   readonly status: string;
   readonly subject: string;
   readonly issuer: string;
+  /** Why the signature could not be read, when PowerShell failed (else empty). */
+  readonly error?: string;
 }
 
 /** The only acceptable signer of the runtime package. */
 export function signatureProblem(sig: Signature): string | undefined {
-  if (sig.status !== "Valid") return `Authenticode status ${sig.status}`;
+  if (sig.error !== undefined && sig.error.length > 0) return `signature could not be read: ${sig.error}`;
+  if (sig.status !== "Valid") return `Authenticode status ${sig.status.length > 0 ? sig.status : "(none)"}`;
   if (!/^CN=Microsoft Corporation,/.test(sig.subject)) return `unexpected signer ${sig.subject}`;
   if (!/O=Microsoft Corporation/.test(sig.issuer)) return `unexpected issuer ${sig.issuer}`;
   return undefined;
 }
 
-/** Reads the Authenticode signature of a file with PowerShell (Windows). */
+/** Reads the Authenticode signature of a file with PowerShell (Windows); failures are reported. */
 export function authenticode(path: string): Signature {
-  const script =
-    "$s = Get-AuthenticodeSignature -LiteralPath $env:CAELUM_SIGNED_FILE; " +
-    "[pscustomobject]@{ status = [string]$s.Status; subject = [string]$s.SignerCertificate.Subject; " +
-    "issuer = [string]$s.SignerCertificate.Issuer } | ConvertTo-Json -Compress";
+  const script = [
+    "$f = $env:CAELUM_SIGNED_FILE",
+    "try {",
+    "  $len = (Get-Item -LiteralPath $f -ErrorAction Stop).Length",
+    "  $s = Get-AuthenticodeSignature -LiteralPath $f -ErrorAction Stop",
+    "  $o = [pscustomobject]@{ status = [string]$s.Status; subject = [string]$s.SignerCertificate.Subject;",
+    "    issuer = [string]$s.SignerCertificate.Issuer; error = [string]$s.StatusMessage + ' (bytes: ' + $len + ')' }",
+    "  if ($o.status -eq 'Valid') { $o.error = '' }",
+    "} catch {",
+    "  $o = [pscustomobject]@{ status = ''; subject = ''; issuer = ''; error = $_.Exception.Message }",
+    "}",
+    "$o | ConvertTo-Json -Compress",
+  ].join("\n");
   const powershell = join(process.env["SystemRoot"] ?? "C:\\Windows", "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
   const r = spawnSync(powershell, ["-NoProfile", "-NonInteractive", "-Command", script], {
     encoding: "utf8",

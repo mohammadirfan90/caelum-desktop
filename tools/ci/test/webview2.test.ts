@@ -25,6 +25,12 @@ describe("WebView2 package signature", () => {
     assert.match(signatureProblem({ ...microsoft, subject: "CN=Contoso Ltd, O=Contoso" }) ?? "", /unexpected signer/);
     assert.match(signatureProblem({ ...microsoft, issuer: "CN=Some CA, O=Other" }) ?? "", /unexpected issuer/);
   });
+
+  it("reports an unreadable signature with its reason instead of a blank status", () => {
+    const problem = signatureProblem({ status: "", subject: "", issuer: "", error: "Cannot find path" });
+    assert.equal(problem, "signature could not be read: Cannot find path");
+    assert.equal(signatureProblem({ status: "", subject: "", issuer: "" }), "Authenticode status (none)");
+  });
 });
 
 describe("pinned runtime", () => {
