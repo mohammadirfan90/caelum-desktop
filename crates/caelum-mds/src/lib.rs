@@ -15,15 +15,17 @@
 //! - R-INT-07: records are kept in a persistent outbox while the medical data system is
 //!   unavailable and delivered exactly once on reconnect (idempotent client ids, [`ids`]).
 //!
-//! The crate is sans-I/O: time is injected as TAI ([`caelum_domain::time::TaiNs`]) and the FHIR
-//! transport is a trait ([`transport::FhirTransport`]). The HTTPS transport is supplied by the
-//! core (CR-016). The interface is create/search only: no command reaches the medical data
-//! system (ICD-MDS §7). `fake` and `store::MemoryStore` are test equipment, compiled only for
-//! tests or with the `test-equipment` feature.
+//! The connector is sans-I/O: time is injected as TAI ([`caelum_domain::time::TaiNs`]) and the
+//! FHIR transport is a trait ([`transport::FhirTransport`]). The production implementation is
+//! [`https::HttpsTransport`] (TLS 1.3, mutual certificates; CR-016 "HTTPS transport"), which the
+//! core constructs from signed configuration. The interface is create/search only: no command
+//! reaches the medical data system (ICD-MDS §7). `fake` and `store::MemoryStore` are test
+//! equipment, compiled only for tests or with the `test-equipment` feature.
 
 pub mod connector;
 pub mod fhir;
 pub mod health;
+pub mod https;
 pub mod ids;
 pub mod inbox;
 pub mod instant;

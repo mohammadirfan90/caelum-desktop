@@ -15,6 +15,15 @@ serde_json = "1.0.151"
 sha2 = "0.11"
 thiserror = "2.0.21"
 uuid = { version = "1.28.0", features = ["serde"] }
+# HTTPS transport (CR-016 "HTTPS transport"): blocking HTTP/1.1 client over rustls with the `ring`
+# provider only; no default features, so no web-PKI roots, no aws-lc-rs / cmake, no gzip, no proxy.
+rustls = { version = "0.23.40", default-features = false, features = ["ring", "std"] }
+ureq = { version = "3.3.0", default-features = false, features = ["rustls-no-provider"] }
+zeroize = "1.9.1"
+
+[dev-dependencies]
+# Test certificates for the loopback TLS 1.3 server (ring backend; no aws-lc-rs).
+rcgen = { version = "0.14.10", default-features = false, features = ["pem", "ring"] }
 
 [features]
 # Exposes the fake FHIR server and the in-memory store to other crates' tests. Never in releases.
