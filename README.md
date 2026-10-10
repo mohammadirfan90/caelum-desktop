@@ -39,5 +39,6 @@ Tauri 2 + Rust desktop application.
 | `docs/change-requests/CR-002.md` | Decisions from the first-session review (feature lock rev. 3) |
 | `docs/change-requests/CR-003.md` | Medical lead, spot-check evaluation, measured fever, licence and dependency policy |
 | `docs/change-requests/CR-004.md` | WebView2 Fixed Version runtime for offline-reproducible Windows builds |
+| `docs/ROLE_MATRIX.md` | Who may see and do what, per role (M1) |
 | `docs/change-requests/CR-005.md` | M0 offline evidence by network trap; physical network-off run in M13 |
 | `LICENSE`, `NOTICE` | Apache-2.0 licence and attribution notice |
