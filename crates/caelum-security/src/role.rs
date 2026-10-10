@@ -281,6 +281,14 @@ pub enum Command {
     CrewLanSignOut,
     /// Apply the signed retention limits (F-SYS-08, CR-022).
     ConfigApplyRetention,
+    /// Apply the signed DICOM folder-watch configuration (F-ACQ-06, CR-022).
+    ConfigApplyImport,
+    /// Apply the signed check schedule (F-CLN-06, F-CLN-07; CR-022).
+    ConfigApplySchedule,
+    /// The next scheduled check (F-CLN-06, F-CLN-07).
+    ScheduleNext,
+    /// Export a segment of an imported ECG recording as EDF+ (F-CLN-03).
+    EcgExportSegment,
 }
 
 /// Who may call a command.
@@ -296,7 +304,7 @@ pub enum Access {
 
 impl Command {
     /// Every command.
-    pub const ALL: [Command; 69] = [
+    pub const ALL: [Command; 73] = [
         Command::AppInfo,
         Command::AuthLogin,
         Command::AuthLogout,
@@ -366,6 +374,10 @@ impl Command {
         Command::CrewLanSignIn,
         Command::CrewLanSignOut,
         Command::ConfigApplyRetention,
+        Command::ConfigApplyImport,
+        Command::ConfigApplySchedule,
+        Command::ScheduleNext,
+        Command::EcgExportSegment,
     ];
 
     /// The IPC command name.
@@ -440,6 +452,10 @@ impl Command {
             Command::CrewLanSignIn => "crew_lan_sign_in",
             Command::CrewLanSignOut => "crew_lan_sign_out",
             Command::ConfigApplyRetention => "config_apply_retention",
+            Command::ConfigApplyImport => "config_apply_import",
+            Command::ConfigApplySchedule => "config_apply_schedule",
+            Command::ScheduleNext => "schedule_next",
+            Command::EcgExportSegment => "ecg_export_segment",
         }
     }
 
@@ -547,6 +563,10 @@ impl Command {
             Command::CrewLanSignIn => Access::Public,
             Command::CrewLanSignOut => Access::Public,
             Command::ConfigApplyRetention => Access::Roles(&[Role::Administrator]),
+            Command::ConfigApplyImport => Access::Roles(&[Role::Administrator]),
+            Command::ConfigApplySchedule => Access::Roles(&[Role::Administrator]),
+            Command::ScheduleNext => Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon]),
+            Command::EcgExportSegment => Access::Roles(&[Role::Cmo, Role::FlightSurgeon]),
         }
     }
 

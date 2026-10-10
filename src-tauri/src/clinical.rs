@@ -599,6 +599,18 @@ pub struct EcgLead {
     pub samples: Vec<f64>,
 }
 
+/// One event stated in an ECG file (F-CLN-03).
+#[derive(Debug, Clone, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct EcgEventView {
+    /// Seconds after the recording start.
+    pub onset_s: f64,
+    /// Duration, s, if stated.
+    pub duration_s: Option<f64>,
+    /// Text.
+    pub text: String,
+}
+
 /// A decoded ECG recording (F-CLN-03).
 #[derive(Debug, Clone, Serialize, Type)]
 #[serde(rename_all = "camelCase")]
@@ -607,6 +619,10 @@ pub struct EcgRecordingView {
     pub format: String,
     /// Leads.
     pub leads: Vec<EcgLead>,
+    /// Events stated in the file.
+    pub events: Vec<EcgEventView>,
+    /// The file states its start time (needed for EDF+ segment export).
+    pub start_known: bool,
 }
 
 /// A display window (centre and width, rescaled units).
@@ -699,6 +715,16 @@ pub async fn ecg_view(
 ) -> Result<EcgRecordingView, CommandError> {
     let r = state.with(|s| Ok(s.ecg_view(&id)?))?;
     Ok(EcgRecordingView {
+        events: r
+            .events
+            .iter()
+            .map(|e| EcgEventView {
+                onset_s: e.onset_s,
+                duration_s: e.duration_s,
+                text: e.text.clone(),
+            })
+            .collect(),
+        start_known: r.start.is_some(),
         format: r.format.to_owned(),
         leads: r
             .leads
@@ -746,4 +772,75 @@ pub async fn config_apply_retention(
     signature: String,
 ) -> Result<String, CommandError> {
     state.with(|s| Ok(s.config_apply_retention(bundle.as_bytes(), &signature)?))
+}
+
+/// The next scheduled check (F-CLN-06, F-CLN-07).
+#[derive(Debug, Clone, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct NextCheck {
+    /// `pvt` or `checkin`.
+    pub kind: String,
+    /// When, UTC ms.
+    pub at_utc_ms: Option<f64>,
+}
+
+/// The next scheduled check; `None` without a signed schedule (shown as NO DATA).
+#[tauri::command]
+#[specta::specta]
+pub async fn schedule_next(state: State<'_, AppState>) -> Result<Option<NextCheck>, CommandError> {
+    let next = state.with(|s| Ok(s.schedule_next()?))?;
+    Ok(next.map(|n| NextCheck {
+        kind: n.kind.to_owned(),
+        at_utc_ms: utc_ms(n.at.0),
+    }))
+}
+
+/// Applies the signed check schedule (administrator, re-authentication; CR-022).
+#[tauri::command]
+#[specta::specta]
+pub async fn config_apply_schedule(
+    state: State<'_, AppState>,
+    bundle: String,
+    signature: String,
+) -> Result<String, CommandError> {
+    state.with(|s| Ok(s.config_apply_schedule(bundle.as_bytes(), &signature)?))
+}
+
+/// Applies the signed DICOM folder-watch configuration (administrator, re-authentication).
+#[tauri::command]
+#[specta::specta]
+pub async fn config_apply_import(
+    state: State<'_, AppState>,
+    bundle: String,
+    signature: String,
+) -> Result<String, CommandError> {
+    state.with(|s| Ok(s.config_apply_import(bundle.as_bytes(), &signature)?))
+}
+
+/// A segment of an imported ECG recording as EDF+ (F-CLN-03; audited).
+#[tauri::command]
+#[specta::specta]
+pub async fn ecg_export_segment(
+    state: State<'_, AppState>,
+    id: String,
+    from_s: f64,
+    to_s: f64,
+) -> Result<Vec<u8>, CommandError> {
+    state.with(|s| Ok(s.ecg_export_segment(&id, from_s, to_s)?))
+}
+
+/// The DICOM folder watch (F-ACQ-06, CR-022 §2): a scan every 10 s while this instance acts.
+pub fn start_folder_watch(app: tauri::AppHandle) {
+    use tauri::Manager;
+    tauri::async_runtime::spawn(async move {
+        loop {
+            tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+            let _ = app.state::<AppState>().with(|s| {
+                if s.is_acting() {
+                    s.import_folder_scan()?;
+                }
+                Ok(())
+            });
+        }
+    });
 }

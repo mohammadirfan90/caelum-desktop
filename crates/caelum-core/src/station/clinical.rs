@@ -688,6 +688,19 @@ impl Station {
         metadata: serde_json::Value,
     ) -> Result<String, StationError> {
         let user = self.user_for(Command::AttachmentImport)?;
+        self.attachment_store(&Actor::user(&user), crew, kind, filename, bytes, metadata)
+    }
+
+    /// Stores an attachment encrypted and audits it as `actor` (manual import or folder watch).
+    pub(super) fn attachment_store(
+        &mut self,
+        actor: &Actor,
+        crew: CrewMemberId,
+        kind: &str,
+        filename: &str,
+        bytes: &[u8],
+        metadata: serde_json::Value,
+    ) -> Result<String, StationError> {
         if !["dicom", "ecg", "file"].contains(&kind) {
             return Err(rejected("unknown attachment kind"));
         }
@@ -710,7 +723,7 @@ impl Station {
             created_at_tai: Some(now.0),
         })?;
         self.log().append(
-            &Actor::user(&user),
+            actor,
             AuditAction::AttachmentImported,
             Some(&id),
             &json!({ "kind": kind, "sha256": stored.sha256, "bytes": stored.len }),

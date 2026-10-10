@@ -2,8 +2,10 @@ import { type SyntheticEvent, useEffect, useId, useRef, useState } from "react";
 
 import type { Api } from "../api";
 import { type Notice, NoticeLine } from "../components/Confirm";
+import { useLoad } from "../components/useLoad";
 import { Card, NoData, SectionHead } from "../components/Values";
 import { strings } from "../strings";
+import { utcDateTime } from "../time";
 import { errorText } from "./Access";
 import { Protocols } from "./Protocols";
 
@@ -224,16 +226,28 @@ export function CheckinForm({ api }: { readonly api: Api }) {
   );
 }
 
+/** The next scheduled check (F-CLN-06, F-CLN-07): NO DATA without a signed schedule. */
+function NextCheckCard({ api }: { readonly api: Api }) {
+  const next = useLoad(() => api.scheduleNext(), "next");
+  return (
+    <Card label={strings.checksNext}>
+      <SectionHead title={strings.checksNext} />
+      <div className="mt-3">
+        {next.state === "ok" && next.data !== null && next.data.atUtcMs !== null ? (
+          <p className="text-lg">{strings.checksNextAt(strings.checkKinds[next.data.kind] ?? next.data.kind, utcDateTime(next.data.atUtcMs))}</p>
+        ) : (
+          <NoData status="noData" />
+        )}
+      </div>
+    </Card>
+  );
+}
+
 /** Checks (docs/07 §4): next scheduled check, PVT, daily check-in, own checklists. */
 export function Checks({ api, crewId, isAstronaut }: { readonly api: Api; readonly crewId: string | null; readonly isAstronaut: boolean }) {
   return (
     <div className="flex flex-col gap-6">
-      <Card label={strings.checksNext}>
-        <SectionHead title={strings.checksNext} />
-        <div className="mt-3">
-          <NoData status="noData" />
-        </div>
-      </Card>
+      <NextCheckCard api={api} />
       {isAstronaut ? <PvtTest api={api} /> : null}
       {isAstronaut ? <CheckinForm api={api} /> : null}
       <Protocols api={api} crewId={crewId} canRun />

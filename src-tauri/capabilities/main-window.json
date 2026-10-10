@@ -71,6 +71,10 @@
     "allow-crew-lan-status",
     "allow-crew-lan-sign-in",
     "allow-crew-lan-sign-out",
-    "allow-config-apply-retention"
+    "allow-config-apply-retention",
+    "allow-config-apply-import",
+    "allow-config-apply-schedule",
+    "allow-schedule-next",
+    "allow-ecg-export-segment"
   ]
 }

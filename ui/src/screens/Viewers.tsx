@@ -50,7 +50,7 @@ function valueAt(lead: EcgLead, rate: number, t: number): string {
   return v === null || v === undefined ? strings.noData.noData : `${v.toFixed(3)} ${lead.unit}`;
 }
 
-function EcgPlot({ rec }: { readonly rec: EcgRecordingView }) {
+function EcgPlot({ rec, onExport }: { readonly rec: EcgRecordingView; readonly onExport: ((from: number, to: number) => void) | null }) {
   const [leadIx, setLeadIx] = useState(0);
   const [start, setStart] = useState(0);
   const [a, setA] = useState(0);
@@ -160,6 +160,28 @@ function EcgPlot({ rec }: { readonly rec: EcgRecordingView }) {
         <line x1={x(ta)} x2={x(ta)} y1="0" y2="200" stroke="currentColor" strokeDasharray="6 4" strokeWidth="2" vectorEffect="non-scaling-stroke" />
         <line x1={x(tb)} x2={x(tb)} y1="0" y2="200" stroke="currentColor" strokeDasharray="2 3" strokeWidth="2" vectorEffect="non-scaling-stroke" />
       </svg>
+      {onExport !== null && rec.startKnown ? (
+        <button
+          type="button"
+          className="btn btn-soft self-start"
+          onClick={() => {
+            onExport(Math.min(ta, tb), Math.max(ta, tb));
+          }}
+        >
+          {strings.ecgExport}
+        </button>
+      ) : null}
+      {onExport !== null && !rec.startKnown ? <p className="text-sm text-ink-3">{strings.ecgExportNoStart}</p> : null}
+      {rec.events.length > 0 ? (
+        <div className="text-sm">
+          <p className="font-semibold">{strings.ecgEvents}</p>
+          <ul>
+            {rec.events.map((e) => (
+              <li key={`${String(e.onsetS)}-${e.text}`}>{strings.ecgEvent(e.onsetS ?? 0, e.text)}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       <p className="text-sm tabular-nums" aria-live="polite">
         {`${strings.ecgInterval(dt)} ${dt > 0 ? strings.ecgRate(60000 / dt) : ""} · ${strings.ecgAmplitude(strings.ecgCaliperA, valueAt(lead, rate, ta))} · ${strings.ecgAmplitude(strings.ecgCaliperB, valueAt(lead, rate, tb))}`}
       </p>
@@ -170,11 +192,29 @@ function EcgPlot({ rec }: { readonly rec: EcgRecordingView }) {
 /** ECG review (F-CLN-03): an imported recording, one lead at a time, with time calipers. */
 export function EcgReview({ api, id, name, onClose }: { readonly api: Api; readonly id: string; readonly name: string; readonly onClose: () => void }) {
   const data = useLoad(() => api.ecgView(id), id);
+  const [notice, setNotice] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
+  const exportSegment = (from: number, to: number) => {
+    void api.ecgExportSegment(id, from, to).then((r) => {
+      if (r.status === "error") {
+        setNotice({ kind: "error", text: r.error.message });
+        return;
+      }
+      const file = `${name.replace(/\.[^.]*$/, "")}-${from.toFixed(1)}-${to.toFixed(1)}.edf`;
+      const url = URL.createObjectURL(new Blob([new Uint8Array(r.data)], { type: "application/octet-stream" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = file;
+      a.click();
+      URL.revokeObjectURL(url);
+      setNotice({ kind: "ok", text: strings.ecgExported(file) });
+    });
+  };
   return (
     <Card label={strings.ecgReviewTitle(name)}>
       <SectionHead title={strings.ecgReviewTitle(name)} />
       {data.state === "error" ? <NoticeLine notice={{ kind: "error", text: data.message }} /> : null}
-      {data.state === "ok" ? <EcgPlot rec={data.data} /> : null}
+      {data.state === "ok" ? <EcgPlot rec={data.data} onExport={exportSegment} /> : null}
+      <NoticeLine notice={notice} />
       <button type="button" className="btn btn-soft mt-3" onClick={onClose}>
         {strings.viewerClose}
       </button>

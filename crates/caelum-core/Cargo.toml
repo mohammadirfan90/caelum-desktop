@@ -48,6 +48,10 @@ test-equipment = ["dep:caelum-test-equipment", "caelum-domain/test-equipment", "
 workspace = true
 
 [dev-dependencies]
+# M8 tests build a real DICOM file (same versions as caelum-devices).
+dicom-core = "0.10.0"
+dicom-dictionary-std = "0.10.0"
+dicom-object = { version = "0.10.0", default-features = false }
 cargo_metadata = "0.23.1"
 # Crew-LAN tests: a throw-away PKI and a runtime for the node (as caelum-cluster's own tests).
 rcgen = { version = "0.14", default-features = false, features = ["crypto", "pem", "ring"] }

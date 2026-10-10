@@ -386,6 +386,8 @@ export const en = {
 
   // Checks (docs/07 §4; F-CLN-06, F-CLN-07)
   checksNext: "Next scheduled check",
+  checksNextAt: (kind: string, at: string) => `${kind} at ${at}`,
+  checkKinds: { pvt: "Reaction test (PVT)", checkin: "Daily check-in" } as Record<string, string>,
   checkinTitle: "Daily check-in",
   checkinMood: "Mood (1 very low, 5 very good)",
   checkinSleep: "Hours slept",
@@ -473,6 +475,12 @@ export const en = {
   fhirRejectedTitle: "Not imported",
   attachmentReview: (name: string) => `Review ${name}`,
   viewerClose: "Close the viewer",
+  ecgEvents: "Events in the file",
+  ecgEvent: (at: number, text: string) => `${at.toFixed(1)} s: ${text}`,
+  ecgExport: "Export A to B as EDF+",
+  ecgExportNoStart: "This file does not state its start time, so no EDF+ segment can be written.",
+  ecgExported: (name: string) => `${name} is ready.`,
+  encounterAttachments: "Attached files",
   ecgReviewTitle: (name: string) => `ECG review: ${name}`,
   ecgFormat: (format: string, leads: number, rate: number | null, seconds: number) =>
     `${format.toUpperCase()} · ${String(leads)} leads · ${rate === null ? "rate not stated" : `${String(rate)} Hz`} · ${seconds.toFixed(1)} s`,

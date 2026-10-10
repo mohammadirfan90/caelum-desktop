@@ -73,6 +73,10 @@ fn main() {
             "crew_lan_sign_in",
             "crew_lan_sign_out",
             "config_apply_retention",
+            "config_apply_import",
+            "config_apply_schedule",
+            "schedule_next",
+            "ecg_export_segment",
         ]));
     if let Err(error) = tauri_build::try_build(attributes) {
         panic!("tauri-build failed: {error:#}");

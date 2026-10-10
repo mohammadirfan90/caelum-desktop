@@ -28,6 +28,21 @@ pub struct EcgRecording {
     pub format: &'static str,
     /// Leads in physical units.
     pub leads: Vec<WaveformChannel>,
+    /// Start of the recording as stated in the file; `None` if the file does not say.
+    pub start: Option<caelum_devices::files::CivilDateTime>,
+    /// Events stated in the file (EDF+ annotations), for review (F-CLN-03).
+    pub events: Vec<EcgEvent>,
+}
+
+/// One event stated in an ECG file.
+#[derive(Debug, Clone, PartialEq)]
+pub struct EcgEvent {
+    /// Seconds after the recording start.
+    pub onset_s: f64,
+    /// Duration, s, if stated.
+    pub duration_s: Option<f64>,
+    /// Text.
+    pub text: String,
 }
 
 /// One DICOM frame rendered for display (F-CLN-04): 8-bit samples, interleaved, row by row.
@@ -188,13 +203,31 @@ pub fn decode_ecg(bytes: &[u8]) -> Result<EcgRecording, String> {
     if bytes.first() == Some(&b'0') && bytes.len() >= 256 {
         let f = edf::read(bytes).map_err(|e| e.to_string())?;
         let leads: Vec<WaveformChannel> = f.signals.iter().map(|s| s.to_channel()).collect();
-        return non_empty("edf", leads);
+        let events = f
+            .annotations
+            .iter()
+            .map(|a| EcgEvent {
+                onset_s: a.onset_s,
+                duration_s: a.duration_s,
+                text: a.text.clone(),
+            })
+            .collect();
+        return with_context("edf", leads, Some(f.start), events);
     }
     let scp = scp_ecg::read(bytes).map_err(|e| format!("not a supported ECG file: {e}"))?;
-    non_empty("scp-ecg", scp.leads)
+    with_context("scp-ecg", scp.leads, scp.acquired, Vec::new())
 }
 
 fn non_empty(format: &'static str, leads: Vec<WaveformChannel>) -> Result<EcgRecording, String> {
+    with_context(format, leads, None, Vec::new())
+}
+
+fn with_context(
+    format: &'static str,
+    leads: Vec<WaveformChannel>,
+    start: Option<caelum_devices::files::CivilDateTime>,
+    events: Vec<EcgEvent>,
+) -> Result<EcgRecording, String> {
     if leads.is_empty()
         || leads
             .iter()
@@ -202,7 +235,12 @@ fn non_empty(format: &'static str, leads: Vec<WaveformChannel>) -> Result<EcgRec
     {
         return Err("the file holds no usable lead".to_owned());
     }
-    Ok(EcgRecording { format, leads })
+    Ok(EcgRecording {
+        format,
+        leads,
+        start,
+        events,
+    })
 }
 
 impl Station {

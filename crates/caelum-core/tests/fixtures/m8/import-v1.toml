@@ -1,0 +1,5 @@
+# Test fixture (CR-022): folder watch, relative to the data directory, signed with the development key.
+[import]
+version = "1"
+watch_dir = "dicom-inbox"
+crew_member_id = "0b6f3c1e-6a59-4c3e-9a51-6f7c1d2e3a41"

@@ -1,0 +1,5 @@
+# Test fixture (CR-022): check schedule signed with the development key.
+[schedule]
+version = "1"
+pvt = ["08:00"]
+checkin = ["20:00"]

@@ -8,6 +8,7 @@ import type {
   DicomWindow,
   EcgRecordingView,
   FhirImportResult,
+  NextCheck,
   Checkin,
   CheckinEntry,
   ChecklistRun,
@@ -121,6 +122,9 @@ export interface Api {
   // Export (F-SYS-08)
   readonly exportFhir: (crewMemberId: string, windowS: number) => Promise<Res<string>>;
   readonly exportCsv: (crewMemberId: string, parameter: string, windowS: number) => Promise<Res<string>>;
+  // Clinical files and schedule (CR-022)
+  readonly scheduleNext: () => Promise<Res<NextCheck | null>>;
+  readonly ecgExportSegment: (id: string, fromS: number, toS: number) => Promise<Res<number[]>>;
 }
 
 /** Subscriptions to the value-free change events (new readings, device changes). */

@@ -55,6 +55,7 @@ pub fn run() -> tauri::Result<()> {
             mds::start_mds(app.handle().clone(), state::open_mds_service(&data_dir));
             cluster::start_cluster(app.handle().clone(), &data_dir);
             crewlan::start_crew_lan(app.handle().clone(), &data_dir);
+            clinical::start_folder_watch(app.handle().clone());
             Ok(())
         })
         .invoke_handler(ipc::invoke_handler())

@@ -31,6 +31,13 @@ is audited (`attachment.import`, `fhir.import`). In test-equipment builds, FHIR 
 ## Roles
 `fhir_import`, `ecg_view`, `dicom_view`: CMO and Flight Surgeon (`docs/ROLE_MATRIX.md` §3).
 
+## Added by CR-022
+- Retention: signed limits for Technical parameters and raw waveforms, alarm guard, daily, audited.
+- Folder watch: signed `import` bundle (folder, crew member); files that open are imported as the system and moved to `imported/`, others to `refused/`.
+- ECG review: events from EDF+ annotations; segment export as EDF+ (at most 10 min, start shifted; refused when the file states no start time).
+- Encounters: the form lists the crew member's files to attach (drafts only).
+- Schedule: signed `schedule` bundle; the Checks screen shows the next check.
+
 ## Open
 - Folder watch and the DICOM C-STORE SCP (the SCP needs its own network CR, CR-014 §2).
 - ECG review: events from EDF+ annotations and aECG, export of a reviewed segment.

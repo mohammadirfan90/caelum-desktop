@@ -98,7 +98,8 @@ function Snapshot({ json }: { readonly json: string | null }) {
 /** Encounters (F-CLN-05): SOAP draft by the author, signed once with re-authentication. */
 function Encounters({ api, crewId, self }: { readonly api: Api; readonly crewId: string; readonly self: string }) {
   const [bump, setBump] = useState(0);
-  const [editing, setEditing] = useState<{ id: string | null; soap: Soap } | null>(null);
+  const [editing, setEditing] = useState<{ id: string | null; soap: Soap; files: string[] } | null>(null);
+  const files = useLoad(() => api.attachmentList(crewId), `${crewId}:files:${String(bump)}`);
   const [notice, setNotice] = useState<Notice>(null);
   const { run, prompt } = useConfirmed(api.authReauth);
   const list = useLoad(() => api.encounterList(crewId), `${crewId}:${String(bump)}`);
@@ -107,12 +108,12 @@ function Encounters({ api, crewId, self }: { readonly api: Api; readonly crewId:
     e.preventDefault();
     if (editing === null) return;
     const s = editing.soap;
-    void api.encounterSave(editing.id, crewId, orNull(s.subjective), orNull(s.objective), orNull(s.assessment), orNull(s.plan), []).then((r) => {
+    void api.encounterSave(editing.id, crewId, orNull(s.subjective), orNull(s.objective), orNull(s.assessment), orNull(s.plan), editing.files).then((r) => {
       if (r.status === "error") {
         setNotice({ kind: "error", text: errorText(r.error) });
         return;
       }
-      setEditing({ id: r.data, soap: s });
+      setEditing({ id: r.data, soap: s, files: editing.files });
       setNotice({ kind: "ok", text: strings.encounterSaved });
       setBump((b) => b + 1);
     });
@@ -131,7 +132,8 @@ function Encounters({ api, crewId, self }: { readonly api: Api; readonly crewId:
     );
   };
   const open = (e: Encounter) => {
-    setEditing({ id: e.id, soap: { subjective: e.subjective ?? "", objective: e.objective ?? "", assessment: e.assessment ?? "", plan: e.plan ?? "" } });
+    const linked = [...e.attachments];
+    setEditing({ id: e.id, soap: { subjective: e.subjective ?? "", objective: e.objective ?? "", assessment: e.assessment ?? "", plan: e.plan ?? "" }, files: linked });
   };
   return (
     <Card label={strings.encountersTitle}>
@@ -142,7 +144,7 @@ function Encounters({ api, crewId, self }: { readonly api: Api; readonly crewId:
         type="button"
         className="btn btn-soft mt-3"
         onClick={() => {
-          setEditing({ id: null, soap: EMPTY });
+          setEditing({ id: null, soap: EMPTY, files: [] });
         }}
       >
         {strings.encounterNew}
@@ -165,6 +167,27 @@ function Encounters({ api, crewId, self }: { readonly api: Api; readonly crewId:
               />
             </div>
           ))}
+          {files.state === "ok" && files.data.length > 0 ? (
+            <fieldset className="flex flex-col gap-2">
+              <legend className="text-sm font-semibold">{strings.encounterAttachments}</legend>
+              {files.data.map((f) => (
+                <label key={f.id} className="flex min-h-12 items-center gap-3">
+                  <input
+                    type="checkbox"
+                    className="h-6 w-6"
+                    checked={editing.files.includes(f.id)}
+                    onChange={(ev) => {
+                      setEditing({
+                        ...editing,
+                        files: ev.target.checked ? [...editing.files, f.id] : editing.files.filter((x) => x !== f.id),
+                      });
+                    }}
+                  />
+                  {f.filename ?? f.id}
+                </label>
+              ))}
+            </fieldset>
+          ) : null}
           <div className="flex flex-wrap gap-3">
             <button type="submit" className="btn btn-soft">
               {strings.encounterSave}

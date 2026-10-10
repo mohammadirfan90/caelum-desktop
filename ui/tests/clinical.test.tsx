@@ -142,7 +142,7 @@ describe("Clinical files", () => {
     const samples = Array.from({ length: 500 }, (_, i) => (i % 250 === 125 ? 1 : 0));
     const a = api({
       attachmentList: () => ok([attachment("e1", "ecg", "rest.edf")]),
-      ecgView: () => ok({ format: "edf", leads: [{ label: "ECG II", unit: "mV", sampleRateHz: 250, samples }] }),
+      ecgView: () => ok({ format: "edf", leads: [{ label: "ECG II", unit: "mV", sampleRateHz: 250, samples }], events: [{ onsetS: 1, durationS: null, text: "event" }], startKnown: true }),
     });
     render(<Medical api={a} userRole="cmo" self="u1" crewId="c1" crew={crew} version={0} />);
     fireEvent.click(await screen.findByRole("button", { name: "Review rest.edf" }));

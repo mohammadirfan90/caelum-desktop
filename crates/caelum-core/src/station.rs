@@ -30,6 +30,7 @@ pub use clinical::{CrewOverviewItem, PvtResult, PROTOCOLS_KIND};
 pub mod export;
 pub mod files;
 mod kit;
+pub mod m8;
 pub mod mds_link;
 pub mod pathb;
 pub mod reads;

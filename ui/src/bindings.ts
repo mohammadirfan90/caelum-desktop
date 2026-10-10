@@ -166,6 +166,19 @@ export const commands = {
 	crewLanSignOut: () => typedError<null, CommandError>(__TAURI_INVOKE("crew_lan_sign_out")),
 	/**  Applies the signed retention limits (administrator, re-authentication; CR-022). */
 	configApplyRetention: (bundle: string, signature: string) => typedError<string, CommandError>(__TAURI_INVOKE("config_apply_retention", { bundle, signature })),
+	/**  Applies the signed DICOM folder-watch configuration (administrator, re-authentication). */
+	configApplyImport: (bundle: string, signature: string) => typedError<string, CommandError>(__TAURI_INVOKE("config_apply_import", { bundle, signature })),
+	/**  Applies the signed check schedule (administrator, re-authentication; CR-022). */
+	configApplySchedule: (bundle: string, signature: string) => typedError<string, CommandError>(__TAURI_INVOKE("config_apply_schedule", { bundle, signature })),
+	/**  The next scheduled check; `None` without a signed schedule (shown as NO DATA). */
+	scheduleNext: () => typedError<{
+	/**  `pvt` or `checkin`. */
+	kind: string,
+	/**  When, UTC ms. */
+	atUtcMs: number | null,
+} | null, CommandError>(__TAURI_INVOKE("schedule_next")),
+	/**  A segment of an imported ECG recording as EDF+ (F-CLN-03; audited). */
+	ecgExportSegment: (id: string, fromS: number | null, toS: number | null) => typedError<number[], CommandError>(__TAURI_INVOKE("ecg_export_segment", { id, fromS, toS })),
 };
 
 /** Events */
@@ -564,6 +577,16 @@ export type DicomWindow = {
 	width: number | null,
 };
 
+/**  One event stated in an ECG file (F-CLN-03). */
+export type EcgEventView = {
+	/**  Seconds after the recording start. */
+	onsetS: number | null,
+	/**  Duration, s, if stated. */
+	durationS: number | null,
+	/**  Text. */
+	text: string,
+};
+
 /**  One ECG lead for review (physical units). */
 export type EcgLead = {
 	/**  Label from the file. */
@@ -582,6 +605,10 @@ export type EcgRecordingView = {
 	format: string,
 	/**  Leads. */
 	leads: EcgLead[],
+	/**  Events stated in the file. */
+	events: EcgEventView[],
+	/**  The file states its start time (needed for EDF+ segment export). */
+	startKnown: boolean,
 };
 
 /**  An encounter. */
@@ -744,6 +771,14 @@ export type NearbyDevice = {
 	emulated: boolean,
 	/**  A CAELUM sensor-kit device (F-ACQ-05). */
 	sensorKit: boolean,
+};
+
+/**  The next scheduled check (F-CLN-06, F-CLN-07). */
+export type NextCheck = {
+	/**  `pvt` or `checkin`. */
+	kind: string,
+	/**  When, UTC ms. */
+	atUtcMs: number | null,
 };
 
 /**

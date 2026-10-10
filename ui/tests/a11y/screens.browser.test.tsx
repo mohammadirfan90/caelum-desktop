@@ -150,7 +150,7 @@ const api = {
   ecgView: () =>
     Promise.resolve({
       status: "ok" as const,
-      data: { format: "edf", leads: [{ label: "ECG II", unit: "mV", sampleRateHz: 250, samples: Array.from({ length: 3000 }, (_, i) => (i % 250 === 125 ? 1 : 0)) }] },
+      data: { format: "edf", leads: [{ label: "ECG II", unit: "mV", sampleRateHz: 250, samples: Array.from({ length: 3000 }, (_, i) => (i % 250 === 125 ? 1 : 0)) }], events: [{ onsetS: 4, durationS: null, text: "Fixture event" }], startKnown: true },
     }),
   dicomView: () =>
     Promise.resolve({

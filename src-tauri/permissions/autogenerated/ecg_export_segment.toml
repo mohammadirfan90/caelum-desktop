@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-ecg-export-segment"
+description = "Enables the ecg_export_segment command without any pre-configured scope."
+commands.allow = ["ecg_export_segment"]
+
+[[permission]]
+identifier = "deny-ecg-export-segment"
+description = "Denies the ecg_export_segment command without any pre-configured scope."
+commands.deny = ["ecg_export_segment"]

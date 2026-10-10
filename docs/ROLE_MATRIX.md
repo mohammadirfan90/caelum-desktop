@@ -112,6 +112,10 @@ lead (CR-003) until a licensed clinician advisor countersigns; it does not block
 | `crew_lan_sign_in` | public | Credentials checked by the primary (throttled, audited there) |
 | `crew_lan_sign_out` | public | Ends the session on the primary |
 | `config_apply_retention` | Admin | Signed bundle kind retention; re-authentication (§4); audited; Mission data never removed |
+| `config_apply_import` | Admin | Signed bundle kind import; re-authentication (§4); audited |
+| `config_apply_schedule` | Admin | Signed bundle kind schedule; re-authentication (§4); audited |
+| `schedule_next` | Astronaut, CMO, Flight Surgeon | No physiology; NO DATA without a signed schedule |
+| `ecg_export_segment` | CMO, Flight Surgeon | At most 10 min; needs the stated start time; audited |
 
 ## 4. Sessions
 - Onboard: PIN plus device-bound key; auto-lock after 10 minutes (configurable). Ground: password
