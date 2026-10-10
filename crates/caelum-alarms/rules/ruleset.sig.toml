@@ -1,8 +1,8 @@
 # Signatures of ruleset.toml (CR-009). Written by tools/ruleset-signer; do not edit.
-ruleset_version = "1.0.0-draft.1"
-sha256 = "72e0481c45eb42c915f73464dbb6830bc9cca4abaef77964df6453c2f1b05aee"
+ruleset_version = "1.0.0-draft.2"
+sha256 = "d9ee9c3abd51f1b4279782ca7824b8711ebece47e41ad584a799b096bb30d9e5"
 
 [[signature]]
 role = "author"
 key_id = "5811d4225220dff7"
-signature = "e4f7a8e7a025d72e3af702a6dcabba6c2025c60be0cd558e49abcd641cd185d676f1a3e6ea97906006ee366a8fc708824e874cf04c878f53f3c302abd685d50d"
+signature = "686d512f3042ef5b6ed6e6ccaecc1aefecf845e7c401146212fc867ffc83e863d5862d7a775b1bf73c0ec1e84a370c27c4c55920d70bc09bf1425e55a2cd0601"

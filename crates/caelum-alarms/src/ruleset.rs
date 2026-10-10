@@ -206,6 +206,8 @@ pub struct BaselineDef {
     pub spot_n: u32,
     /// Gap that restarts persistence, s.
     pub max_gap_s: u32,
+    /// At-rest condition for parameters marked `at_rest`.
+    pub at_rest: AtRestDef,
     /// Parameters with baselines.
     pub parameters: Vec<BaselineParamDef>,
 }
@@ -216,6 +218,8 @@ pub struct BaselineDef {
 pub struct BaselineParamDef {
     /// Catalog key.
     pub parameter: String,
+    /// Category of its notices.
+    pub category: AlarmCategory,
     /// Evaluated at rest only (unknown activity: evaluated, SR-018).
     pub at_rest: bool,
 }
@@ -283,6 +287,9 @@ pub enum Condition {
     Threshold(Threshold),
     /// Absence of an expected event.
     Absence(Absence),
+    /// Personal-baseline deviation (observe only); built from the `[baseline]` section, never
+    /// written as a rule.
+    Baseline,
 }
 
 /// A validated rule.
@@ -317,6 +324,8 @@ pub struct Rule {
 pub struct BaselineParam {
     /// Parameter.
     pub parameter: Parameter,
+    /// Category of its notices.
+    pub category: AlarmCategory,
     /// At rest only.
     pub at_rest: bool,
 }
@@ -336,6 +345,8 @@ pub struct Baseline {
     pub spot_n: u32,
     /// Gap restart, s.
     pub max_gap_s: u32,
+    /// At-rest condition (context parameter, maximum).
+    pub at_rest: (Parameter, f64),
     /// Parameters.
     pub parameters: Vec<BaselineParam>,
 }
@@ -614,19 +625,24 @@ impl Ruleset {
         if b.spot_k == 0 || b.spot_k > b.spot_n || b.for_s == 0 || b.max_gap_s == 0 {
             errors.push("baseline: need 0 < spot_k <= spot_n and positive windows".to_owned());
         }
+        let at_rest = parameter(&b.at_rest.parameter, &mut errors, "baseline");
+        if at_rest.is_some_and(|p| p != Parameter::ActivityLevel) {
+            errors.push("baseline: at_rest uses activity_level".to_owned());
+        }
         let parameters: Vec<BaselineParam> = b
             .parameters
             .iter()
             .filter_map(|p| {
                 parameter(&p.parameter, &mut errors, "baseline").map(|parameter| BaselineParam {
                     parameter,
+                    category: p.category,
                     at_rest: p.at_rest,
                 })
             })
             .collect();
-        if !errors.is_empty() {
+        let (Some(at_rest), true) = (at_rest, errors.is_empty()) else {
             return Err(RulesetError::Invalid(errors));
-        }
+        };
         Ok(Self {
             version: file.ruleset.version,
             status: file.ruleset.status,
@@ -639,6 +655,7 @@ impl Ruleset {
                 spot_k: b.spot_k,
                 spot_n: b.spot_n,
                 max_gap_s: b.max_gap_s,
+                at_rest: (at_rest, b.at_rest.max),
                 parameters,
             },
         })

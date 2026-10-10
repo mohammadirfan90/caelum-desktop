@@ -130,6 +130,7 @@ fn bundled_ruleset_matches_docs_06_section_3() {
                 );
                 assert_eq!(a.event, "qrs");
             }
+            Condition::Baseline => panic!("{id}: baseline conditions never come from rules"),
         }
     }
 }
@@ -206,7 +207,7 @@ fn sr_009_flight_policy_needs_a_medical_approver_flight_signature() {
         },
     ];
     let bytes = BUNDLED_RULESET.as_bytes();
-    let version = "1.0.0-draft.1";
+    let version = "1.0.0-draft.2";
     let author_only = envelope(bytes, version, &[(SignerRole::Author, &author)]);
     assert_eq!(
         verify(bytes, &author_only, &keys, TrustPolicy::Flight),
@@ -247,7 +248,7 @@ fn sr_009_tampered_rulesets_are_rejected() {
     let stranger = test_key(9);
     let foreign = envelope(
         BUNDLED_RULESET.as_bytes(),
-        "1.0.0-draft.1",
+        "1.0.0-draft.2",
         &[(SignerRole::Author, &stranger)],
     );
     assert_eq!(
@@ -255,7 +256,7 @@ fn sr_009_tampered_rulesets_are_rejected() {
         Err(VerifyError::UntrustedKey(key_id(&stranger.verifying_key())))
     );
     // Unsigned, unparsable, wrong version.
-    let unsigned = envelope(BUNDLED_RULESET.as_bytes(), "1.0.0-draft.1", &[]);
+    let unsigned = envelope(BUNDLED_RULESET.as_bytes(), "1.0.0-draft.2", &[]);
     assert_eq!(
         verify(BUNDLED_RULESET.as_bytes(), &unsigned, &keys, dev),
         Err(VerifyError::Unsigned)

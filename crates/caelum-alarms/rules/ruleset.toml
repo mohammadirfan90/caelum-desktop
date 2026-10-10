@@ -7,7 +7,7 @@
 # and 600 for warning rules. max_gap_s 30 for every rule until the flight-surgeon review.
 
 [ruleset]
-version = "1.0.0-draft.1"
+version = "1.0.0-draft.2"
 status = "DRAFT"
 approved_by = "Provisional medical lead (CR-003), DRAFT"
 
@@ -258,11 +258,13 @@ for_s = 600
 spot_k = 3
 spot_n = 4
 max_gap_s = 30
+at_rest = { parameter = "activity_level", max = 0.3 }
+# ⚕ weight has no natural category; CARDIO (fluid status) until the medical lead decides (CR-009).
 parameters = [
-    { parameter = "heart_rate", at_rest = true },
-    { parameter = "hrv_rmssd", at_rest = false },
-    { parameter = "respiration_rate", at_rest = false },
-    { parameter = "core_temp", at_rest = false },
-    { parameter = "spo2", at_rest = true },
-    { parameter = "weight", at_rest = false },
+    { parameter = "heart_rate", category = "CARDIO", at_rest = true },
+    { parameter = "hrv_rmssd", category = "CARDIO", at_rest = false },
+    { parameter = "respiration_rate", category = "RESPIRATORY", at_rest = false },
+    { parameter = "core_temp", category = "THERMAL", at_rest = false },
+    { parameter = "spo2", category = "RESPIRATORY", at_rest = true },
+    { parameter = "weight", category = "CARDIO", at_rest = false },
 ]

@@ -386,10 +386,13 @@ version = "0.1.0"
 dependencies = [
  "caelum-domain",
  "ed25519-dalek",
+ "proptest",
  "serde",
+ "serde_json",
  "sha2 0.11.0",
  "thiserror 2.0.21",
  "toml 1.1.8+spec-1.1.0",
+ "uuid",
 ]
 
 [[package]]
