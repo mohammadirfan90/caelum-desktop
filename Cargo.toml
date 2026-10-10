@@ -57,3 +57,11 @@ undocumented_unsafe_blocks = "deny"
 todo = "deny"
 unimplemented = "deny"
 dbg_macro = "deny"
+
+# argon2id with the production parameters (64 MiB, 3 passes; CR-006 §2) takes many seconds per hash
+# unoptimised; tests and development builds use optimised password hashing too.
+[profile.dev.package.argon2]
+opt-level = 3
+
+[profile.dev.package.blake2]
+opt-level = 3
