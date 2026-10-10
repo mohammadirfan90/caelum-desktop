@@ -10,7 +10,8 @@ use std::collections::BTreeSet;
 use std::time::{Duration, Instant};
 
 use btleplug::api::{
-    Central, CentralEvent, CharPropFlags, Characteristic, Manager as _, Peripheral as _, ScanFilter,
+    Central, CentralEvent, CharPropFlags, Characteristic, Manager as _, Peripheral as _,
+    ScanFilter, WriteType,
 };
 use btleplug::platform::{Adapter, Manager, Peripheral, PeripheralId};
 use futures::StreamExt;
@@ -326,6 +327,63 @@ impl BleCentral {
     }
 }
 
+/// Immediate Alert Service (wristband alert, F-ALM-04).
+pub const IMMEDIATE_ALERT_SERVICE: u16 = 0x1802;
+/// Alert Level characteristic.
+pub const ALERT_LEVEL: u16 = 0x2A06;
+/// Adapter name of a registered crew wristband (device registry).
+pub const WRISTBAND_ADAPTER: &str = "ble-wristband";
+
+/// Alert Level values (Immediate Alert Service).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AlertLevel {
+    /// 0: stop alerting.
+    None,
+    /// 1: mild alert.
+    Mild,
+    /// 2: high alert.
+    High,
+}
+
+impl AlertLevel {
+    /// The byte written.
+    pub const fn value(self) -> u8 {
+        match self {
+            Self::None => 0,
+            Self::Mild => 1,
+            Self::High => 2,
+        }
+    }
+}
+
+/// The only characteristic WX-002 may write: Alert Level in the Immediate Alert Service.
+pub fn is_alert_level(service: Uuid, characteristic: Uuid) -> bool {
+    short_uuid(service) == Some(IMMEDIATE_ALERT_SERVICE)
+        && short_uuid(characteristic) == Some(ALERT_LEVEL)
+}
+
+impl BleCentral {
+    /// Wristband alert to the wearer (F-ALM-04, SR-015): writes one Alert Level byte to the
+    /// Immediate Alert Service of a connected wristband. Always in addition to the crew-station
+    /// sound, never instead; a failure is reported and changes nothing for the stations.
+    pub async fn wristband_alert(&self, id: &str, level: AlertLevel) -> Result<(), BleError> {
+        let peripheral = self.peripheral(id).await?;
+        let Some(c) = peripheral
+            .characteristics()
+            .into_iter()
+            .find(|c| is_alert_level(c.service_uuid, c.uuid))
+        else {
+            return Err(BleError::NothingToAcquire);
+        };
+        let value = [level.value()];
+        peripheral
+            // WRITE-EXCEPTION: WX-002
+            .write(&c, &value, WriteType::WithoutResponse)
+            .await?;
+        Ok(())
+    }
+}
+
 /// Enables notifications or indications (CCCD write) on one measurement characteristic.
 async fn enable_notifications(
     peripheral: &Peripheral,
@@ -339,6 +397,20 @@ async fn enable_notifications(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// WX-002 scope: only Alert Level (0x2A06) in the Immediate Alert Service (0x1802), values 0–2.
+    #[test]
+    fn only_the_alert_level_characteristic_is_writable() {
+        assert!(is_alert_level(sig_uuid(0x1802), sig_uuid(0x2A06)));
+        assert!(
+            !is_alert_level(sig_uuid(0x1803), sig_uuid(0x2A06)),
+            "Link Loss service"
+        );
+        assert!(!is_alert_level(sig_uuid(0x1802), sig_uuid(0x2A37)));
+        assert!(!is_alert_level(Uuid::from_u128(1), sig_uuid(0x2A06)));
+        let values = [AlertLevel::None, AlertLevel::Mild, AlertLevel::High].map(AlertLevel::value);
+        assert_eq!(values, [0, 1, 2]);
+    }
 
     #[test]
     fn sig_uuids_round_trip_and_vendor_uuids_are_not_sig() {

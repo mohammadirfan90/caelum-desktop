@@ -29,5 +29,6 @@ allowed. Changing these categories needs a change request.
 | ID | Crate | Call (module::function) | Category | Standard / ICD reference | Reason | Reviewer | Date |
 |---|---|---|---|---|---|---|---|
 | WX-001 | caelum-devices | `ble::enable_notifications` (btleplug `subscribe`) | a | CCCD 0x2902, Bluetooth Core Specification Vol 3 Part G §3.3.3.3; HRS, PLXS, BPS, HTS, WSS, GLS service specifications | Enables notifications (0x0001) or indications (0x0002) on the supported measurement characteristics only (`ble::measurement_characteristics`: 0x2A37, 0x2A5E, 0x2A5F, 0x2A35, 0x2A1C, 0x2A9D, 0x2A18); needed to receive data | Product owner (mohammadirfan90) | 2026-10-10 |
+| WX-002 | caelum-devices | `ble::BleCentral::wristband_alert` (btleplug `write`, without response) | c | Immediate Alert Service 0x1802, Alert Level 0x2A06 (0 no alert, 1 mild, 2 high) | Wristband alert to the wearer in addition to the crew-station sound, never instead (SR-015); writes one Alert Level byte, only to 0x2A06 in 0x1802 (`ble::is_alert_level`), only on a device registered as the crew member's wristband | Mohammad Irfan (product owner) | 2026-10-10 |
 
-M0 shipped with zero exceptions; WX-001 added in M2.
+M0 shipped with zero exceptions; WX-001 added in M2, WX-002 in M4.

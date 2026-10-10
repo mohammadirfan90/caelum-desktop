@@ -395,6 +395,26 @@ impl Station {
         Ok(())
     }
 
+    /// The wristbands an alarm's alert goes to (F-ALM-04, WX-002): devices registered with the
+    /// wristband adapter and assigned to the alarm's crew member. Empty when there is none; the
+    /// crew stations sound either way (SR-015).
+    pub fn wristband_targets(&self, alarm: AlarmId) -> Result<Vec<String>, StationError> {
+        let Some(crew) = self.alarms.crew_of(alarm) else {
+            return Ok(Vec::new());
+        };
+        let crew = crew.to_string();
+        Ok(self
+            .db
+            .devices()?
+            .into_iter()
+            .filter(|d| {
+                d.adapter == caelum_devices::ble::WRISTBAND_ADAPTER
+                    && d.crew_member_id.as_deref() == Some(crew.as_str())
+            })
+            .map(|d| d.id)
+            .collect())
+    }
+
     /// Sounds to resume after a restart (SR-007), delivered once.
     pub fn take_restored(&mut self) -> Output {
         Output {

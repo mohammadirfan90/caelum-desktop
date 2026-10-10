@@ -611,3 +611,47 @@ fn the_station_tick_escalates_and_watches_clock_and_staleness() {
         "clears when time moves forward again"
     );
 }
+
+/// F-ALM-04, WX-002, SR-015: the wristband alert goes only to wristbands assigned to the alarm's
+/// crew member; with none, there is no target and the crew stations still sound.
+#[test]
+fn wristband_alerts_target_only_the_crew_members_wristbands() {
+    use caelum_devices::registry::{DeviceIdentity, Registry};
+    let dir = DataDir::new();
+    let keys = MemoryKeyStore::default();
+    let clock = TestClock::default();
+    let mut station = open(&dir, &keys, &clock).unwrap();
+    add_user(&station, "astro.a", Role::Astronaut);
+    add_user(&station, "astro.b", Role::Astronaut);
+    let a = crew_of_user(&station, "astro.a");
+    let b = crew_of_user(&station, "astro.b");
+    let alarm = critical_alarm(&mut station, a, 1_000_000_000_000);
+    assert!(
+        station.wristband_targets(alarm).unwrap().is_empty(),
+        "no wristband: no target"
+    );
+    let reg = Registry::new(station.db());
+    let identity = |adapter: &str, serial: &str| DeviceIdentity {
+        adapter: adapter.into(),
+        vendor: "V".into(),
+        model: "M".into(),
+        serial: serial.into(),
+        firmware: None,
+        accuracy_class: None,
+        calibration_due: None,
+    };
+    let mine = reg
+        .register(&identity(caelum_devices::ble::WRISTBAND_ADAPTER, "W-A"))
+        .unwrap();
+    let theirs = reg
+        .register(&identity(caelum_devices::ble::WRISTBAND_ADAPTER, "W-B"))
+        .unwrap();
+    let strap = reg.register(&identity("ble-sig", "HR-A")).unwrap();
+    reg.assign(mine, a, None).unwrap();
+    reg.assign(theirs, b, None).unwrap();
+    reg.assign(strap, a, None).unwrap();
+    assert_eq!(
+        station.wristband_targets(alarm).unwrap(),
+        [mine.to_string()]
+    );
+}
