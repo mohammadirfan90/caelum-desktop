@@ -21,7 +21,7 @@ marked `complete` (`09` §3).
 | M6 | in progress | 2026-10-10 | |
 | M7 | in progress | 2026-10-10 | |
 | M8 | in progress | 2026-10-10 | |
-| M9 | in progress | 2026-10-10 | |
+| M9 | complete | 2026-10-10 | local evidence under CR-020 (docs/gates/M9.md) |
 | M10 | in progress | 2026-10-10 | |
 | M11 | in progress | 2026-10-10 | |
 | M12 | in progress | 2026-10-10 | |

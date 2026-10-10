@@ -54,6 +54,7 @@ inside the locked stack.
 | RUSTSEC-2024-0429 | `glib` 0.18 | Unsound `VariantStrIter` iterator impls | Linux only: Tauri 2 GTK backend (`gtk`, `wry`, `tao`) | CAELUM never uses that API; nothing of it on Windows; the fix needs gtk-rs ≥ 0.20, which Tauri 2 has not adopted | M0 |
 | RUSTSEC-2024-0370 | `proc-macro-error` | Unmaintained | Linux only, compile time: `glib-macros` | Procedural macro, no runtime code; no known vulnerability | M0 |
 | RUSTSEC-2024-0436 | `paste` | Unmaintained | Compile time: `specta` (via `tauri-specta`) | Procedural macro, no runtime code; no known vulnerability | M0 |
+| RUSTSEC-2021-0153 | `encoding` 0.2 | Unmaintained | Run time: `dicom-encoding` (dicom-rs), DICOM Specific Character Set text of imported files | No known vulnerability; only imported files reach it, and a file that fails to decode is refused; replace when dicom-rs moves to `encoding_rs` | M8 |
 
 ## Known risks to enter when the dependency is added
 - `cfdp-rs` 0.3 (M10): no inactivity handling, suspend, keep-alive/prompt or

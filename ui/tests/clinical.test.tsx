@@ -276,7 +276,7 @@ describe("Environment, Ground and kiosk", () => {
     const chart = await screen.findByRole("img", { name: /Cabin CO₂: 2 readings above.*Breathing rate: 2 readings below.*1 environment alarms marked/ });
     expect(chart).toBeInTheDocument();
     // One shared axis: from the first reading of either series to the last.
-    expect(chart).toHaveAccessibleName(expect.stringMatching(/12:00:00 UTC to 13:10:00 UTC$/));
+    expect(chart.getAttribute("aria-label")).toMatch(/12:00:00 UTC to 13:10:00 UTC$/);
     expect(screen.getByText("Cabin CO2 elevated at 12:50:00 UTC")).toBeInTheDocument();
     expect(screen.queryByText(/High heart rate at/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Other crew at/)).not.toBeInTheDocument();
