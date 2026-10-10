@@ -21,3 +21,6 @@ node_modules/
 # OS and editor files
 .DS_Store
 Thumbs.db
+
+# cargo-cyclonedx output next to manifests (tools/ci/src/sbom.ts moves the app one to target/sbom/).
+*.cdx.json

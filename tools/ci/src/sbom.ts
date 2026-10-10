@@ -35,9 +35,11 @@ export function writeSboms(target: string = hostTarget()): { rust: string; ui: s
   // which covers its whole dependency tree, and remove the rest.
   const rust = join(SBOM_DIR, `caelum-desktop-${target}.cdx.json`);
   renameSync(join(REPO_ROOT, "src-tauri", GENERATED), rust);
-  for (const crate of readdirSync(join(REPO_ROOT, "crates"))) {
-    const stray = join(REPO_ROOT, "crates", crate, GENERATED);
-    if (existsSync(stray)) rmSync(stray);
+  for (const parent of ["crates", "tools"]) {
+    for (const member of readdirSync(join(REPO_ROOT, parent))) {
+      const stray = join(REPO_ROOT, parent, member, GENERATED);
+      if (existsSync(stray)) rmSync(stray);
+    }
   }
 
   const ui = join(SBOM_DIR, "caelum-ui.cdx.json");
