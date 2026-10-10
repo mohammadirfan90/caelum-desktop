@@ -30,6 +30,9 @@ allow = [
     "MIT",
     "BSD-2-Clause",
     "BSD-3-Clause",
+    # ISC: permissive (ring, rustls-webpki, untrusted for the MDS TLS transport; libloading for
+    # ort), notices carried into NOTICE with the release SBOM (CR-016 §9, CR-018).
+    "ISC",
     "Unicode-3.0",
     "Zlib",
 ]
