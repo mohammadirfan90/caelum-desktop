@@ -161,6 +161,12 @@ pub enum Command {
     AuditVerify,
     /// Alarm ruleset in force (SR-009 banner).
     RulesetStatus,
+    /// Acknowledge an alarm (onboard, or the ground stage for the flight surgeon).
+    AlarmAcknowledge,
+    /// Silence an alarm (SR-008).
+    AlarmSilence,
+    /// Escalate an alarm to its next stage.
+    AlarmEscalate,
 }
 
 /// Who may call a command.
@@ -176,7 +182,7 @@ pub enum Access {
 
 impl Command {
     /// Every command.
-    pub const ALL: [Command; 9] = [
+    pub const ALL: [Command; 12] = [
         Command::AppInfo,
         Command::AuthLogin,
         Command::AuthLogout,
@@ -186,6 +192,9 @@ impl Command {
         Command::AuditList,
         Command::AuditVerify,
         Command::RulesetStatus,
+        Command::AlarmAcknowledge,
+        Command::AlarmSilence,
+        Command::AlarmEscalate,
     ];
 
     /// The IPC command name.
@@ -200,6 +209,9 @@ impl Command {
             Command::AuditList => "audit_list",
             Command::AuditVerify => "audit_verify",
             Command::RulesetStatus => "ruleset_status",
+            Command::AlarmAcknowledge => "alarm_acknowledge",
+            Command::AlarmSilence => "alarm_silence",
+            Command::AlarmEscalate => "alarm_escalate",
         }
     }
 
@@ -228,6 +240,13 @@ impl Command {
                 Role::Bme,
                 Role::Administrator,
             ]),
+            // Crew scope (own / all / ground stage) is checked per alarm: `alarm_authority`.
+            Command::AlarmAcknowledge => {
+                Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon])
+            }
+            Command::AlarmSilence | Command::AlarmEscalate => {
+                Access::Roles(&[Role::Astronaut, Role::Cmo])
+            }
         }
     }
 

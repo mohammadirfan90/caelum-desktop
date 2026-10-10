@@ -50,6 +50,9 @@ lead (CR-003) until a licensed clinician advisor countersigns; it does not block
 | `break_glass_open` | no login | Opens the emergency view; audited and notified (SR-014) |
 | `audit_list` | CMO, Flight Surgeon (all); BME (technical); Admin (configuration and security) | Filtered by role server-side |
 | `audit_verify` | CMO, Flight Surgeon, BME, Admin | Returns chain and signature status only |
+| `alarm_acknowledge` | Astronaut (own), CMO (all), Flight Surgeon (ground stage only) | §2 alarm actions; the flight surgeon's acknowledgement is recorded for the ground stage and never stops onboard escalation (§5.4); audited (F-ALM-05) |
+| `alarm_silence` | Astronaut (own), CMO (all) | Time-limited (SR-008: 2 min critical, 10 min warning); never removes the visual alarm; audited |
+| `alarm_escalate` | Astronaut (own), CMO (all) | Manual escalation to the next stage (F-ALM-05); audited |
 | `ruleset_status` | public | Ruleset version in force and the DEVELOPMENT RULESET / fallback / safe-state banner (SR-009); safety information shown before sign-in, no clinical content |
 
 ## 4. Sessions

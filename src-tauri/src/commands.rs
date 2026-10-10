@@ -9,7 +9,8 @@ use caelum_core::alarms::RulesetStatus;
 use caelum_core::security::audit::{AuditEntry, ChainStatus, ProblemKind};
 use caelum_core::security::role::{DeniedReason, Role};
 use caelum_core::security::session::AuthError;
-use caelum_core::station::{Me, StationError};
+use caelum_core::station::{Acknowledged, Me, StationError};
+use caelum_domain::ids::AlarmId;
 use serde::Serialize;
 use specta::Type;
 use tauri::State;
@@ -342,6 +343,64 @@ impl From<&RulesetStatus> for RulesetInfo {
 #[specta::specta]
 pub async fn ruleset_status(state: State<'_, AppState>) -> Result<RulesetInfo, CommandError> {
     state.with(|s| Ok(s.ruleset_status().into()))
+}
+
+fn alarm_id(text: &str) -> Result<AlarmId, CommandError> {
+    text.parse().map_err(|_| CommandError {
+        kind: ErrorKind::Failed,
+        message: "not an alarm id".to_owned(),
+        retry_after_s: None,
+    })
+}
+
+/// How an acknowledgement was applied.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub enum AcknowledgeScope {
+    /// Onboard: escalation and sound stopped.
+    Onboard,
+    /// Ground stage only (flight surgeon); onboard escalation continues.
+    GroundStage,
+}
+
+/// Acknowledges an alarm (astronaut own, CMO all, flight surgeon the ground stage; audited).
+#[tauri::command]
+#[specta::specta]
+pub async fn alarm_acknowledge(
+    state: State<'_, AppState>,
+    alarm: String,
+) -> Result<AcknowledgeScope, CommandError> {
+    let id = alarm_id(&alarm)?;
+    state.with(|s| {
+        Ok(match s.alarm_acknowledge(id)? {
+            Acknowledged::Onboard(_) => AcknowledgeScope::Onboard,
+            Acknowledged::GroundStage => AcknowledgeScope::GroundStage,
+        })
+    })
+}
+
+/// Silences an alarm's sound for `seconds`, at most 2 min (critical) or 10 min (warning); returns
+/// the seconds applied (SR-008; audited).
+#[tauri::command]
+#[specta::specta]
+pub async fn alarm_silence(
+    state: State<'_, AppState>,
+    alarm: String,
+    seconds: u32,
+) -> Result<u32, CommandError> {
+    let id = alarm_id(&alarm)?;
+    state.with(|s| Ok(s.alarm_silence(id, seconds)?.1))
+}
+
+/// Escalates an alarm to its next stage now (F-ALM-05; audited).
+#[tauri::command]
+#[specta::specta]
+pub async fn alarm_escalate(state: State<'_, AppState>, alarm: String) -> Result<(), CommandError> {
+    let id = alarm_id(&alarm)?;
+    state.with(|s| {
+        s.alarm_escalate(id)?;
+        Ok(())
+    })
 }
 
 // Commands are `async` so the argon2 work runs off the window's main thread.

@@ -332,3 +332,162 @@ fn sr_009_the_station_loads_the_ruleset_for_its_build() {
         station.ruleset_status()
     );
 }
+
+fn crew_of_user(station: &Station, username: &str) -> CrewMemberId {
+    station
+        .db()
+        .connection()
+        .query_row(
+            "SELECT crew_member_id FROM user WHERE username = ?1",
+            [username],
+            |r| r.get::<_, String>(0),
+        )
+        .unwrap()
+        .parse()
+        .unwrap()
+}
+
+/// A critical SpO2 alarm for `crew`, raised through the alarm service.
+fn critical_alarm(
+    station: &mut Station,
+    crew: CrewMemberId,
+    t0: i64,
+) -> caelum_domain::ids::AlarmId {
+    use caelum_domain::observation::{Classification, MeasurementMode, Quality};
+    use caelum_domain::parameters::Parameter;
+    let device = caelum_domain::ids::DeviceId::from_uuid(uuid::Uuid::new_v4());
+    let mut id = None;
+    for k in 0..=15 {
+        let obs = caelum_ingest::Observation {
+            crew_member_id: crew,
+            device_id: device,
+            parameter: Parameter::Spo2,
+            value: caelum_ingest::Value::Number(80.0),
+            unit: Parameter::Spo2.spec().unit,
+            measured_at: TaiNs(t0 + k * 1_000_000_000),
+            received_at: TaiNs(t0 + k * 1_000_000_000),
+            quality: Quality::Good,
+            classification: Classification::Measured,
+            mode: MeasurementMode::Continuous,
+            provenance: caelum_ingest::Provenance {
+                time: caelum_ingest::TimeSource::Receipt,
+                original: None,
+                site: None,
+            },
+        };
+        let out = station.observe(&obs).unwrap();
+        for ev in out.events {
+            if let caelum_alarms::engine::Event::Raised(a) = ev {
+                id = Some(a.id);
+            }
+        }
+    }
+    id.expect("alarm raised")
+}
+
+fn alarm_actions(station: &mut Station) -> Vec<String> {
+    station
+        .db()
+        .audit_records()
+        .unwrap()
+        .into_iter()
+        .filter(|r| r.action.starts_with("alarm."))
+        .map(|r| r.action)
+        .collect()
+}
+
+/// F-ALM-05, ROLE_MATRIX §2 and §5: astronauts act on their own alarms, the CMO on anyone's, the
+/// flight surgeon acknowledges the ground stage only, others cannot act; every action is audited.
+#[test]
+fn alarm_actions_follow_the_role_matrix_and_are_audited() {
+    use caelum_core::station::Acknowledged;
+    let dir = DataDir::new();
+    let keys = MemoryKeyStore::default();
+    let clock = TestClock::default();
+    let mut station = open(&dir, &keys, &clock).unwrap();
+    for (name, role) in [
+        ("astro.a", Role::Astronaut),
+        ("astro.b", Role::Astronaut),
+        ("cmo", Role::Cmo),
+        ("fs", Role::FlightSurgeon),
+        ("bme", Role::Bme),
+        ("admin", Role::Administrator),
+    ] {
+        add_user(&station, name, role);
+    }
+    let a = crew_of_user(&station, "astro.a");
+    let alarm_a = critical_alarm(&mut station, a, 1_000_000_000_000);
+
+    // Another astronaut: not their alarm.
+    station
+        .login("astro.b", secret_for(Role::Astronaut).as_bytes())
+        .unwrap();
+    assert_eq!(
+        denied(station.alarm_acknowledge(alarm_a)),
+        Some(DeniedReason::Role)
+    );
+    assert_eq!(
+        denied(station.alarm_silence(alarm_a, 60)),
+        Some(DeniedReason::Role)
+    );
+    // BME and administrator: no alarm actions at all.
+    for (name, role) in [("bme", Role::Bme), ("admin", Role::Administrator)] {
+        station.login(name, secret_for(role).as_bytes()).unwrap();
+        assert_eq!(
+            denied(station.alarm_acknowledge(alarm_a)),
+            Some(DeniedReason::Role),
+            "{name}"
+        );
+        assert_eq!(
+            denied(station.alarm_escalate(alarm_a)),
+            Some(DeniedReason::Role),
+            "{name}"
+        );
+    }
+    // Flight surgeon: ground stage only; cannot silence onboard.
+    station
+        .login("fs", secret_for(Role::FlightSurgeon).as_bytes())
+        .unwrap();
+    assert!(matches!(
+        station.alarm_acknowledge(alarm_a).unwrap(),
+        Acknowledged::GroundStage
+    ));
+    assert_eq!(
+        denied(station.alarm_silence(alarm_a, 60)),
+        Some(DeniedReason::Role)
+    );
+    // The astronaut silences (clamped) and escalates their own alarm.
+    station
+        .login("astro.a", secret_for(Role::Astronaut).as_bytes())
+        .unwrap();
+    assert_eq!(station.alarm_silence(alarm_a, 900).unwrap().1, 120);
+    station.alarm_escalate(alarm_a).unwrap();
+    // The CMO acknowledges it onboard.
+    station
+        .login("cmo", secret_for(Role::Cmo).as_bytes())
+        .unwrap();
+    assert!(matches!(
+        station.alarm_acknowledge(alarm_a).unwrap(),
+        Acknowledged::Onboard(_)
+    ));
+    assert_eq!(
+        alarm_actions(&mut station),
+        [
+            "alarm.ground_acknowledge",
+            "alarm.silence",
+            "alarm.escalate",
+            "alarm.acknowledge"
+        ]
+    );
+    // Unknown alarm; signed out.
+    let ghost = caelum_domain::ids::AlarmId::from_uuid(uuid::Uuid::new_v4());
+    assert!(matches!(
+        station.alarm_acknowledge(ghost),
+        Err(StationError::Alarms(_))
+    ));
+    station.logout().unwrap();
+    assert_eq!(
+        denied(station.alarm_acknowledge(alarm_a)),
+        Some(DeniedReason::SignInRequired)
+    );
+}

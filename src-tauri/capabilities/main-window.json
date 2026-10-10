@@ -11,6 +11,9 @@
     "allow-break-glass-open",
     "allow-audit-list",
     "allow-audit-verify",
-    "allow-ruleset-status"
+    "allow-ruleset-status",
+    "allow-alarm-acknowledge",
+    "allow-alarm-silence",
+    "allow-alarm-escalate"
   ]
 }

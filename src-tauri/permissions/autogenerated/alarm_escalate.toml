@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-alarm-escalate"
+description = "Enables the alarm_escalate command without any pre-configured scope."
+commands.allow = ["alarm_escalate"]
+
+[[permission]]
+identifier = "deny-alarm-escalate"
+description = "Denies the alarm_escalate command without any pre-configured scope."
+commands.deny = ["alarm_escalate"]

@@ -17,6 +17,7 @@ tauri-build = { version = "2.7.1", features = [] }
 
 [dependencies]
 caelum-core.workspace = true
+caelum-domain.workspace = true
 # Default features minus `common-controls-v6`: CAELUM has no predefined `about` menu, and that
 # feature makes Windows test binaries fail to load (STATUS_ENTRYPOINT_NOT_FOUND).
 tauri = { version = "2.12.2", default-features = false, features = ["wry", "compression", "dynamic-acl", "x11", "dbus"] }
@@ -29,7 +30,6 @@ specta-typescript = "=0.0.12"
 zeroize = "1.9.1"
 
 [dev-dependencies]
-caelum-domain.workspace = true
 serde_json = "1"
 
 [features]

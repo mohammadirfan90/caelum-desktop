@@ -6,19 +6,31 @@ use std::path::Path;
 
 use caelum_alarms::signing::{built_in_keys, TrustPolicy};
 use caelum_alarms::{BUNDLED_RULESET, BUNDLED_SIGNATURES};
+use caelum_domain::ids::AlarmId;
 use caelum_security::audit::{Actor, AuditAction, AuditEntry, AuditLog, ChainStatus};
 use caelum_security::clock::Clock;
 use caelum_security::keys::{
     database_key, instance_key, IfMissing, InstanceKey, DB_KEY_ENTRY, INSTANCE_KEY_ENTRY,
 };
 use caelum_security::keystore::KeyStore;
-use caelum_security::role::{Command, Denied, Principal, UserIdentity};
+use caelum_security::role::{
+    alarm_authority, AlarmAuthority, Command, Denied, DeniedReason, Principal, UserIdentity,
+};
 use caelum_security::session::{AuthError, BreakGlassGrant, SessionConfig, SessionManager};
 use caelum_security::SecurityError;
 use caelum_store::Database;
 use serde_json::json;
 
-use crate::alarms::{AlarmService, AlarmServiceError, RulesetStatus};
+use crate::alarms::{AlarmService, AlarmServiceError, Output, RulesetStatus};
+
+/// How an acknowledgement was applied.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Acknowledged {
+    /// Onboard: escalation and sound stopped.
+    Onboard(Output),
+    /// Ground stage only (flight surgeon): recorded; onboard escalation continues.
+    GroundStage,
+}
 
 /// File name of the encrypted database inside the data directory.
 pub const DATABASE_FILE: &str = "caelum.db";
@@ -127,6 +139,108 @@ impl Station {
     /// The audit log (for wiring and tests).
     pub fn log(&self) -> AuditLog<'_> {
         AuditLog::new(&self.db, &self.key, &*self.clock)
+    }
+
+    /// The signed-in user allowed to use `command` on `alarm`, with their authority over it.
+    fn alarm_actor(
+        &mut self,
+        command: Command,
+        alarm: AlarmId,
+    ) -> Result<(UserIdentity, AlarmAuthority), StationError> {
+        let Principal::User(user) = self.authorize(command)? else {
+            return Err(StationError::Auth(AuthError::NotSignedIn));
+        };
+        let crew = self
+            .alarms
+            .crew_of(alarm)
+            .ok_or(StationError::Alarms(AlarmServiceError::UnknownAlarm))?;
+        let authority = alarm_authority(&user, crew);
+        if authority == AlarmAuthority::None {
+            return Err(StationError::Denied(Denied {
+                command,
+                reason: DeniedReason::Role,
+            }));
+        }
+        Ok((user, authority))
+    }
+
+    fn now(&self) -> Result<caelum_domain::time::TaiNs, StationError> {
+        Ok(self.clock.now_tai().map_err(SecurityError::from)?)
+    }
+
+    /// `alarm_acknowledge` (F-ALM-05): onboard for the astronaut (own) and the CMO; the flight
+    /// surgeon's acknowledgement counts for the ground stage only (ROLE_MATRIX §5.4). Audited.
+    pub fn alarm_acknowledge(&mut self, alarm: AlarmId) -> Result<Acknowledged, StationError> {
+        let (user, authority) = self.alarm_actor(Command::AlarmAcknowledge, alarm)?;
+        let now = self.now()?;
+        let by = user.user_id.to_string();
+        let result = if authority == AlarmAuthority::GroundStage {
+            self.alarms.acknowledge_ground(&self.db, alarm, &by, now)?;
+            Acknowledged::GroundStage
+        } else {
+            Acknowledged::Onboard(self.alarms.acknowledge(&self.db, alarm, &by, now)?)
+        };
+        let action = match result {
+            Acknowledged::GroundStage => AuditAction::AlarmGroundAcknowledged,
+            Acknowledged::Onboard(_) => AuditAction::AlarmAcknowledged,
+        };
+        self.log().append(
+            &Actor::user(&user),
+            action,
+            Some(&alarm.to_string()),
+            &json!({}),
+        )?;
+        Ok(result)
+    }
+
+    /// `alarm_silence` (SR-008): for up to 2 min (critical) or 10 min (warning). Audited with the
+    /// requested and applied durations.
+    pub fn alarm_silence(
+        &mut self,
+        alarm: AlarmId,
+        seconds: u32,
+    ) -> Result<(Output, u32), StationError> {
+        let (user, authority) = self.alarm_actor(Command::AlarmSilence, alarm)?;
+        if authority != AlarmAuthority::Onboard {
+            return Err(StationError::Denied(Denied {
+                command: Command::AlarmSilence,
+                reason: DeniedReason::Role,
+            }));
+        }
+        let now = self.now()?;
+        let (out, applied) = self.alarms.silence(&self.db, alarm, seconds, now)?;
+        self.log().append(
+            &Actor::user(&user),
+            AuditAction::AlarmSilenced,
+            Some(&alarm.to_string()),
+            &json!({ "requested_s": seconds, "applied_s": applied }),
+        )?;
+        Ok((out, applied))
+    }
+
+    /// `alarm_escalate` (F-ALM-05): the next stage now. Audited.
+    pub fn alarm_escalate(&mut self, alarm: AlarmId) -> Result<Output, StationError> {
+        let (user, authority) = self.alarm_actor(Command::AlarmEscalate, alarm)?;
+        if authority != AlarmAuthority::Onboard {
+            return Err(StationError::Denied(Denied {
+                command: Command::AlarmEscalate,
+                reason: DeniedReason::Role,
+            }));
+        }
+        let now = self.now()?;
+        let out = self.alarms.escalate(&self.db, alarm, now)?;
+        self.log().append(
+            &Actor::user(&user),
+            AuditAction::AlarmEscalated,
+            Some(&alarm.to_string()),
+            &json!({}),
+        )?;
+        Ok(out)
+    }
+
+    /// Evaluates a stored observation in the ingest path (docs/03 §3 step 5).
+    pub fn observe(&mut self, obs: &caelum_ingest::Observation) -> Result<Output, StationError> {
+        Ok(self.alarms.observe(&self.db, obs, None)?)
     }
 
     /// `ruleset_status` (public): the ruleset in force, for the SR-009 banner.

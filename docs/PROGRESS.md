@@ -27,7 +27,7 @@ Status of record: the table in `docs/10_BUILD_PLAN.md` (the trace enforces miles
 | Devices | `crates/caelum-devices` | SIG decoders (HRS, PLXS, BPS, HTS, WSS, GLS, CTS), registry with assignment and user slots, link supervisor (reconnect ≤ 5 s), BLE central (btleplug), pairing (WinRT, BlueZ, macOS), read-only serial and HID |
 | Alarms | `crates/caelum-alarms`, `rules/ruleset.toml` | Signed TOML ruleset (matches docs/06 §3 rule by rule), strict validation, signature policy, deterministic engine (continuous, spot SR-019, absence, baseline, supersession, latching) |
 | Core | `crates/caelum-core` | Station (records, keys, session, M1 commands, ruleset at start-up), acquisition path, alarm service with the SR-009 fallback |
-| App | `src-tauri`, `ui` | Tauri 2 shell; IPC: app_info, auth_*, break_glass_open, audit_list, audit_verify, ruleset_status; UI window with version and the DEVELOPMENT RULESET banner |
+| App | `src-tauri`, `ui` | Tauri 2 shell; IPC: app_info, auth_*, break_glass_open, audit_list, audit_verify, ruleset_status, alarm_acknowledge, alarm_silence, alarm_escalate; UI window with version and the DEVELOPMENT RULESET banner |
 | Test equipment | `crates/caelum-test-equipment` | SIG device emulators (test builds only) |
 | Tools | `tools/ci`, `tools/offline`, `tools/ruleset-signer` | Guards (release features, writes, npm licences), SBOM, trace, coverage gates; offline tool cache; ruleset signer |
 
@@ -79,3 +79,4 @@ Write exceptions: `docs/write-exceptions.md` (WX-001 CCCD enable, reviewed by th
 | 2026-10-10 | (this push) | rustfmt on the station test (CI run 38030239526 failed `cargo fmt --check` on Ubuntu); the run on this commit is the M2/M3 closing candidate |
 | 2026-10-10 | (this push) | M4 step 1: escalation plans moved into the signed ruleset (1.0.0-draft.3, equal to docs/06 by test); sans-I/O escalator with restart resume, SR-008 silence, sound scopes and the docs/06 §3a OPS record (CR-010) |
 | 2026-10-10 | (this push) | M4 step 2a: escalator in the alarm service; stages, acknowledgement (onboard and ground stage), silence and escalation stage persisted (migration V4, alarm_notification); open alarms restored into engine and escalator after a restart (no duplicates, sound resumes); alarm authority per ROLE_MATRIX §2 tested; clinical audit actions defined |
+| 2026-10-10 | (this push) | M4 step 2b: alarm actions as IPC commands with role and crew-scope checks (astronaut own, CMO all, flight surgeon ground stage only) and clinical audit entries; ROLE_MATRIX §3 rows added |

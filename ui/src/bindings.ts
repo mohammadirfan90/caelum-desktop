@@ -25,9 +25,25 @@ export const commands = {
 	auditVerify: () => typedError<AuditStatus, CommandError>(__TAURI_INVOKE("audit_verify")),
 	/**  The alarm ruleset in force and its banner (public: safety information, SR-009). */
 	rulesetStatus: () => typedError<RulesetInfo, CommandError>(__TAURI_INVOKE("ruleset_status")),
+	/**  Acknowledges an alarm (astronaut own, CMO all, flight surgeon the ground stage; audited). */
+	alarmAcknowledge: (alarm: string) => typedError<AcknowledgeScope, CommandError>(__TAURI_INVOKE("alarm_acknowledge", { alarm })),
+	/**
+	 *  Silences an alarm's sound for `seconds`, at most 2 min (critical) or 10 min (warning); returns
+	 *  the seconds applied (SR-008; audited).
+	 */
+	alarmSilence: (alarm: string, seconds: number) => typedError<number, CommandError>(__TAURI_INVOKE("alarm_silence", { alarm, seconds })),
+	/**  Escalates an alarm to its next stage now (F-ALM-05; audited). */
+	alarmEscalate: (alarm: string) => typedError<null, CommandError>(__TAURI_INVOKE("alarm_escalate", { alarm })),
 };
 
 /* Types */
+/**  How an acknowledgement was applied. */
+export type AcknowledgeScope = 
+/**  Onboard: escalation and sound stopped. */
+"onboard" | 
+/**  Ground stage only (flight surgeon); onboard escalation continues. */
+"groundStage";
+
 /**  Application identity shown in the main window (M0, F-SYS-06). */
 export type AppInfo = {
 	/**  Product name. */

@@ -43,6 +43,9 @@ static BUILDER: LazyLock<Builder<Wry>> = LazyLock::new(|| {
         crate::commands::audit_list,
         crate::commands::audit_verify,
         crate::commands::ruleset_status,
+        crate::commands::alarm_acknowledge,
+        crate::commands::alarm_silence,
+        crate::commands::alarm_escalate,
     ])
 });
 
