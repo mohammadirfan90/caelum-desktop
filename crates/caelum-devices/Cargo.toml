@@ -15,6 +15,8 @@ caelum-store.workspace = true
 # Stack item (CLAUDE.md): BLE central on WinRT, BlueZ and CoreBluetooth.
 btleplug = "0.13.4"
 futures = "0.3"
+# HID input reports (F-ACQ-04). Pure-Rust backends on Windows and Linux: no libudev or C build.
+hidapi = { version = "2.6.7", default-features = false, features = ["windows-native", "linux-native-basic-udev"] }
 tokio = { version = "1", features = ["rt", "time", "sync", "macros"] }
 # Stack item (CLAUDE.md); MPL-2.0, allowed per crate in deny.toml. No libudev: nothing to install.
 serialport = { version = "4.10.1", default-features = false }
