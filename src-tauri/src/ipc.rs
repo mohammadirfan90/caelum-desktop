@@ -87,6 +87,7 @@ static BUILDER: LazyLock<Builder<Wry>> = LazyLock::new(|| {
             crate::ground::config_apply_ground,
             crate::ground::ground_status,
             crate::ground::model_list,
+            crate::windows::window_open_waveform,
         ])
         .events(collect_events![
             crate::events::AlarmBusEvent,

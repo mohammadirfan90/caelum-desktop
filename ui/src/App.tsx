@@ -8,6 +8,7 @@ import { AlarmBar } from "./components/AlarmBar";
 import { RulesetBanner, TechnicalGlyph } from "./RulesetBanner";
 import { errorText, Locked, type Result, SignIn } from "./screens/Access";
 import { EmergencyView, Shell } from "./screens/Shell";
+import { KioskBoard } from "./screens/Windows";
 import { applyPrefs, loadPrefs, type Prefs, savePrefs } from "./settings";
 import { strings } from "./strings";
 
@@ -266,7 +267,11 @@ export function App({ api: overrides = {}, subscribeAlarms = listenAlarms, makeA
           {actionError}
         </p>
       )}
-      {phase.kind === "active" ? (
+      {load.state === "ready" && load.info.kiosk ? (
+        <main id="content" tabIndex={-1} className="flex flex-1 flex-col">
+          <KioskBoard alarms={list} />
+        </main>
+      ) : phase.kind === "active" ? (
         <Shell
           api={api}
           alarms={list}

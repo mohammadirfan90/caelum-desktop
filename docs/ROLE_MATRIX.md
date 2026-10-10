@@ -95,6 +95,7 @@ lead (CR-003) until a licensed clinician advisor countersigns; it does not block
 | `config_apply_ground` | Admin | Signed bundle kind ground: APID plan, path B endpoint, CFDP entities (CR-016); re-authentication (§4); audited |
 | `ground_status` | Astronaut, CMO, Flight Surgeon, BME, MCC, Admin | Configuration, backlog counts and link state only (docs/06 §3a) |
 | `model_list` | Astronaut, CMO, Flight Surgeon, BME | Validation status shown in the UI (F-ML-01, CR-018); never MCC |
+| `window_open_waveform` | Astronaut, CMO, Flight Surgeon, BME | Second window on the same session; its data still comes from authorised commands (F-SYS-13) |
 
 ## 4. Sessions
 - Onboard: PIN plus device-bound key; auto-lock after 10 minutes (configurable). Ground: password

@@ -285,4 +285,9 @@ impl Station {
         self.user_for(Command::ModelList)?;
         Ok(self.models.statuses())
     }
+
+    /// `window_open_waveform` (F-SYS-13): roles that may read waveforms.
+    pub fn window_open_allowed(&mut self) -> Result<(), StationError> {
+        self.user_for(Command::WindowOpenWaveform).map(|_| ())
+    }
 }

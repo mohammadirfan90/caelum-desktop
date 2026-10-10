@@ -31,6 +31,14 @@ pub struct AppInfo {
     pub product_name: String,
     /// Application version, taken from the Cargo workspace (single source of truth).
     pub version: String,
+    /// Started as a wall-mounted crew display (`--kiosk`, F-SYS-13): the crew-wide alarm board,
+    /// no sign-in screen.
+    pub kiosk: bool,
+}
+
+/// Whether the process was started as a kiosk crew display (`--kiosk`, F-SYS-13).
+pub fn kiosk_mode() -> bool {
+    std::env::args().any(|a| a == "--kiosk")
 }
 
 /// Returns the product name and version of this build (public, shown before sign-in).
@@ -40,6 +48,7 @@ pub fn app_info() -> AppInfo {
     AppInfo {
         product_name: PRODUCT_NAME.to_owned(),
         version: env!("CARGO_PKG_VERSION").to_owned(),
+        kiosk: kiosk_mode(),
     }
 }
 

@@ -429,6 +429,11 @@ export const en = {
   modelDevelopment: "DEVELOPMENT MODEL",
   modelAdvisory: (status: string) => `ADVISORY · ${status}`,
 
+  // Kiosk and windows (F-SYS-13)
+  kioskTitle: "Crew alarms",
+  waveformWindowTitle: "ECG viewer",
+  openWaveformWindow: "Open the ECG in its own window",
+
   // Settings (F-SYS-10)
   settingsTitle: "Display",
   theme: "Theme",

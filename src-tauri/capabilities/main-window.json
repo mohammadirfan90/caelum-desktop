@@ -1,7 +1,7 @@
 {
   "identifier": "main-window",
   "description": "Least privilege for the main window: only CAELUM's own commands, no shell, file system, HTTP or updater access (docs/03_ARCHITECTURE.md §5).",
-  "windows": ["main"],
+  "windows": ["main", "waveform"],
   "permissions": [
     "allow-app-info",
     "allow-auth-login",
@@ -54,6 +54,7 @@
     "allow-vehicle-link-status",
     "allow-config-apply-ground",
     "allow-ground-status",
-    "allow-model-list"
+    "allow-model-list",
+    "allow-window-open-waveform"
   ]
 }

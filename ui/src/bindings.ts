@@ -118,6 +118,8 @@ export const commands = {
 	groundStatus: () => typedError<GroundStatus, CommandError>(__TAURI_INVOKE("ground_status")),
 	/**  Installed advisory models with their validation status (F-ML-01). */
 	modelList: () => typedError<ModelItem[], CommandError>(__TAURI_INVOKE("model_list")),
+	/**  Opens (or focuses) the waveform viewer window. */
+	windowOpenWaveform: () => typedError<null, CommandError>(__TAURI_INVOKE("window_open_waveform")),
 };
 
 /** Events */
@@ -258,6 +260,11 @@ export type AppInfo = {
 	productName: string,
 	/**  Application version, taken from the Cargo workspace (single source of truth). */
 	version: string,
+	/**
+	 *  Started as a wall-mounted crew display (`--kiosk`, F-SYS-13): the crew-wide alarm board,
+	 *  no sign-in screen.
+	 */
+	kiosk: boolean,
 };
 
 /**  Attachment metadata. */

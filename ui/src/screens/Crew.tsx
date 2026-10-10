@@ -134,7 +134,7 @@ export function Home({ ctx }: { readonly ctx: CrewContext }) {
 }
 
 /** ECG strip from stored waveform chunks (`i16le` samples); NO DATA when there are none. */
-function EcgStrip({ chunks }: { readonly chunks: readonly WaveformChunk[] }) {
+export function EcgStrip({ chunks }: { readonly chunks: readonly WaveformChunk[] }) {
   const samples: number[] = [];
   for (const c of chunks) {
     if (c.encoding !== "i16le" || c.quality === "unusable") continue;
@@ -213,6 +213,15 @@ export function Body({ ctx }: { readonly ctx: CrewContext }) {
         <div className="mt-4 flex flex-col gap-4">
           <Vitals params={["heart_rate", "hrv_rmssd", "hrv_sdnn"]} vitals={v} />
           <h3 className="text-base font-semibold">{strings.ecgTitle}</h3>
+          <button
+            type="button"
+            className="btn btn-soft self-start"
+            onClick={() => {
+              void api.windowOpenWaveform();
+            }}
+          >
+            {strings.openWaveformWindow}
+          </button>
           {ecg.state === "ok" ? <EcgStrip chunks={ecg.data} /> : <NoData status="noData" />}
         </div>
       </Card>

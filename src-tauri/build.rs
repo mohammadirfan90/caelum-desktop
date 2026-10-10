@@ -56,6 +56,7 @@ fn main() {
             "config_apply_ground",
             "ground_status",
             "model_list",
+            "window_open_waveform",
         ]));
     if let Err(error) = tauri_build::try_build(attributes) {
         panic!("tauri-build failed: {error:#}");

@@ -23,6 +23,7 @@ pub mod ipc;
 pub mod reads;
 pub mod state;
 pub mod vehicle;
+pub mod windows;
 
 /// Builds and runs the application. Errors are returned, never unwrapped.
 ///
@@ -32,6 +33,12 @@ pub fn run() -> tauri::Result<()> {
     tauri::Builder::default()
         .setup(|app| {
             ipc::mount_events(app);
+            // F-SYS-13: a wall-mounted crew display runs full screen.
+            if commands::kiosk_mode() {
+                if let Some(w) = app.get_webview_window("main") {
+                    let _ = w.set_fullscreen(true);
+                }
+            }
             let data_dir = app.path().app_local_data_dir()?;
             // Test equipment only (CR-012 §8): the end-to-end test runs on its own records.
             #[cfg(feature = "test-equipment")]

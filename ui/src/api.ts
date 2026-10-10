@@ -105,6 +105,7 @@ export interface Api {
   // Ground, path B and models (M9, M10, M12)
   readonly groundStatus: () => Promise<Res<GroundStatus>>;
   readonly modelList: () => Promise<Res<ModelItem[]>>;
+  readonly windowOpenWaveform: () => Promise<Res<null>>;
 }
 
 /** Subscriptions to the value-free change events (new readings, device changes). */

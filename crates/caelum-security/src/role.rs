@@ -247,6 +247,8 @@ pub enum Command {
     GroundStatus,
     /// Installed advisory models with validation status (F-ML-01).
     ModelList,
+    /// Open the waveform viewer window (F-SYS-13).
+    WindowOpenWaveform,
 }
 
 /// Who may call a command.
@@ -262,7 +264,7 @@ pub enum Access {
 
 impl Command {
     /// Every command.
-    pub const ALL: [Command; 52] = [
+    pub const ALL: [Command; 53] = [
         Command::AppInfo,
         Command::AuthLogin,
         Command::AuthLogout,
@@ -315,6 +317,7 @@ impl Command {
         Command::ConfigApplyGround,
         Command::GroundStatus,
         Command::ModelList,
+        Command::WindowOpenWaveform,
     ];
 
     /// The IPC command name.
@@ -372,6 +375,7 @@ impl Command {
             Command::ConfigApplyGround => "config_apply_ground",
             Command::GroundStatus => "ground_status",
             Command::ModelList => "model_list",
+            Command::WindowOpenWaveform => "window_open_waveform",
         }
     }
 
@@ -462,6 +466,7 @@ impl Command {
             Command::ConfigApplyGround => Access::Roles(&[Role::Administrator]),
             Command::GroundStatus => Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon, Role::Bme, Role::Mcc, Role::Administrator]),
             Command::ModelList => Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon, Role::Bme]),
+            Command::WindowOpenWaveform => Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon, Role::Bme]),
         }
     }
 
