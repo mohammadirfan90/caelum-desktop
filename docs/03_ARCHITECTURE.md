@@ -114,5 +114,6 @@ Latency budget: device sample → UI ≤ 500 ms; persistence met → alarm on al
 - Updates are signed installer packages delivered by uplink (CFDP) or removable media; the
   updater verifies signatures and keeps the previous version for rollback.
 - Release builds are reproducible offline from a prepared, checksummed tool cache
-  (`docs/OFFLINE_BUILD.md`). Windows installers embed the WebView2 offline installer
-  (`offlineInstaller`); flight builds may use `fixedRuntime` to pin the WebView2 version.
+  (`docs/OFFLINE_BUILD.md`). Windows installers ship a pinned, Microsoft-signed WebView2 Fixed
+  Version runtime (`fixedRuntime`, CR-004) and install per machine, so every laptop renders the UI
+  with the same tested engine and nothing is downloaded at build or install time.

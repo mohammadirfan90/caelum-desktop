@@ -10,6 +10,10 @@ tools/offline/loinc/
 # Tauri editor schemas, regenerated on every build
 /src-tauri/gen/
 
+# WebView2 Fixed Version runtime (~670 MB), expanded from the tool cache (CR-004)
+/src-tauri/webview2-fixed-runtime/
+/src-tauri/webview2-fixed-runtime.staging/
+
 # Node / UI
 node_modules/
 /ui/dist/

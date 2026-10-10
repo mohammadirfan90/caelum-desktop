@@ -109,9 +109,10 @@ fn capabilities_grant_only_app_commands() {
     assert_eq!(files, 1, "expected exactly one capability file");
 }
 
-/// R-OPS-03, CR-002 D4: MSI and NSIS installers that embed the WebView2 offline installer.
+/// R-OPS-03, CR-004: MSI and per-machine NSIS installers that ship the pinned WebView2 Fixed
+/// Version runtime, so release builds need no network and every laptop uses the same engine.
 #[test]
-fn windows_installers_embed_webview2_offline_installer() {
+fn windows_installers_ship_pinned_webview2_fixed_runtime() {
     let conf = conf();
     let targets: Vec<&str> = conf["bundle"]["targets"]
         .as_array()
@@ -120,9 +121,24 @@ fn windows_installers_embed_webview2_offline_installer() {
         .filter_map(Value::as_str)
         .collect();
     assert_eq!(targets, ["msi", "nsis"]);
+    let windows = &conf["bundle"]["windows"];
+    assert_eq!(windows["webviewInstallMode"]["type"], "fixedRuntime");
     assert_eq!(
-        conf["bundle"]["windows"]["webviewInstallMode"]["type"],
-        "offlineInstaller"
+        windows["webviewInstallMode"]["path"],
+        "./webview2-fixed-runtime/"
     );
+    assert_eq!(windows["nsis"]["installMode"], "perMachine");
     assert_eq!(conf["bundle"]["license"], "Apache-2.0");
+}
+
+/// CR-004: the ~670 MB runtime is expanded from the tool cache, never committed to git.
+#[test]
+fn webview2_runtime_directory_is_git_ignored() {
+    let gitignore = std::fs::read_to_string(crate_dir().join("../.gitignore")).expect(".gitignore");
+    assert!(
+        gitignore
+            .lines()
+            .any(|l| l.trim() == "/src-tauri/webview2-fixed-runtime/"),
+        ".gitignore must exclude src-tauri/webview2-fixed-runtime/"
+    );
 }

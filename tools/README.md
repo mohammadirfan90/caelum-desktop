@@ -11,6 +11,7 @@ Command-line tools and build scripts (docs/03_ARCHITECTURE.md §2). Filled in by
 | `ci/trace.ts`: runs all test suites, writes `docs/trace.csv`, enforces complete milestones (`docs/09_VV_PLAN.md` §3) | M0 |
 | `ci/check-all.ts`: every check of `docs/09_VV_PLAN.md` §4 in CI order, with a summary (`--offline` for air-gapped machines) | M0 |
 | `offline/prepare.ts`, `verify.ts`, `build-offline.ts`: tool cache (`docs/OFFLINE_BUILD.md`); library and tests in `ci/` | M0 |
+| `offline/install-webview2.ts`: pinned WebView2 Fixed Version runtime from the cache into `src-tauri/` (CR-004) | M0 |
 | `offline/loinc/`: LOINC table placed by the product owner (git-ignored) | M1 |
 | Ruleset signer | M3 |
 | Config signer, XTCE export CLI, data export CLI | M10 |

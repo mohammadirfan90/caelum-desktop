@@ -210,6 +210,6 @@ M2 is VALIDATED; promoting it to warning needs a CR."
 **Prompt:** "Implement the adapter plug-in SDK (F-ACQ-12), smart-garment vendor adapters via the
 SDK (F-ACQ-13) and resource budget mode (F-SYS-12). Run the performance, soak and fault-injection
 campaigns in docs/09; fix all findings. Produce SBOM, threat model, hazard log update, user manual,
-ICDs for every interface, and signed installers (offlineInstaller; fixedRuntime for flight builds).
+ICDs for every interface, and signed installers (WebView2 fixedRuntime, CR-004).
 Prepare the flight-surgeon review package for the ruleset and protocols."
 **Gate:** all budgets met; 14-day soak clean; usability summative evaluation passed; review package complete.

@@ -1,7 +1,7 @@
 // Prepare the offline tool cache (ONLINE, on a trusted machine) — docs/OFFLINE_BUILD.md §3.1.
 //   node tools/offline/prepare.ts --cache <dir>      (or set CAELUM_TOOL_CACHE)
-// Requires a prior online `pnpm tauri build` on this machine so Tauri's bundler tools (NSIS, WiX,
-// WebView2 offline installer) are present to copy. Every download is checked against the digest
+// If Tauri's bundler tools (NSIS, WiX) are not on this machine yet, it runs one online
+// `pnpm tauri build` so the Tauri CLI downloads them. Every download is checked against the digest
 // its upstream publishes; the cache ends with ITEMS.json (provenance) and MANIFEST.sha256.
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
@@ -12,11 +12,14 @@ import {
   type CacheItem,
   cacheDir,
   copyInto,
+  downloadFile,
   downloadVerified,
+  hashFile,
   writeItems,
   writeManifest,
 } from "../ci/src/offline.ts";
 import { REPO_ROOT } from "../ci/src/repo.ts";
+import { authenticode, installRuntime, signatureProblem, WEBVIEW2 } from "../ci/src/webview2.ts";
 
 /** Pinned versions; keep in step with rust-toolchain.toml, package.json and the installed tools. */
 const RUST = "1.99.0";
@@ -104,13 +107,38 @@ for (const tool of CARGO_TOOLS) {
   items.push({ name: tool, version, path: `cargo-tools/${tool}.exe`, source: `crates.io: cargo install --locked ${tool}`, fetchedAt: now, licence: "MIT OR Apache-2.0" });
 }
 
-// 7. Tauri bundler tools (NSIS, WiX, WebView2 offline installer), from the online build.
-const tauriTools = join(process.env["LOCALAPPDATA"] ?? "", "tauri");
-if (!existsSync(tauriTools)) throw new Error(`${tauriTools} not found: run \`pnpm tauri build\` once online first`);
-copyInto(tauriTools, join(cache, "tauri-tools"));
-items.push({ name: "Tauri bundler tools (NSIS, WiX, WebView2 offline installer)", version: "as downloaded by @tauri-apps/cli 2.12.1", path: "tauri-tools", source: "downloaded by the Tauri CLI (GitHub releases, Microsoft)", fetchedAt: now, licence: "NSIS: zlib; WiX: MS-RL; WebView2: Microsoft redistributable" });
+// 7. WebView2 Fixed Version runtime (CR-004): Microsoft publishes no digest, so the package must
+// carry a valid Authenticode signature from Microsoft Corporation; its SHA-256 is recorded.
+const webviewCab = join(cache, "webview2", WEBVIEW2.cab);
+await downloadFile(WEBVIEW2.url, webviewCab);
+const webviewSig = authenticode(webviewCab);
+const webviewProblem = signatureProblem(webviewSig);
+if (webviewProblem !== undefined) throw new Error(`${WEBVIEW2.cab}: ${webviewProblem}`);
+items.push({
+  name: "WebView2 Fixed Version runtime (x64)",
+  version: WEBVIEW2.version,
+  path: `webview2/${WEBVIEW2.cab}`,
+  source: WEBVIEW2.url,
+  fetchedAt: now,
+  licence: "Microsoft WebView2 Runtime redistribution terms",
+  upstreamCheck: `Authenticode ${webviewSig.status}: ${webviewSig.subject.split(",")[0] ?? ""}, issuer ${webviewSig.issuer.split(",")[0] ?? ""}; sha256 ${await hashFile(webviewCab)}`,
+});
 
-// 8. Advisory database snapshots for air-gapped checks.
+// 8. Tauri bundler tools (NSIS, WiX). The Tauri CLI downloads them on the first installer build;
+// on a fresh machine run that one online build here (it needs the WebView2 runtime from step 7).
+const tauriTools = join(process.env["LOCALAPPDATA"] ?? "", "tauri");
+const haveTools = existsSync(join(tauriTools, "NSIS")) && existsSync(join(tauriTools, "WixTools314"));
+if (!haveTools) {
+  installRuntime(webviewCab, true);
+  sh("pnpm tauri build");
+}
+copyInto(tauriTools, join(cache, "tauri-tools"));
+// Tauri's own WebView2 offline-installer download (`x64/`, `x86/`, `arm64/`) is not used: CAELUM
+// ships the Fixed Version runtime instead (CR-004).
+for (const arch of ["x64", "x86", "arm64"]) rmSync(join(cache, "tauri-tools", arch), { recursive: true, force: true });
+items.push({ name: "Tauri bundler tools (NSIS, WiX)", version: "as downloaded by @tauri-apps/cli 2.12.1", path: "tauri-tools", source: "downloaded by the Tauri CLI (GitHub releases)", fetchedAt: now, licence: "NSIS: zlib; WiX: MS-RL" });
+
+// 9. Advisory database snapshots for air-gapped checks.
 sh("cargo deny fetch");
 sh("cargo audit --deny warnings");
 copyInto(join(homedir(), ".cargo", "advisory-dbs"), join(cache, "advisory-db", "cargo-deny"));

@@ -12,7 +12,7 @@ the M0 gate.
 | Rust crates | cargo downloads from crates.io | Vendored into the cache (`cargo vendor`); offline builds use source replacement and `CARGO_NET_OFFLINE=true` |
 | npm packages | pnpm downloads them | pnpm store in the cache (`pnpm fetch`); offline installs use `--offline --frozen-lockfile` |
 | NSIS, WiX | Tauri CLI downloads them on the first bundle | Vendored in the cache and placed where the Tauri CLI looks for them |
-| WebView2 | Default mode downloads a bootstrapper at install time | `offlineInstaller`: the standalone WebView2 installer is embedded in the CAELUM installer. Flight builds may use `fixedRuntime` (pinned runtime). Both come from the cache. **Open (CR-004):** Tauri CLI 2.12 contacts Microsoft on every `offlineInstaller` build even when the installer is cached, so offline builds need the CR-004 decision |
+| WebView2 | Default mode downloads a bootstrapper at install time; Tauri 2.12's `offlineInstaller` mode contacts Microsoft on every build | `fixedRuntime` (CR-004): the pinned, Microsoft-signed WebView2 Fixed Version runtime (`webview2/` in the cache) is expanded into `src-tauri/webview2-fixed-runtime/` and shipped inside CAELUM; nothing is downloaded at build or install time |
 | ONNX Runtime (M12) | `ort` downloads binaries at build time | `ort` with `load-dynamic`; a pinned, checksummed ONNX Runtime binary from the cache, shipped with the app |
 | Advisory databases | cargo-deny, cargo-audit and pnpm audit download them | Online CI job on every run; a dated offline snapshot in the cache for air-gapped builds, whose reports state the snapshot date |
 | Fonts | — | Outfit from `@fontsource/outfit`, bundled at build time; nothing fetched at runtime |
@@ -32,23 +32,28 @@ from the cache (`node/`, `pnpm/`); the Rust toolchain from `rust/` (if rustup is
 the installed toolchain as `1.99.0-x86_64-pc-windows-msvc` with `rustup toolchain link` so
 `rust-toolchain.toml` resolves without the network).
 
-1. **Prepare** (online, on a trusted machine, after one online `pnpm tauri build` so Tauri's bundler
-   tools are present):
+1. **Prepare** (online, on a trusted machine; if Tauri's NSIS and WiX tools are not present yet,
+   prepare runs one online `pnpm tauri build` so the Tauri CLI downloads them):
    `node tools/offline/prepare.ts --cache <dir>` (or set `CAELUM_TOOL_CACHE`). Vendors every crate,
    fetches the pnpm store, downloads the Rust and Node installers and pnpm (each checked against the
-   digest its upstream publishes), copies the cargo check tools, Tauri's bundler tools and the
+   digest its upstream publishes) and the WebView2 Fixed Version runtime (must carry a valid
+   Microsoft Authenticode signature), copies the cargo check tools, Tauri's bundler tools and the
    advisory databases, and writes `ITEMS.json` (provenance) and `MANIFEST.sha256`.
+   For an online developer build, `node tools/offline/install-webview2.ts --cache <dir>` puts the
+   runtime where `tauri.conf.json` expects it before `pnpm tauri build`.
 2. **Verify:** `node tools/offline/verify.ts --cache <dir>`. Fails on any changed, missing or
    unlisted file.
 3. **Build offline:** with the network disabled, `node tools/offline/build-offline.ts --cache <dir>`.
    It verifies the cache first and refuses a damaged one, puts the bundler tools where the Tauri
-   CLI looks, installs npm packages from the cached store (`pnpm install --offline`), and builds
+   CLI looks, expands the WebView2 runtime (signature re-checked), installs npm packages from the
+   cached store (`pnpm install --offline`), and builds
    against the vendored crates (`cargo --config` source replacement, `net.offline`). As a second
    line, it points every proxy-respecting client at a closed local port, so any network access
    the build still attempts fails loudly. It writes `target/offline/build-report.json` with the
-   installer checksums. **Blocked until CR-004 is decided** (WebView2, §1).
-4. **Install offline:** the installer runs with no network. If WebView2 is missing (for example on
-   Windows 10 LTSC 2019, which ships without it), the embedded WebView2 installs it.
+   installer checksums.
+4. **Install offline:** the installer runs with no network and installs per machine (Program
+   Files). CAELUM uses its bundled WebView2 runtime, so it also runs where no system WebView2 is
+   present (for example Windows 10 LTSC 2019).
 
 Air-gapped checks: `node tools/ci/check-all.ts --offline` uses the advisory snapshot
 (`cargo deny --offline check`, `cargo audit --no-fetch`); copy `advisory-db/cargo-deny` to

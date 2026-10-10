@@ -38,5 +38,5 @@ Tauri 2 + Rust desktop application.
 | `docs/change-requests/CR-001.md` | Approved change adding the medical data system integration (feature lock rev. 2) |
 | `docs/change-requests/CR-002.md` | Decisions from the first-session review (feature lock rev. 3) |
 | `docs/change-requests/CR-003.md` | Medical lead, spot-check evaluation, measured fever, licence and dependency policy |
-| `docs/change-requests/CR-004.md` | **Proposed:** WebView2 distribution for offline-reproducible Windows builds |
+| `docs/change-requests/CR-004.md` | WebView2 Fixed Version runtime for offline-reproducible Windows builds |
 | `LICENSE`, `NOTICE` | Apache-2.0 licence and attribution notice |

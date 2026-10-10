@@ -9,6 +9,7 @@ import { join } from "node:path";
 
 import { cacheDir, hashFile, offlineCargoConfig, readItems, verifyCache } from "../ci/src/offline.ts";
 import { REPO_ROOT } from "../ci/src/repo.ts";
+import { installRuntime, WEBVIEW2 } from "../ci/src/webview2.ts";
 
 const cache = cacheDir(process.argv.slice(2));
 const outDir = join(REPO_ROOT, "target", "offline");
@@ -25,6 +26,10 @@ if (problems.length > 0) {
 // 2. Tauri bundler tools where the Tauri CLI looks for them (copy only what is missing).
 const tauriTools = join(process.env["LOCALAPPDATA"] ?? "", "tauri");
 cpSync(join(cache, "tauri-tools"), tauriTools, { recursive: true, force: false, errorOnExist: false });
+
+// 2b. The pinned WebView2 Fixed Version runtime into src-tauri/webview2-fixed-runtime (CR-004).
+const webview = installRuntime(join(cache, "webview2", WEBVIEW2.cab), false);
+console.log(`build-offline: WebView2 ${WEBVIEW2.version} runtime installed (Authenticode ${webview.status})`);
 
 // 3. Cargo: vendored crates only, no network.
 const cargoConfig = join(outDir, "cargo-offline.toml");
@@ -77,6 +82,7 @@ for (const kind of ["msi", "nsis"]) {
 }
 const report = {
   builtAt: new Date().toISOString(),
+  webview2: { version: WEBVIEW2.version, mode: "fixedRuntime", authenticode: webview.status },
   cache: readItems(cache).map((i) => ({ name: i.name, version: i.version, fetchedAt: i.fetchedAt })),
   installers,
 };

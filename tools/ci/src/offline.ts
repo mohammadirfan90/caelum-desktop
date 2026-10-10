@@ -89,16 +89,21 @@ export async function verifyCache(cache: string): Promise<string[]> {
   return problems;
 }
 
+/** Downloads `url` to `dest`. Callers must check the result (digest or signature). */
+export async function downloadFile(url: string, dest: string): Promise<void> {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`download failed: ${url} (${String(response.status)})`);
+  mkdirSync(dirname(dest), { recursive: true });
+  writeFileSync(dest, Buffer.from(await response.arrayBuffer()));
+}
+
 /** Downloads `url` to `dest` and checks it against an upstream digest (hex or base64). */
 export async function downloadVerified(
   url: string,
   dest: string,
   expected: { algorithm: "sha256" | "sha512"; digest: string; encoding: "hex" | "base64" },
 ): Promise<void> {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`download failed: ${url} (${String(response.status)})`);
-  mkdirSync(dirname(dest), { recursive: true });
-  writeFileSync(dest, Buffer.from(await response.arrayBuffer()));
+  await downloadFile(url, dest);
   const hex = await hashFile(dest, expected.algorithm);
   const actual = expected.encoding === "hex" ? hex : Buffer.from(hex, "hex").toString("base64");
   if (actual !== expected.digest) {

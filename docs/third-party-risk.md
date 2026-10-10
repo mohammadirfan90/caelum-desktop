@@ -17,6 +17,11 @@ replacing a stack item or used in `caelum-alarms`, `caelum-ingest`, `caelum-secu
 | `cargo_metadata` | `0.23.1` (`Cargo.lock`) | Dev-dependency of `caelum-core`: architecture test reads the workspace layout (`cargo metadata --no-deps`, offline) | Test-only; low. MIT licence; actively maintained | Dev-dependency only, never in a release build; no network or native downloads at build time | M0 |
 | `cssparser`, `cssparser-macros`, `selectors`, `dtoa-short`, `option-ext` (via `tauri`, `dirs`) | `Cargo.lock` | HTML/CSS handling in Tauri's build tooling and config; user directories | Licensed MPL-2.0 (file-level copyleft), outside the permissive allow-list | Allowed per crate in `deny.toml` (any new MPL crate fails until reviewed); used unmodified; obligation: state where the MPL source is available, carried into NOTICE with the release SBOM | M0 |
 
+## Bundled runtime components
+| Name | Version | Purpose | Risk | Mitigation | Added |
+|---|---|---|---|---|---|
+| Microsoft WebView2 Fixed Version runtime (x64) | `155.0.4283.45` (`tools/ci/src/webview2.ts`) | Browser engine that renders the CAELUM UI on Windows (CR-004) | Does not update itself: security fixes reach the vehicle only through CAELUM releases; Microsoft supports a Fixed Version only for a limited time; no published digest; about 670 MB installed | Pinned and tested with the app; package accepted only with a valid Microsoft Corporation Authenticode signature, then held in the checksummed tool cache; refresh at least each release and whenever Microsoft publishes a security fix; per-machine install keeps the sandbox permissions standard | M0 |
+
 ## Accepted security advisories
 Each ID is ignored in both `deny.toml` and `.cargo/audit.toml` (kept equal by
 `tools/ci/test/supply-chain.test.ts`) and re-checked on every Tauri upgrade. None can be fixed

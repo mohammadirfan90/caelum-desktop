@@ -43,8 +43,11 @@
     ],
     "windows": {
       "webviewInstallMode": {
-        "type": "offlineInstaller",
-        "silent": true
+        "type": "fixedRuntime",
+        "path": "./webview2-fixed-runtime/"
+      },
+      "nsis": {
+        "installMode": "perMachine"
       }
     }
   }

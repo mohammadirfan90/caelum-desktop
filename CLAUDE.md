@@ -79,6 +79,7 @@ cargo nextest run --workspace      # all Rust tests
 cargo clippy --workspace -- -D warnings
 pnpm -C ui typecheck && pnpm -C ui test
 pnpm tauri dev                     # run the desktop app
+node tools/offline/install-webview2.ts --cache <dir>   # Windows: pinned WebView2 runtime first (CR-004)
 pnpm tauri build                   # release installers (no test-equipment feature)
 cargo deny check && cargo audit --deny warnings && pnpm audit   # online
 pnpm -C tools/ci check             # release-feature, write-exception and npm licence guards
