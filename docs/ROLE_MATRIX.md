@@ -102,6 +102,9 @@ lead (CR-003) until a licensed clinician advisor countersigns; it does not block
 | `mds_identity_set` | Admin | PEM, kept in the encrypted records; re-authentication (§4); audited without the key |
 | `mds_status` | CMO, Flight Surgeon, BME, Admin | Health, pending and held counts; no record content |
 | `uplink_apply` | Admin | Signed items only; rulesets take effect at the next start; re-authentication (§4); audited |
+| `fhir_import` | CMO, Flight Surgeon | Stored as imported and evaluated (SR-016); demonstration/test data refused (SR-017); audited |
+| `ecg_view` | CMO, Flight Surgeon | Read-only; leads in physical units |
+| `dicom_view` | CMO, Flight Surgeon | Read-only; uncompressed and pure-Rust codecs only (CR-014) |
 
 ## 4. Sessions
 - Onboard: PIN plus device-bound key; auto-lock after 10 minutes (configurable). Ground: password

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-dicom-view"
+description = "Enables the dicom_view command without any pre-configured scope."
+commands.allow = ["dicom_view"]
+
+[[permission]]
+identifier = "deny-dicom-view"
+description = "Denies the dicom_view command without any pre-configured scope."
+commands.deny = ["dicom_view"]

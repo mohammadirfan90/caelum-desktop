@@ -261,6 +261,12 @@ pub enum Command {
     MdsStatus,
     /// Verify and apply an uplinked ruleset, protocol library or configuration (F-GND-07).
     UplinkApply,
+    /// Import observations from a FHIR R4 resource or bundle (F-ACQ-08).
+    FhirImport,
+    /// An imported ECG recording, decoded for review (F-CLN-03).
+    EcgView,
+    /// An imported DICOM image, decoded for the viewer (F-CLN-04).
+    DicomView,
 }
 
 /// Who may call a command.
@@ -276,7 +282,7 @@ pub enum Access {
 
 impl Command {
     /// Every command.
-    pub const ALL: [Command; 59] = [
+    pub const ALL: [Command; 62] = [
         Command::AppInfo,
         Command::AuthLogin,
         Command::AuthLogout,
@@ -336,6 +342,9 @@ impl Command {
         Command::MdsIdentitySet,
         Command::MdsStatus,
         Command::UplinkApply,
+        Command::FhirImport,
+        Command::EcgView,
+        Command::DicomView,
     ];
 
     /// The IPC command name.
@@ -400,6 +409,9 @@ impl Command {
             Command::MdsIdentitySet => "mds_identity_set",
             Command::MdsStatus => "mds_status",
             Command::UplinkApply => "uplink_apply",
+            Command::FhirImport => "fhir_import",
+            Command::EcgView => "ecg_view",
+            Command::DicomView => "dicom_view",
         }
     }
 
@@ -497,6 +509,9 @@ impl Command {
             Command::MdsIdentitySet => Access::Roles(&[Role::Administrator]),
             Command::MdsStatus => Access::Roles(&[Role::Cmo, Role::FlightSurgeon, Role::Bme, Role::Administrator]),
             Command::UplinkApply => Access::Roles(&[Role::Administrator]),
+            Command::FhirImport => Access::Roles(&[Role::Cmo, Role::FlightSurgeon]),
+            Command::EcgView => Access::Roles(&[Role::Cmo, Role::FlightSurgeon]),
+            Command::DicomView => Access::Roles(&[Role::Cmo, Role::FlightSurgeon]),
         }
     }
 

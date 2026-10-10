@@ -61,6 +61,9 @@
     "allow-config-apply-mds",
     "allow-mds-identity-set",
     "allow-mds-status",
-    "allow-uplink-apply"
+    "allow-uplink-apply",
+    "allow-fhir-import",
+    "allow-ecg-view",
+    "allow-dicom-view"
   ]
 }

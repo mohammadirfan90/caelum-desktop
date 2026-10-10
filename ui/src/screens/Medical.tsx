@@ -12,6 +12,7 @@ import { utcDateTime } from "../time";
 import { errorText } from "./Access";
 import { Models } from "./Ground";
 import { Protocols } from "./Protocols";
+import { DicomViewer, EcgReview } from "./Viewers";
 
 const unitText = (u: string) => strings.unit[u] ?? u;
 
@@ -223,7 +224,10 @@ function Encounters({ api, crewId, self }: { readonly api: Api; readonly crewId:
   );
 }
 
-/** Attachments (F-CLN-04): import into the encrypted store, list with size and hash. */
+/**
+ * Attachments (F-CLN-04, F-ACQ-06, F-ACQ-07, F-ACQ-08): import into the encrypted store (DICOM and
+ * ECG files must open first; FHIR observations are imported and evaluated), list, and review.
+ */
 function Attachments({ api, crewId }: { readonly api: Api; readonly crewId: string }) {
   const fileId = useId();
   const kindId = useId();
@@ -231,11 +235,27 @@ function Attachments({ api, crewId }: { readonly api: Api; readonly crewId: stri
   const [kind, setKind] = useState("file");
   const [bump, setBump] = useState(0);
   const [notice, setNotice] = useState<Notice>(null);
+  const [open, setOpen] = useState<{ id: string; kind: string; name: string } | null>(null);
+  const [refused, setRefused] = useState<readonly string[]>([]);
   const list = useLoad(() => api.attachmentList(crewId), `${crewId}:${String(bump)}`);
   const importFile = (e: SyntheticEvent) => {
     e.preventDefault();
     if (file === null) {
       setNotice({ kind: "error", text: strings.attachmentChoose });
+      return;
+    }
+    setRefused([]);
+    if (kind === "fhir") {
+      void file.text().then((json) =>
+        api.fhirImport(crewId, file.name, json).then((r) => {
+          if (r.status === "error") setNotice({ kind: "error", text: errorText(r.error) });
+          else {
+            setNotice({ kind: "ok", text: strings.fhirImported(r.data.imported, r.data.rejected.length) });
+            setRefused(r.data.rejected);
+            setBump((b) => b + 1);
+          }
+        }),
+      );
       return;
     }
     void file.arrayBuffer().then((buf) =>
@@ -289,13 +309,61 @@ function Attachments({ api, crewId }: { readonly api: Api; readonly crewId: stri
         </button>
       </form>
       <NoticeLine notice={notice} />
+      {refused.length > 0 ? (
+        <div className="mt-2 text-sm">
+          <p className="font-semibold">{strings.fhirRejectedTitle}</p>
+          <ul className="list-disc pl-5">
+            {refused.map((r) => (
+              <li key={r}>{r}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       {list.state === "ok" && list.data.length === 0 ? <p className="mt-3 text-sm text-ink-3">{strings.attachmentsEmpty}</p> : null}
       {list.state === "ok" && list.data.length > 0 ? (
-        <ul className="mt-3 flex flex-col gap-1 text-sm">
-          {list.data.map((a) => (
-            <li key={a.id}>{`${a.filename ?? a.id} · ${strings.attachmentKinds[a.kind] ?? a.kind} · ${utcDateTime(a.createdAtUtcMs)}`}</li>
-          ))}
+        <ul className="mt-3 flex flex-col gap-2 text-sm">
+          {list.data.map((a) => {
+            const name = a.filename ?? a.id;
+            return (
+              <li key={a.id} className="flex flex-wrap items-center gap-3">
+                <span>{`${name} · ${strings.attachmentKinds[a.kind] ?? a.kind} · ${utcDateTime(a.createdAtUtcMs)}`}</span>
+                {a.kind === "ecg" || a.kind === "dicom" ? (
+                  <button
+                    type="button"
+                    className="btn btn-soft"
+                    onClick={() => {
+                      setOpen({ id: a.id, kind: a.kind, name });
+                    }}
+                  >
+                    {strings.attachmentReview(name)}
+                  </button>
+                ) : null}
+              </li>
+            );
+          })}
         </ul>
+      ) : null}
+      {open?.kind === "ecg" ? (
+        <EcgReview
+          key={open.id}
+          api={api}
+          id={open.id}
+          name={open.name}
+          onClose={() => {
+            setOpen(null);
+          }}
+        />
+      ) : null}
+      {open?.kind === "dicom" ? (
+        <DicomViewer
+          key={open.id}
+          api={api}
+          id={open.id}
+          name={open.name}
+          onClose={() => {
+            setOpen(null);
+          }}
+        />
       ) : null}
     </Card>
   );

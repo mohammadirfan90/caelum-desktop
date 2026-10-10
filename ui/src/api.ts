@@ -4,6 +4,10 @@ import type {
   AlarmInfo,
   AlarmReportData,
   Attachment,
+  DicomImage,
+  DicomWindow,
+  EcgRecordingView,
+  FhirImportResult,
   Checkin,
   CheckinEntry,
   ChecklistRun,
@@ -104,6 +108,10 @@ export interface Api {
   readonly checklistList: () => Promise<Res<ChecklistRun[]>>;
   readonly attachmentImport: (crewMemberId: string, kind: string, filename: string, bytes: number[]) => Promise<Res<string>>;
   readonly attachmentList: (crewMemberId: string | null) => Promise<Res<Attachment[]>>;
+  // Clinical files (F-ACQ-08, F-CLN-03, F-CLN-04)
+  readonly fhirImport: (crewMemberId: string, filename: string, json: string) => Promise<Res<FhirImportResult>>;
+  readonly ecgView: (id: string) => Promise<Res<EcgRecordingView>>;
+  readonly dicomView: (id: string, frame: number, window: DicomWindow | null) => Promise<Res<DicomImage>>;
   // Ground, path B and models (M9, M10, M12)
   readonly groundStatus: () => Promise<Res<GroundStatus>>;
   readonly modelList: () => Promise<Res<ModelItem[]>>;

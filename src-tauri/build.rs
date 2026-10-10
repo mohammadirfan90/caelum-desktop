@@ -63,6 +63,9 @@ fn main() {
             "mds_identity_set",
             "mds_status",
             "uplink_apply",
+            "fhir_import",
+            "ecg_view",
+            "dicom_view",
         ]));
     if let Err(error) = tauri_build::try_build(attributes) {
         panic!("tauri-build failed: {error:#}");

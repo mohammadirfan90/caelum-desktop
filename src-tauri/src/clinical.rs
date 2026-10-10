@@ -535,8 +535,8 @@ pub async fn attachment_import(
     bytes: Vec<u8>,
 ) -> Result<String, CommandError> {
     let c = crew(&crew_member_id)?;
-    let metadata = serde_json::json!({ "size": bytes.len() });
-    state.with(|s| Ok(s.attachment_import(c, &kind, &filename, &bytes, metadata)?))
+    // DICOM and ECG files must open before they are kept (CR-014).
+    state.with(|s| Ok(s.file_import(c, &kind, &filename, &bytes)?))
 }
 
 /// Attachment metadata (optionally for one crew member).
@@ -583,4 +583,156 @@ pub async fn export_csv(
 ) -> Result<String, CommandError> {
     let c = crew(&crew_member_id)?;
     state.with(|s| Ok(s.export_csv(c, &parameter, window_s)?))
+}
+
+/// One ECG lead for review (physical units).
+#[derive(Debug, Clone, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct EcgLead {
+    /// Label from the file.
+    pub label: String,
+    /// Unit from the file.
+    pub unit: String,
+    /// Sample rate, Hz.
+    pub sample_rate_hz: f64,
+    /// Samples.
+    pub samples: Vec<f64>,
+}
+
+/// A decoded ECG recording (F-CLN-03).
+#[derive(Debug, Clone, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct EcgRecordingView {
+    /// `edf`, `aecg`, `scp-ecg` or `dicom-waveform`.
+    pub format: String,
+    /// Leads.
+    pub leads: Vec<EcgLead>,
+}
+
+/// A display window (centre and width, rescaled units).
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct DicomWindow {
+    /// Centre.
+    pub center: f64,
+    /// Width.
+    pub width: f64,
+}
+
+/// One DICOM frame rendered for display (F-CLN-04).
+#[derive(Debug, Clone, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct DicomImage {
+    /// Rows.
+    pub rows: u32,
+    /// Columns.
+    pub columns: u32,
+    /// Frames in the object.
+    pub frames: u32,
+    /// The frame shown.
+    pub frame: u32,
+    /// 1 (grey) or 3 (RGB).
+    pub channels: u8,
+    /// Photometric interpretation.
+    pub photometric: String,
+    /// 8-bit display samples, interleaved, row by row.
+    pub pixels: Vec<u8>,
+    /// Window applied (grey only).
+    pub window: Option<DicomWindow>,
+    /// Window presets from the file.
+    pub presets: Vec<DicomWindow>,
+    /// Pixel spacing (row, column) in mm, if stated.
+    pub pixel_spacing_mm: Option<(f64, f64)>,
+}
+
+/// Outcome of a FHIR import.
+#[derive(Debug, Clone, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct FhirImportResult {
+    /// Observations stored and evaluated.
+    pub imported: u32,
+    /// What was not imported, and why.
+    pub rejected: Vec<String>,
+}
+
+fn window(w: (f64, f64)) -> DicomWindow {
+    DicomWindow {
+        center: w.0,
+        width: w.1,
+    }
+}
+
+/// Imports observations from a FHIR R4 JSON resource or bundle for one crew member (F-ACQ-08).
+#[tauri::command]
+#[specta::specta]
+pub async fn fhir_import(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    crew_member_id: String,
+    filename: String,
+    json: String,
+) -> Result<FhirImportResult, CommandError> {
+    use tauri_specta::Event as _;
+    let c = crew(&crew_member_id)?;
+    let (n, rejected, out) = state.with(|s| Ok(s.fhir_import(c, &filename, json.as_bytes())?))?;
+    for e in crate::events::bus_events(&out) {
+        let _ = e.emit(&app);
+    }
+    if n > 0 {
+        let _ = crate::events::ObservationsChanged {
+            crew_id: crew_member_id,
+        }
+        .emit(&app);
+    }
+    Ok(FhirImportResult {
+        imported: u32::try_from(n).unwrap_or(u32::MAX),
+        rejected,
+    })
+}
+
+/// An imported ECG recording, decoded for review (F-CLN-03).
+#[tauri::command]
+#[specta::specta]
+pub async fn ecg_view(
+    state: State<'_, AppState>,
+    id: String,
+) -> Result<EcgRecordingView, CommandError> {
+    let r = state.with(|s| Ok(s.ecg_view(&id)?))?;
+    Ok(EcgRecordingView {
+        format: r.format.to_owned(),
+        leads: r
+            .leads
+            .into_iter()
+            .map(|l| EcgLead {
+                label: l.label,
+                unit: l.unit,
+                sample_rate_hz: l.sample_rate_hz,
+                samples: l.samples,
+            })
+            .collect(),
+    })
+}
+
+/// One frame of an imported DICOM image, rendered with the given window (F-CLN-04).
+#[tauri::command]
+#[specta::specta]
+pub async fn dicom_view(
+    state: State<'_, AppState>,
+    id: String,
+    frame: u32,
+    window: Option<DicomWindow>,
+) -> Result<DicomImage, CommandError> {
+    let v = state.with(|s| Ok(s.dicom_view(&id, frame, window.map(|w| (w.center, w.width)))?))?;
+    Ok(DicomImage {
+        rows: v.rows,
+        columns: v.columns,
+        frames: v.frames,
+        frame: v.frame,
+        channels: v.channels,
+        photometric: v.photometric,
+        pixels: v.pixels,
+        window: v.window.map(self::window),
+        presets: v.presets.into_iter().map(self::window).collect(),
+        pixel_spacing_mm: v.pixel_spacing_mm,
+    })
 }

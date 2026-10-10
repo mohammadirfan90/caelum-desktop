@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-ecg-view"
+description = "Enables the ecg_view command without any pre-configured scope."
+commands.allow = ["ecg_view"]
+
+[[permission]]
+identifier = "deny-ecg-view"
+description = "Denies the ecg_view command without any pre-configured scope."
+commands.deny = ["ecg_view"]

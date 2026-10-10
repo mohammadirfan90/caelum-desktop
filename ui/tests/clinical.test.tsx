@@ -112,6 +112,82 @@ describe("Medical", () => {
   });
 });
 
+describe("Clinical files", () => {
+  const attachment = (id: string, kind: string, filename: string) => ({ id, kind, sha256: "00", metadata: "{}", crewMemberId: "c1", filename, createdAtUtcMs: T });
+  const choose = async (kind: string, name: string, content: string) => {
+    const form = await screen.findByRole("form", { name: "Import" });
+    fireEvent.change(within(form).getByLabelText("Kind"), { target: { value: kind } });
+    fireEvent.change(within(form).getByLabelText("File to import"), { target: { files: [new File([content], name)] } });
+    fireEvent.submit(form);
+  };
+
+  it("imports FHIR observations and lists what was not imported, with the reason (F-ACQ-08)", async () => {
+    const fhirImport = vi.fn(() => ok({ imported: 1, rejected: ["entry[1]: LOINC 2708-6 is not in the catalog"] }));
+    render(<Medical api={api({ fhirImport })} userRole="cmo" self="u1" crewId="c1" crew={crew} version={0} />);
+    await choose("fhir", "obs.json", '{"resourceType":"Bundle"}');
+    expect(await screen.findByText("1 observations imported and evaluated; 1 not imported.")).toBeInTheDocument();
+    expect(screen.getByText("entry[1]: LOINC 2708-6 is not in the catalog")).toBeInTheDocument();
+    expect(fhirImport).toHaveBeenCalledWith("c1", "obs.json", '{"resourceType":"Bundle"}');
+  });
+
+  it("shows a refused ECG file's reason and keeps nothing (F-ACQ-07)", async () => {
+    const attachmentImport = vi.fn(() => Promise.resolve({ status: "error" as const, error: { kind: "rejected" as const, message: "the ECG file does not open: bad header", retryAfterS: null } }));
+    render(<Medical api={api({ attachmentImport })} userRole="cmo" self="u1" crewId="c1" crew={crew} version={0} />);
+    await choose("ecg", "x.edf", "garbage");
+    expect(await screen.findByText(/the ECG file does not open/)).toBeInTheDocument();
+  });
+
+  it("reviews an ECG with keyboard-operable calipers that give the interval and rate (F-CLN-03)", async () => {
+    const samples = Array.from({ length: 500 }, (_, i) => (i % 250 === 125 ? 1 : 0));
+    const a = api({
+      attachmentList: () => ok([attachment("e1", "ecg", "rest.edf")]),
+      ecgView: () => ok({ format: "edf", leads: [{ label: "ECG II", unit: "mV", sampleRateHz: 250, samples }] }),
+    });
+    render(<Medical api={a} userRole="cmo" self="u1" crewId="c1" crew={crew} version={0} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Review rest.edf" }));
+    const viewer = await screen.findByRole("region", { name: "ECG review: rest.edf" });
+    expect(within(viewer).getByText("EDF · 1 leads · 250 Hz · 2.0 s")).toBeInTheDocument();
+    expect(within(viewer).getByRole("img", { name: /ECG II from 0.00 s to 2.00 s/ })).toBeInTheDocument();
+    fireEvent.change(within(viewer).getByLabelText("Caliper A (s)"), { target: { value: "0.5" } });
+    fireEvent.change(within(viewer).getByLabelText("Caliper B (s)"), { target: { value: "1.5" } });
+    expect(within(viewer).getByText(/Interval 1000 ms = 60 \/min/)).toBeInTheDocument();
+    expect(within(viewer).getByText(/Caliper A \(s\): 1\.000 mV/)).toBeInTheDocument();
+    fireEvent.click(within(viewer).getByRole("button", { name: "Close the viewer" }));
+    expect(screen.queryByRole("region", { name: "ECG review: rest.edf" })).not.toBeInTheDocument();
+  });
+
+  it("shows a DICOM frame with its size and window, and applies a window by hand (F-CLN-04)", async () => {
+    const dicomView = vi.fn((_id: string, frame: number, window: { center: number | null; width: number | null } | null) =>
+      ok({
+        rows: 2,
+        columns: 2,
+        frames: 3,
+        frame,
+        channels: 1,
+        photometric: "MONOCHROME2",
+        pixels: [0, 85, 170, 255],
+        window: window ?? { center: 128, width: 256 },
+        presets: [],
+        pixelSpacingMm: null,
+      }),
+    );
+    const a = api({ attachmentList: () => ok([attachment("d1", "dicom", "us.dcm")]), dicomView });
+    render(<Medical api={a} userRole="cmo" self="u1" crewId="c1" crew={crew} version={0} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Review us.dcm" }));
+    const viewer = await screen.findByRole("region", { name: "Image: us.dcm" });
+    expect(await within(viewer).findByRole("img", { name: "Image 2 × 2 pixels, frame 1 of 3 · Window 128 / 256" })).toBeInTheDocument();
+    expect(within(viewer).getByText("Pixel spacing not stated: no distances are shown.")).toBeInTheDocument();
+    fireEvent.change(within(viewer).getByLabelText("Window centre"), { target: { value: "40" } });
+    fireEvent.change(within(viewer).getByLabelText("Window width"), { target: { value: "400" } });
+    fireEvent.submit(within(viewer).getByRole("form", { name: "Apply window" }));
+    await waitFor(() => {
+      expect(dicomView).toHaveBeenLastCalledWith("d1", 0, { center: 40, width: 400 });
+    });
+    fireEvent.change(within(viewer).getByLabelText("Frame"), { target: { value: "3" } });
+    expect(await within(viewer).findByRole("img", { name: /frame 3 of 3/ })).toBeInTheDocument();
+  });
+});
+
 describe("Checks", () => {
   it("runs a PVT and submits only measured reaction times (F-CLN-06)", async () => {
     vi.useFakeTimers();
@@ -184,6 +260,7 @@ describe("Environment, Ground and kiosk", () => {
           pathBWaiting: 0,
           pathBProblem: "no signed ground configuration",
           vehicle: { running: false, version: null, problem: null, datagrams: 0, readings: 0, rejected: [], clock: null, latestOffsetMs: null },
+          instanceRole: "standalone",
         }),
       mdsStatus: () => ok({ configured: false, version: null, health: "not_configured", pending: 0, held: 0, problem: null }),
     });

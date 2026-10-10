@@ -27,6 +27,7 @@ mod admin;
 pub mod clinical;
 pub use clinical::{CrewOverviewItem, PvtResult, PROTOCOLS_KIND};
 pub mod export;
+pub mod files;
 pub mod mds_link;
 pub mod pathb;
 pub mod reads;

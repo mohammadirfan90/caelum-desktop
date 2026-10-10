@@ -23,7 +23,7 @@ marked `complete` (`09` §3).
 | M8 | in progress | 2026-10-10 | |
 | M9 | in progress | 2026-10-10 | |
 | M10 | in progress | 2026-10-10 | |
-| M11 | not started | | |
+| M11 | in progress | 2026-10-10 | |
 | M12 | in progress | 2026-10-10 | |
 | M13 | not started | | |
 

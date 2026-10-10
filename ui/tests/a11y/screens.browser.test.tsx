@@ -26,6 +26,7 @@ import { Devices } from "../../src/screens/Devices";
 import { Environment } from "../../src/screens/Environment";
 import { Ground } from "../../src/screens/Ground";
 import { Medical } from "../../src/screens/Medical";
+import { DicomViewer, EcgReview } from "../../src/screens/Viewers";
 import { KioskBoard } from "../../src/screens/Windows";
 import { Locked, SignIn } from "../../src/screens/Access";
 import { EmergencyView, Shell } from "../../src/screens/Shell";
@@ -142,9 +143,31 @@ const api = {
         pathBWaiting: 0,
         pathBProblem: null,
         vehicle: { running: true, version: "1", problem: null, datagrams: 120, readings: 360, rejected: [], clock: "set", latestOffsetMs: 12.5 },
+        instanceRole: "standalone",
       },
     }),
   mdsStatus: () => Promise.resolve({ status: "ok" as const, data: { configured: true, version: "1", health: "connected", pending: 2, held: 0, problem: null } }),
+  ecgView: () =>
+    Promise.resolve({
+      status: "ok" as const,
+      data: { format: "edf", leads: [{ label: "ECG II", unit: "mV", sampleRateHz: 250, samples: Array.from({ length: 3000 }, (_, i) => (i % 250 === 125 ? 1 : 0)) }] },
+    }),
+  dicomView: () =>
+    Promise.resolve({
+      status: "ok" as const,
+      data: {
+        rows: 16,
+        columns: 16,
+        frames: 2,
+        frame: 0,
+        channels: 1,
+        photometric: "MONOCHROME2",
+        pixels: Array.from({ length: 256 }, (_, i) => i),
+        window: { center: 128, width: 256 },
+        presets: [{ center: 40, width: 400 }],
+        pixelSpacingMm: [0.2, 0.2],
+      },
+    }),
 } as unknown as Api;
 
 const crew = [{ id: "c1", name: "Fixture Astronaut A", position: "flight engineer", mission: "TEST-1", active: true }];
@@ -193,6 +216,8 @@ const SCREENS: Record<string, () => ReactElement> = {
   environment: () => <Environment api={api} crewId="c1" version={0} />,
   ground: () => <Ground api={api} version={0} />,
   kiosk: () => <KioskBoard alarms={alarms} />,
+  "ecg-review": () => <EcgReview api={api} id="e1" name="rest.edf" onClose={() => undefined} />,
+  "dicom-viewer": () => <DicomViewer api={api} id="d1" name="us.dcm" onClose={() => undefined} />,
 };
 
 const VARIANTS: Record<string, Prefs> = {

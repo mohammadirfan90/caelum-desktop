@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-fhir-import"
+description = "Enables the fhir_import command without any pre-configured scope."
+commands.allow = ["fhir_import"]
+
+[[permission]]
+identifier = "deny-fhir-import"
+description = "Denies the fhir_import command without any pre-configured scope."
+commands.deny = ["fhir_import"]

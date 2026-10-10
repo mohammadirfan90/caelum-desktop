@@ -132,6 +132,17 @@ export const commands = {
 	mdsStatus: () => typedError<MdsLink, CommandError>(__TAURI_INVOKE("mds_status")),
 	/**  Verifies and applies an uplinked item (administrator, re-authentication; F-GND-07). */
 	uplinkApply: (kind: string, content: string, signature: string) => typedError<UplinkOutcome, CommandError>(__TAURI_INVOKE("uplink_apply", { kind, content, signature })),
+	/**  Imports observations from a FHIR R4 JSON resource or bundle for one crew member (F-ACQ-08). */
+	fhirImport: (crewMemberId: string, filename: string, json: string) => typedError<FhirImportResult, CommandError>(__TAURI_INVOKE("fhir_import", { crewMemberId, filename, json })),
+	/**  An imported ECG recording, decoded for review (F-CLN-03). */
+	ecgView: (id: string) => typedError<EcgRecordingView, CommandError>(__TAURI_INVOKE("ecg_view", { id })),
+	/**  One frame of an imported DICOM image, rendered with the given window (F-CLN-04). */
+	dicomView: (id: string, frame: number, window: {
+	/**  Centre. */
+	center: number | null,
+	/**  Width. */
+	width: number | null,
+} | null) => typedError<DicomImage, CommandError>(__TAURI_INVOKE("dicom_view", { id, frame, window })),
 };
 
 /** Events */
@@ -478,6 +489,58 @@ export type DevicesChanged = {
 	deviceId: string,
 };
 
+/**  One DICOM frame rendered for display (F-CLN-04). */
+export type DicomImage = {
+	/**  Rows. */
+	rows: number,
+	/**  Columns. */
+	columns: number,
+	/**  Frames in the object. */
+	frames: number,
+	/**  The frame shown. */
+	frame: number,
+	/**  1 (grey) or 3 (RGB). */
+	channels: number,
+	/**  Photometric interpretation. */
+	photometric: string,
+	/**  8-bit display samples, interleaved, row by row. */
+	pixels: number[],
+	/**  Window applied (grey only). */
+	window: DicomWindow | null,
+	/**  Window presets from the file. */
+	presets: DicomWindow[],
+	/**  Pixel spacing (row, column) in mm, if stated. */
+	pixelSpacingMm: [number | null, number | null] | null,
+};
+
+/**  A display window (centre and width, rescaled units). */
+export type DicomWindow = {
+	/**  Centre. */
+	center: number | null,
+	/**  Width. */
+	width: number | null,
+};
+
+/**  One ECG lead for review (physical units). */
+export type EcgLead = {
+	/**  Label from the file. */
+	label: string,
+	/**  Unit from the file. */
+	unit: string,
+	/**  Sample rate, Hz. */
+	sampleRateHz: number | null,
+	/**  Samples. */
+	samples: (number | null)[],
+};
+
+/**  A decoded ECG recording (F-CLN-03). */
+export type EcgRecordingView = {
+	/**  `edf`, `aecg`, `scp-ecg` or `dicom-waveform`. */
+	format: string,
+	/**  Leads. */
+	leads: EcgLead[],
+};
+
 /**  An encounter. */
 export type Encounter = {
 	/**  ID. */
@@ -528,6 +591,14 @@ export type ErrorKind =
 "unavailable" | 
 /**  Any other failure (storage, keystore, clock). */
 "failed";
+
+/**  Outcome of a FHIR import. */
+export type FhirImportResult = {
+	/**  Observations stored and evaluated. */
+	imported: number,
+	/**  What was not imported, and why. */
+	rejected: string[],
+};
 
 /**  Freshness of a value. */
 export type Freshness = 
