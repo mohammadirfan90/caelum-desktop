@@ -2,7 +2,7 @@
 
 Living record of where the project stands, why things are the way they are, what is open, and how
 to continue. Updated with every push (the commit history holds the details; this file holds the
-picture). Last updated: 2026-10-10, after commit `4e0a6c4`.
+picture). Last updated: 2026-10-10 (M3 independent review recorded; CI runs no longer cancelled).
 
 ## 1. Milestones
 | Milestone | State | Evidence | Open |
@@ -10,7 +10,7 @@ picture). Last updated: 2026-10-10, after commit `4e0a6c4`.
 | M0 Repository and tooling | **complete** (13292b4) | `docs/gates/M0.md`, CI run 38023371185 | Physical network-off install test moved to M13 (CR-005) |
 | M1 Domain, storage, security core | **complete** (13292b4) | `docs/gates/M1.md` | First-administrator enrolment arrives with the M3/M6 login screen (CR-007 §4) |
 | M2 Ingest pipeline and device framework | code complete; closes on the next all-green CI run | `docs/gates/M2.md` | Physical devices on the hardware-in-the-loop bench (docs/09) |
-| M3 Alarm engine | code complete | `docs/gates/M3.md` | **Independent review of caelum-alarms** (needs a reviewer other than the author) |
+| M3 Alarm engine | gate items met; closes on the next all-green CI run | `docs/gates/M3.md` (independent review: Mohammad Irfan, 2026-10-10) | ⚕ clinical content stays DRAFT |
 | M4 Escalation, technical alarms, notifications, self-test | next | | Wristband alert needs a reviewed write-exception entry (category c) |
 | M5–M13 | not started | | |
 
@@ -48,8 +48,6 @@ Write exceptions: `docs/write-exceptions.md` (WX-001 CCCD enable, reviewed by th
 2026-10-10). Third-party risks: `docs/third-party-risk.md`.
 
 ## 4. Waiting on people
-- **Independent review of `caelum-alarms`** (M3 gate): reviewer other than the author; record in
-  `docs/gates/M3.md`.
 - **Medical lead** on ⚕ DRAFT items: CR-003 site classes, CR-008 §3 glucose out-of-range, CR-009 §3
   (ECG SQI gate 0.7, spot interpretation, weight notice category), all docs/06 §3 thresholds.
 - **Licensed clinician advisor**: countersignature; until then no flight ruleset key exists and
@@ -76,3 +74,4 @@ Write exceptions: `docs/write-exceptions.md` (WX-001 CCCD enable, reviewed by th
 | 2026-10-10 | 85585b5..13292b4 | M1: domain, SQLCipher store, security core, sign-in and audit IPC with role-matrix tests (CR-006, CR-007) |
 | 2026-10-10 | 05f16df..8d670c2 | M2: ingest, decoders, registry, acquisition, link supervision, serial, BLE with WX-001, pairing, clock sync, HID; trace handles OS- and feature-gated tests (CR-008) |
 | 2026-10-10 | 5a422b0..4e0a6c4 | M3: signed ruleset and signer, engine, alarm service with SR-009 fallback, coverage gates in CI, DEVELOPMENT RULESET banner (CR-009); M0 and M1 gates closed |
+| 2026-10-10 | 5ceaf9d.. | PROGRESS.md added; M3 independent review by Mohammad Irfan recorded; CI concurrency per commit so every pushed commit gets a complete run (pushes happen after every commit) |
