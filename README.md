@@ -185,20 +185,72 @@ registry ─► feature builder ─► ONNX Runtime (CPU, fixed threads, hard ti
                acknowledge, silence or escalate
 ```
 
-| Model | Purpose | Inputs |
-|---|---|---|
-| M1 | Signal quality | ECG, PPG and respiration windows, motion |
-| M2 | Heart rhythm (atrial fibrillation) | Single-lead ECG |
-| M3 | Respiration events | Chest bands, ECG-derived respiration |
-| M4 | Sleep and wake | Heart rate, HRV, breathing, temperature, activity |
-| M5 | Stress index | HRV, skin conductance, breathing, temperature |
-| M6 | Blood-pressure trend | Pulse arrival time, pulse shape |
-| M9 | Personal-baseline anomaly | Daily features against the astronaut's own baseline |
+| Model | Purpose | Inputs | Reference datasets | Acceptance gate |
+|---|---|---|---|---|
+| M1 | Signal quality | ECG, PPG and respiration windows, motion | MIT-BIH Noise Stress Test, PPG-DaLiA (PhysioNet) | AUROC ≥ 0.90 on held-out subjects |
+| M2 | Heart rhythm (atrial fibrillation) | Single-lead ECG, 30 s | PhysioNet/CinC Challenge 2017, MIT-BIH AF, Icentia11k | AF F1 ≥ 0.80, subject-wise |
+| M3 | Respiration events | Chest bands, ECG-derived respiration | BIDMC, CapnoBase, Apnea-ECG (PhysioNet) | Rate error < 2 /min |
+| M4 | Sleep and wake | Heart rate, HRV, breathing, temperature, activity | MESA, Sleep-Accel, DREAMT | Sleep/wake accuracy ≥ 85 % |
+| M5 | Stress index | HRV, skin conductance, breathing, temperature | WESAD | F1 ≥ 0.80, leave-one-subject-out |
+| M6 | Blood-pressure trend | Pulse arrival time, pulse shape | PulseDB, VitalDB | Trend direction ≥ 85 % after calibration |
+| M9 | Personal-baseline anomaly | Daily features against the astronaut's own baseline | Each astronaut's pre-flight baseline | Injected drift found in ≤ 3 days, < 1 false notice per week |
 
 Each model ships as a signed package with a model card (data, metrics, limitations, acceptance
 gate). Its validation status is shown in the interface as text: VALIDATED, INVESTIGATIONAL,
 DISABLED or UNAVAILABLE. A model is always advisory: the signed safety rules make every alarm
 decision.
+
+---
+
+### Model standards and governance
+- **Package:** each model is an ONNX file with a SHA-256 hash, a model card (intended use,
+  training data, metrics, limitations), a feature specification and an Ed25519 signature. An
+  unsigned or altered package is refused.
+- **Flight builds:** a model needs a medical approver's signature as well as the author's.
+- **Runtime:** ONNX Runtime on CPU only, with a fixed thread count, a hard time limit per
+  inference and range checks on every output.
+- **Validation:** subject-wise splits, a frozen evaluation set, and an acceptance gate per model.
+  The status shown is VALIDATED only when the gate is met on the frozen set.
+- **Safety (SR-002):** models are advisory. They reach the alarm engine only through the
+  observe-only gate. Tests with adversarial model outputs show absolute-limit alarm decisions
+  never change.
+- **Process standards:** IEC 62304 (software life cycle), ISO 14971 (risk management),
+  IEC 62366-1 (usability), and Good Machine Learning Practice for medical devices
+  (FDA / Health Canada / MHRA).
+
+---
+
+## NASA resources
+
+CAELUM builds on these NASA standards, software and data resources:
+
+| Resource | How CAELUM uses it |
+|---|---|
+| **NASA-STD-3001 Vol. 1**, Crew Health | Medical monitoring, levels of care and permissible exposure behind the crew-health requirements |
+| **NASA-STD-3001 Vol. 2**, Human Factors, Habitability and Environmental Health | Caution-and-warning design, legibility, alarm distinguishability, cabin environment limits (CO₂, O₂) |
+| **NPR 7150.2**, Software Engineering Requirements | Software classification, life cycle, reviews and documentation |
+| **NASA-STD-8739.8**, Software Assurance and Software Safety | Hazard analysis and safety-critical software requirements for the alarm core |
+| **NASA-STD-1006**, Space System Protection | Integrity of commands and data, signed uplink, protection against unauthorised access |
+| **core Flight System (cFS)** | Read-only subscription to spacecraft telemetry (environment, radiation, exercise, time); CAELUM status telemetry enters cFS as packets |
+| **Open MCT** (NASA Ames) | Ground consoles: crew status board, alert timeline and telemetry, through the CAELUM plugin |
+| **CCSDS** standards (used by NASA missions) | Space Packets, CUC time, CFDP file delivery, and an XTCE mission database for Yamcs |
+| **NASA Open Science Data Repository (OSDR)** and **Life Sciences Data Archive (LSDA)** | Sources for validating spaceflight effects (for example, cardiovascular and thermoregulatory changes in microgravity) before any model is promoted, through NASA's data-access process |
+
+---
+
+## Integrations
+
+| System | Protocol | Direction |
+|---|---|---|
+| Wearables and medical devices | Bluetooth LE health profiles, IEEE 11073-10206 GHS, CAELUM sensor-kit protocol, USB/serial | In (read-only; only notification enables are written) |
+| Vendor smart garments | Adapter plug-in SDK (signed manifest, isolated decoder process) | In |
+| Spacecraft | NASA cFS Software Bus | In (subscribe only) |
+| Spacecraft (status) | CCSDS telemetry packets, OPS fields only | Out (path B) |
+| Onboard medical data system | HL7 FHIR R4 over HTTPS, mutual TLS 1.3 | Both (path A) |
+| Mission control | Yamcs (XTCE), Open MCT plugin | Out |
+| Flight surgeon (ground) | CCSDS packets and CFDP files to the CAELUM ground console | Out (path A′) |
+| Crew stations | Crew network, mutual TLS 1.3, WebSocket alarm streams | Both |
+| Imaging and ECG files | DICOM (folder watch), EDF/EDF+, HL7 aECG, SCP-ECG, FHIR | In; EDF+, CSV and FHIR export out |
 
 ---
 
