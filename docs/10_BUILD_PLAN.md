@@ -47,8 +47,8 @@ offline tool cache and its scripts per docs/OFFLINE_BUILD.md, and a minimal wind
 app version. Bring over the prototype's tokens.css with the accessibility fixes in docs/07 §1
 (alarm tokens as DRAFT), the Outfit font via @fontsource, and the automated contrast test. Add
 LICENSE (Apache-2.0) and NOTICE attributions for bundled third-party assets."
-**Gate:** a release installer is built from the checksummed tool cache with the network disabled
-and installs with no network; CI green; empty crates compile; every guard fails on a planted
+**Gate:** a release installer is built from the checksummed tool cache with network access blocked
+(network trap, CR-005) and installs and runs; CI green; empty crates compile; every guard fails on a planted
 violation; the contrast test passes for the light, dark and high-contrast themes.
 
 ## M1. Domain, storage, security core (F-SYS-01/02/03/07, R-SEC-01..03, R-OPS-05)
@@ -209,7 +209,8 @@ M2 is VALIDATED; promoting it to warning needs a CR."
 ## M13. Should-features, hardening and release readiness (F-ACQ-12/13, F-SYS-12)
 **Prompt:** "Implement the adapter plug-in SDK (F-ACQ-12), smart-garment vendor adapters via the
 SDK (F-ACQ-13) and resource budget mode (F-SYS-12). Run the performance, soak and fault-injection
-campaigns in docs/09; fix all findings. Produce SBOM, threat model, hazard log update, user manual,
+campaigns in docs/09; fix all findings. Build and install a release on the reference laptop with
+the network physically disconnected, incl. Windows 10 LTSC 2019 without WebView2 (CR-005). Produce SBOM, threat model, hazard log update, user manual,
 ICDs for every interface, and signed installers (WebView2 fixedRuntime, CR-004).
 Prepare the flight-surgeon review package for the ruleset and protocols."
 **Gate:** all budgets met; 14-day soak clean; usability summative evaluation passed; review package complete.
