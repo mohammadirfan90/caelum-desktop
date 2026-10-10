@@ -292,6 +292,9 @@ describe("Environment, Ground and kiosk", () => {
           pathBProblem: "no signed ground configuration",
           vehicle: { running: false, version: null, problem: null, datagrams: 0, readings: 0, rejected: [], clock: null, latestOffsetMs: null },
           instanceRole: "standalone",
+        downlinkConfigured: false,
+        downlinkInContact: false,
+        downlinkWaiting: 0,
         }),
       mdsStatus: () => ok({ configured: false, version: null, health: "not_configured", pending: 0, held: 0, problem: null }),
     });

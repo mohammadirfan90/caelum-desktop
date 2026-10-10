@@ -75,6 +75,7 @@
     "allow-config-apply-import",
     "allow-config-apply-schedule",
     "allow-schedule-next",
-    "allow-ecg-export-segment"
+    "allow-ecg-export-segment",
+    "allow-config-apply-contact"
   ]
 }

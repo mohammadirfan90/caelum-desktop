@@ -20,6 +20,11 @@ export function Ground({ api, version }: { readonly api: Api; readonly version: 
         {s.pathBProblem === null ? null : <p className="text-sm">{s.pathBProblem}</p>}
         {s.pathBConfigured ? <p className="text-sm">{strings.pathBWaiting(s.pathBWaiting)}</p> : null}
       </Card>
+      <Card label={strings.downlinkTitle}>
+        <SectionHead title={strings.downlinkTitle} />
+        <p className="mt-3 font-semibold">{s.downlinkConfigured ? (s.downlinkInContact ? strings.downlinkInContact : strings.downlinkOutOfContact) : strings.downlinkNotConfigured}</p>
+        {s.downlinkConfigured ? <p className="text-sm">{strings.downlinkWaiting(s.downlinkWaiting)}</p> : null}
+      </Card>
       <Card label={strings.mdsTitle}>
         <SectionHead title={strings.mdsTitle} />
         {mds.state === "error" ? <NoticeLine notice={{ kind: "error", text: mds.message }} /> : null}

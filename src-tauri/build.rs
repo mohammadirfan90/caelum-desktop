@@ -77,6 +77,7 @@ fn main() {
             "config_apply_schedule",
             "schedule_next",
             "ecg_export_segment",
+            "config_apply_contact",
         ]));
     if let Err(error) = tauri_build::try_build(attributes) {
         panic!("tauri-build failed: {error:#}");

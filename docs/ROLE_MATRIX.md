@@ -116,6 +116,7 @@ lead (CR-003) until a licensed clinician advisor countersigns; it does not block
 | `config_apply_schedule` | Admin | Signed bundle kind schedule; re-authentication (§4); audited |
 | `schedule_next` | Astronaut, CMO, Flight Surgeon | No physiology; NO DATA without a signed schedule |
 | `ecg_export_segment` | CMO, Flight Surgeon | At most 10 min; needs the stated start time; audited |
+| `config_apply_contact` | Admin | Signed bundle kind contact-schedule; re-authentication (§4); audited |
 
 ## 4. Sessions
 - Onboard: PIN plus device-bound key; auto-lock after 10 minutes (configurable). Ground: password

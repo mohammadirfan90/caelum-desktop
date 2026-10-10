@@ -30,6 +30,12 @@ pub struct GroundStatus {
     /// a signed cluster configuration, else `primary` / `promoting` / `standby`, or `unavailable`
     /// when the configured instance could not start (`technical.cluster` says why).
     pub instance_role: String,
+    /// Ground downlink (MEDICAL summaries and event packets) configured.
+    pub downlink_configured: bool,
+    /// Inside a contact window now.
+    pub downlink_in_contact: bool,
+    /// Items waiting for a contact window.
+    pub downlink_waiting: u32,
 }
 
 /// Ground and path B status (all signed-in roles; counts only).
@@ -40,9 +46,9 @@ pub async fn ground_status(
     vehicle: State<'_, VehicleState>,
     cluster: State<'_, ClusterState>,
 ) -> Result<GroundStatus, CommandError> {
-    let p = state.with(|s| {
+    let (p, d) = state.with(|s| {
         s.ground_status_allowed()?;
-        Ok(s.path_b_status())
+        Ok((s.path_b_status(), s.downlink_status()))
     })?;
     let vehicle = vehicle.snapshot();
     Ok(GroundStatus {
@@ -52,6 +58,9 @@ pub async fn ground_status(
         path_b_problem: p.problem,
         vehicle,
         instance_role: cluster.role(),
+        downlink_configured: d.configured,
+        downlink_in_contact: d.in_contact,
+        downlink_waiting: u32::try_from(d.waiting).unwrap_or(u32::MAX),
     })
 }
 
@@ -121,4 +130,15 @@ pub async fn model_list(state: State<'_, AppState>) -> Result<Vec<ModelItem>, Co
             })
             .collect())
     })
+}
+
+/// Applies the signed contact-window schedule (administrator, re-authentication; CR-024).
+#[tauri::command]
+#[specta::specta]
+pub async fn config_apply_contact(
+    state: State<'_, AppState>,
+    bundle: String,
+    signature: String,
+) -> Result<String, CommandError> {
+    state.with(|s| Ok(s.config_apply_contact(bundle.as_bytes(), &signature)?))
 }

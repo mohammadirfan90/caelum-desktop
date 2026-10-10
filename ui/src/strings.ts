@@ -425,6 +425,11 @@ export const en = {
 
   // Ground (docs/07 §4; F-GND-11, SR-015)
   groundTitle: "Ground and vehicle links",
+  downlinkTitle: "Downlink to ground (MEDICAL)",
+  downlinkNotConfigured: "Not configured: no summaries or event packets are sent to ground.",
+  downlinkInContact: "In a contact window: sending.",
+  downlinkOutOfContact: "Outside contact windows: everything is kept and sent at the next contact.",
+  downlinkWaiting: (n: number) => `${String(n)} items waiting`,
   pathBTitle: "Status to the vehicle (path B)",
   pathBConfigured: (v: string) => `Configured (ground configuration ${v})`,
   pathBNotConfigured: "Not configured",

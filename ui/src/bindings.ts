@@ -179,6 +179,8 @@ export const commands = {
 } | null, CommandError>(__TAURI_INVOKE("schedule_next")),
 	/**  A segment of an imported ECG recording as EDF+ (F-CLN-03; audited). */
 	ecgExportSegment: (id: string, fromS: number | null, toS: number | null) => typedError<number[], CommandError>(__TAURI_INVOKE("ecg_export_segment", { id, fromS, toS })),
+	/**  Applies the signed contact-window schedule (administrator, re-authentication; CR-024). */
+	configApplyContact: (bundle: string, signature: string) => typedError<string, CommandError>(__TAURI_INVOKE("config_apply_contact", { bundle, signature })),
 };
 
 /** Events */
@@ -697,6 +699,12 @@ export type GroundStatus = {
 	 *  when the configured instance could not start (`technical.cluster` says why).
 	 */
 	instanceRole: string,
+	/**  Ground downlink (MEDICAL summaries and event packets) configured. */
+	downlinkConfigured: boolean,
+	/**  Inside a contact window now. */
+	downlinkInContact: boolean,
+	/**  Items waiting for a contact window. */
+	downlinkWaiting: number,
 };
 
 /**  Link status (counts only). */

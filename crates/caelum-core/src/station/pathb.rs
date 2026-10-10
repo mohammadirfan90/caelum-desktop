@@ -133,7 +133,12 @@ fn rejected(reason: impl Into<String>) -> StationError {
 }
 
 /// Signs path B items with the instance key without exposing it.
-struct InstanceSigner<'a>(&'a InstanceKey);
+pub(super) struct InstanceSigner<'a>(&'a InstanceKey);
+
+/// The instance key as the queue item signer.
+pub(super) fn signer(key: &InstanceKey) -> InstanceSigner<'_> {
+    InstanceSigner(key)
+}
 
 impl ItemSigner for InstanceSigner<'_> {
     fn key_id(&self) -> String {
@@ -227,6 +232,16 @@ impl Station {
             &json!({ "kind": GROUND_KIND, "version": config.version, "sha256": digest }),
         )?;
         self.open_path_b()?;
+        if let Err(e) = self.open_ground_link() {
+            let now = self.now()?;
+            self.alarms.technical(
+                &self.db,
+                super::downlink::GROUND_RULE,
+                None,
+                Some(json!({ "ground_link": e.to_string() })),
+                now,
+            )?;
+        }
         Ok(config.version)
     }
 

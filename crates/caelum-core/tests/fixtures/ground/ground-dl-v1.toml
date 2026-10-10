@@ -1,0 +1,17 @@
+# Test fixture (CR-024): ground configuration with a ground downlink, signed with the development key.
+version = "1"
+[apids]
+ops_instance_status = 0x300
+ops_crew_status = 0x301
+ops_alarm = 0x302
+medical_summary = 0x310
+cfdp = 0x320
+[path_b]
+endpoint = "127.0.0.1:47810"
+[cfdp]
+local_entity_id = 10
+ground_entity_id = 1
+[ground_link]
+endpoint = "127.0.0.1:47811"
+receive = "127.0.0.1:47812"
+summary_window_s = 60

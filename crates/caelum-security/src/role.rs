@@ -289,6 +289,8 @@ pub enum Command {
     ScheduleNext,
     /// Export a segment of an imported ECG recording as EDF+ (F-CLN-03).
     EcgExportSegment,
+    /// Apply the signed contact-window schedule (F-GND-05, CR-024).
+    ConfigApplyContact,
 }
 
 /// Who may call a command.
@@ -304,7 +306,7 @@ pub enum Access {
 
 impl Command {
     /// Every command.
-    pub const ALL: [Command; 73] = [
+    pub const ALL: [Command; 74] = [
         Command::AppInfo,
         Command::AuthLogin,
         Command::AuthLogout,
@@ -378,6 +380,7 @@ impl Command {
         Command::ConfigApplySchedule,
         Command::ScheduleNext,
         Command::EcgExportSegment,
+        Command::ConfigApplyContact,
     ];
 
     /// The IPC command name.
@@ -456,6 +459,7 @@ impl Command {
             Command::ConfigApplySchedule => "config_apply_schedule",
             Command::ScheduleNext => "schedule_next",
             Command::EcgExportSegment => "ecg_export_segment",
+            Command::ConfigApplyContact => "config_apply_contact",
         }
     }
 
@@ -567,6 +571,7 @@ impl Command {
             Command::ConfigApplySchedule => Access::Roles(&[Role::Administrator]),
             Command::ScheduleNext => Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon]),
             Command::EcgExportSegment => Access::Roles(&[Role::Cmo, Role::FlightSurgeon]),
+            Command::ConfigApplyContact => Access::Roles(&[Role::Administrator]),
         }
     }
 

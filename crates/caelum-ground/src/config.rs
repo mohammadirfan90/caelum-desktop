@@ -89,6 +89,19 @@ pub struct CfdpEntities {
     pub ground_entity_id: u16,
 }
 
+/// The ground downlink (MEDICAL channel and CFDP files) toward ground through the vehicle
+/// (ICD-VEH OI-1: a configurable UDP endpoint until the vehicle interface is agreed).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct GroundLinkConfig {
+    /// UDP address and port that receive the downlink packets.
+    pub endpoint: SocketAddr,
+    /// Local UDP address on which CFDP acknowledgements from ground arrive.
+    pub receive: SocketAddr,
+    /// MEDICAL summary window, s (F-GND-14), ≥ 60.
+    pub summary_window_s: u32,
+}
+
 /// The ground configuration bundle content.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -101,6 +114,9 @@ pub struct GroundConfig {
     pub path_b: PathBConfig,
     /// CFDP entities.
     pub cfdp: CfdpEntities,
+    /// Ground downlink; absent when only path B is used.
+    #[serde(default)]
+    pub ground_link: Option<GroundLinkConfig>,
 }
 
 impl GroundConfig {
@@ -110,6 +126,11 @@ impl GroundConfig {
         c.apids.validate()?;
         if c.cfdp.local_entity_id == c.cfdp.ground_entity_id {
             return Err(ConfigError::Invalid("CFDP entity IDs must differ".into()));
+        }
+        if c.ground_link.is_some_and(|g| g.summary_window_s < 60) {
+            return Err(ConfigError::Invalid(
+                "summary_window_s must be at least 60".into(),
+            ));
         }
         Ok(c)
     }

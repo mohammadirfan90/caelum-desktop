@@ -1,0 +1,5 @@
+# Test fixture (CR-024): one contact window around the test clock, signed with the development key.
+version = "1"
+[[window]]
+start_tai_ns = 2099996400000000000
+end_tai_ns = 2100007200000000000

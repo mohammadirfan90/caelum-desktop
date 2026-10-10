@@ -10,3 +10,4 @@ crates/caelum-core/tests/fixtures/protocols/** -text
 crates/caelum-core/tests/fixtures/cluster/** -text
 crates/caelum-core/tests/fixtures/retention/** -text
 crates/caelum-core/tests/fixtures/m8/** -text
+crates/caelum-core/tests/fixtures/ground/** -text

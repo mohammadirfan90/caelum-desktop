@@ -27,6 +27,7 @@ mod admin;
 pub mod clinical;
 mod cluster_link;
 pub use clinical::{CrewOverviewItem, PvtResult, PROTOCOLS_KIND};
+pub mod downlink;
 pub mod export;
 pub mod files;
 mod kit;
@@ -173,6 +174,8 @@ pub struct Station {
     models: caelum_ml::registry::Registry,
     /// Sensor-kit signal buffers per device (F-ACQ-05, F-SIG-03/04/07).
     kit: std::collections::HashMap<caelum_domain::ids::DeviceId, kit::KitDevice>,
+    /// The ground downlink (CR-024).
+    ground: Option<downlink::GroundLink>,
     /// When retention last ran (CR-022).
     retention_at: Option<i64>,
     /// Running core-temperature estimates per crew member (F-SIG-05).
@@ -265,6 +268,7 @@ impl Station {
             kit: std::collections::HashMap::new(),
             core_temp: std::collections::HashMap::new(),
             retention_at: None,
+            ground: None,
             baselines: std::collections::HashMap::new(),
             baselines_at: None,
             acquisition: crate::acquisition::Acquisition::new()
@@ -286,6 +290,16 @@ impl Station {
         }
         // Path B (SR-015): opened from the signed ground configuration in force. A stored
         // configuration that no longer verifies leaves path B closed and raises its alarm.
+        if let Err(e) = station.open_ground_link() {
+            let now = station.now()?;
+            station.alarms.technical(
+                &station.db,
+                downlink::GROUND_RULE,
+                None,
+                Some(json!({ "ground_link": e.to_string() })),
+                now,
+            )?;
+        }
         if station.open_path_b().is_err() {
             let now = station.now()?;
             station.alarms.technical(
@@ -552,6 +566,7 @@ impl Station {
         // ICD-VEH §6: every alarm state change also goes to the vehicle on path B.
         let now = self.now()?;
         self.publish_ops(&out.events, &out.notices, now)?;
+        self.ground_events(&out.events, now)?;
         Ok(out)
     }
 
@@ -623,12 +638,22 @@ impl Station {
         self.apply_technical(changes, now)?;
         self.refresh_baselines(now)?;
         self.retention_tick(now)?;
+        if let Err(e) = self.ground_tick(now) {
+            self.alarms.technical(
+                &self.db,
+                downlink::GROUND_RULE,
+                None,
+                Some(json!({ "ground_link": e.to_string() })),
+                now,
+            )?;
+        }
         let core = self.core_temp_tick(now)?;
         let mut out = self.alarms.tick(&self.db, now)?;
         out.events.extend(core.events);
         out.notices.extend(core.notices);
         // SR-015: the ground stage goes to the vehicle on path B, never via the medical system.
         self.publish_ops(&out.events, &out.notices, now)?;
+        self.ground_events(&out.events, now)?;
         Ok(out)
     }
 
