@@ -10,6 +10,11 @@ publish.workspace = true
 
 [dependencies]
 caelum-domain.workspace = true
+thiserror = "2.0.21"
+
+[dev-dependencies]
+caelum-alarms.workspace = true
+proptest = "1.11.0"
 
 [lints]
 workspace = true
