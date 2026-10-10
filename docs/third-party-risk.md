@@ -19,6 +19,9 @@ replacing a stack item or used in `caelum-alarms`, `caelum-ingest`, `caelum-secu
 
 | `uuid` | `1.28` (`Cargo.lock`) | Typed identifiers in `caelum-domain` (parse and format only; generation happens in the storage and security crates) | Low. MIT/Apache-2.0; actively maintained; no network or native downloads | Used without random-generation features in the domain crate | M1 |
 | `proptest` | `1.11` (`Cargo.lock`) | Property tests (CLAUDE.md stack) for units and time conversions | Test-only; low | Dev-dependency only | M1 |
+| `rusqlite` (stack) with `bundled-sqlcipher-vendored-openssl`; bundled SQLCipher, OpenSSL | `0.40.2`; `libsqlite3-sys 0.38.2` = SQLite 3.51.3 / SQLCipher 4.14.0; `openssl-src 300.6.1+3.6.3` = OpenSSL 3.6.3 | Encrypted onboard database (F-SYS-02, R-SEC-01) | OpenSSL advisories arrive through `openssl-src` releases; a plain SQLite build would store data unencrypted; the build needs Perl (Strawberry Perl on Windows) | Versions fixed in `Cargo.lock`; `Database::open` refuses to run without SQLCipher (`cipher_version` check); gate test proves the file has no SQLite header and no plaintext; `cargo audit` covers `openssl-src` | M1 |
+| `refinery` | `0.10` (`Cargo.lock`) | Schema migrations embedded at compile time (CLAUDE.md stack) | 0.10 supports `rusqlite` only up to 0.40, which holds back `rusqlite` upgrades | Migrations are plain SQL in `crates/caelum-store/migrations/`; a test checks the tables against docs/05 §2 | M1 |
+| Security crates (`argon2`, `ed25519-dalek`, `sha2`, `getrandom`, `keyring-core` and the platform keyring stores) | see CR-006 | Passwords, audit signatures and hash chain, randomness, OS keystore | Recorded in CR-006 §1; `keyring-core` is a new major line | Wrapped behind CAELUM traits in `caelum-security`; parameters fixed in CR-006 §2 | M1 |
 
 ## Bundled runtime components
 | Name | Version | Purpose | Risk | Mitigation | Added |
@@ -43,5 +46,5 @@ inside the locked stack.
 - `btleplug` (M2): no pairing or bonding API. Mitigation: platform pairing modules (CR-002 B7).
 - `ort` / ONNX Runtime (M12): downloads binaries at build time by default. Mitigation:
   `load-dynamic` with a pinned, checksummed binary from the tool cache (CR-002 D4).
-- `rusqlite` with `bundled-sqlcipher-vendored-openssl` (M1): builds SQLCipher and OpenSSL from
-  source; needs Strawberry Perl on Windows. Record the OpenSSL version and track its advisories.
+- `rusqlite` with `bundled-sqlcipher-vendored-openssl` (M1): recorded in the table above
+  (SQLCipher 4.14.0, OpenSSL 3.6.3).

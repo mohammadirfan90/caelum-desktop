@@ -10,6 +10,15 @@ publish.workspace = true
 
 [dependencies]
 caelum-domain.workspace = true
+# SQLCipher 4 (AES-256-CBC + HMAC-SHA512) with OpenSSL built from source: no system OpenSSL needed.
+rusqlite = { version = "0.40.2", features = ["bundled-sqlcipher-vendored-openssl"] }
+refinery = { version = "0.10.0", features = ["rusqlite"] }
+thiserror = "2.0.21"
+zeroize = { version = "1.9.1", features = ["derive"] }
+
+[features]
+# Test equipment only: allows simulated observations (docs/05_DATA_MODEL.md §3).
+test-equipment = ["caelum-domain/test-equipment"]
 
 [lints]
 workspace = true

@@ -1,4 +1,13 @@
 //! Encrypted local storage: SQLCipher database with the key from the OS keystore, refinery
 //! migrations, repositories, retention and export.
 //!
+//! The key is supplied by `caelum-security` (keystore); this crate never reads or stores it in a
+//! plain file (R-SEC-01).
+//!
 //! Implemented in M1 (F-SYS-02, R-SEC-01); retention and export in M8 and M10 (F-SYS-08).
+
+mod db;
+mod key;
+
+pub use db::{Database, StoreError};
+pub use key::DbKey;

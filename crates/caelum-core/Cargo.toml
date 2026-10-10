@@ -26,7 +26,7 @@ caelum-test-equipment = { workspace = true, optional = true }
 
 [features]
 # Test equipment only; release builds must not enable it (CLAUDE.md rule 3).
-test-equipment = ["dep:caelum-test-equipment", "caelum-domain/test-equipment"]
+test-equipment = ["dep:caelum-test-equipment", "caelum-domain/test-equipment", "caelum-store/test-equipment"]
 
 [lints]
 workspace = true
