@@ -37,6 +37,8 @@ pub enum AcquisitionError {
 pub struct Outcome {
     /// IDs of the stored observations.
     pub stored: Vec<String>,
+    /// The stored observations, for alarm evaluation (same order as `stored`).
+    pub observations: Vec<Observation>,
     /// Readings that were rejected, with the reason.
     pub rejected: Vec<Rejection>,
     /// Set if the payload could not be decoded (then nothing was stored).
@@ -120,6 +122,7 @@ impl Acquisition {
                     let row = observation_record(&obs)?;
                     db.insert_observation(&row)?;
                     outcome.stored.push(row.id);
+                    outcome.observations.push(obs);
                 }
                 Err(rejection) => {
                     self.count(device, rejection.code());

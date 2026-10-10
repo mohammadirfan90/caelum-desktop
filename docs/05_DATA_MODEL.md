@@ -49,7 +49,7 @@ OS keystore. Attachment file store: AES-256-GCM.
 | downlink_item | id, seq, channel, priority, payload (signed), status, created_at, sent_at, ack_at |
 | uplink_item | id, kind, signature, verified_by, applied_at |
 | audit_entry | id, at, actor, role, action, target, details JSON, prev_hash, hash, signature |
-| config_bundle | id, kind, version, signature, applied_at |
+| config_bundle | id, kind, version, signature, applied_at, content (verified bytes, re-verified before use; SR-009 fallback) |
 | mds_outbox | id, resource_type, client_id (idempotency), payload, state (pending/sent/acked/failed), attempts, last_error, created_at, acked_at |
 | mds_inbox | id, source_id, resource_type, received_at, ingested (bool), dedup_key |
 

@@ -256,3 +256,127 @@ impl Database {
         Ok(rows)
     }
 }
+
+/// A row of the `alarm` table (docs/05 §2).
+#[derive(Debug, Clone, PartialEq)]
+pub struct AlarmRecord {
+    /// Alarm ID.
+    pub id: String,
+    /// Crew member (none for station-wide technical alarms).
+    pub crew_member_id: Option<String>,
+    /// `physiological` or `technical`.
+    pub kind: String,
+    /// Category.
+    pub category: String,
+    /// Rule ID (`technical.*` for technical alarms).
+    pub rule_id: String,
+    /// Ruleset version in force.
+    pub ruleset_version: String,
+    /// `critical` / `warning` / `observe` / `advisory`.
+    pub priority: String,
+    /// State.
+    pub state: String,
+    /// Spot readings behind a confirming alarm (JSON).
+    pub confirming_readings: Option<String>,
+    /// Latched until acknowledged.
+    pub latched: bool,
+    /// Triggering value.
+    pub trigger_value: Option<f64>,
+    /// Why (JSON).
+    pub why: String,
+    /// Action.
+    pub action: Option<String>,
+    /// TAI ns.
+    pub created_at_tai: i64,
+}
+
+impl Database {
+    /// Adds an alarm.
+    pub fn insert_alarm(&self, a: &AlarmRecord) -> Result<(), StoreError> {
+        self.connection().execute(
+            "INSERT INTO alarm (id, crew_member_id, kind, category, rule_id, ruleset_version, priority,
+                 state, confirming_readings, latched, trigger_value, why, action, created_at_tai)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+            rusqlite::params![
+                a.id,
+                a.crew_member_id,
+                a.kind,
+                a.category,
+                a.rule_id,
+                a.ruleset_version,
+                a.priority,
+                a.state,
+                a.confirming_readings,
+                i64::from(a.latched),
+                a.trigger_value,
+                a.why,
+                a.action,
+                a.created_at_tai,
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Updates an alarm's state and why; `resolved_at_tai` when it ended.
+    pub fn update_alarm(
+        &self,
+        id: &str,
+        state: &str,
+        why: Option<&str>,
+        resolved_at_tai: Option<i64>,
+    ) -> Result<bool, StoreError> {
+        let n = self.connection().execute(
+            "UPDATE alarm SET state = ?2, why = COALESCE(?3, why),
+                 resolved_at_tai = COALESCE(?4, resolved_at_tai) WHERE id = ?1",
+            rusqlite::params![id, state, why, resolved_at_tai],
+        )?;
+        Ok(n == 1)
+    }
+
+    /// Alarms not yet ended (no `resolved_at_tai`), oldest first.
+    pub fn open_alarms(&self) -> Result<Vec<(String, String, String)>, StoreError> {
+        let mut stmt = self.connection().prepare(
+            "SELECT id, rule_id, state FROM alarm WHERE resolved_at_tai IS NULL ORDER BY created_at_tai, id",
+        )?;
+        let rows = stmt
+            .query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(rows)
+    }
+
+    /// Records a verified configuration bundle with its content (SR-009 fallback).
+    pub fn put_config_bundle(
+        &self,
+        id: &str,
+        kind: &str,
+        version: &str,
+        signature: &str,
+        content: &str,
+        applied_at_tai: i64,
+    ) -> Result<(), StoreError> {
+        self.connection().execute(
+            "INSERT INTO config_bundle (id, kind, version, signature, content, applied_at_tai)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+             ON CONFLICT (id) DO UPDATE SET applied_at_tai = excluded.applied_at_tai",
+            rusqlite::params![id, kind, version, signature, content, applied_at_tai],
+        )?;
+        Ok(())
+    }
+
+    /// The most recently applied bundle of `kind` with content: (version, signature, content).
+    pub fn latest_config_bundle(
+        &self,
+        kind: &str,
+    ) -> Result<Option<(String, String, String)>, StoreError> {
+        Ok(self
+            .connection()
+            .query_row(
+                "SELECT version, signature, content FROM config_bundle
+                 WHERE kind = ?1 AND content IS NOT NULL
+                 ORDER BY applied_at_tai DESC LIMIT 1",
+                [kind],
+                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+            )
+            .optional()?)
+    }
+}

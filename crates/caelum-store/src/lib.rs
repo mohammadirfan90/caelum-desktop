@@ -14,4 +14,4 @@ mod repo_acquisition;
 pub use db::{Database, StoreError};
 pub use key::DbKey;
 pub use repo::{AuditRecord, ChainHead, UserRecord};
-pub use repo_acquisition::{DeviceRecord, ObservationRecord};
+pub use repo_acquisition::{AlarmRecord, DeviceRecord, ObservationRecord};

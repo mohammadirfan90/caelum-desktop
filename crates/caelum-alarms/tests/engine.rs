@@ -825,3 +825,83 @@ proptest! {
         prop_assert_eq!(run(), run());
     }
 }
+
+/// SR-019: a cleared, latched spot alarm breaching again before acknowledgement is reactivated;
+/// readings between the thresholds change nothing.
+#[test]
+fn spot_alarm_reactivates_and_ignores_readings_between_thresholds() {
+    let mut e = only("spo2.warning");
+    e.evaluate(&spot(Parameter::Spo2, 88.0, 0), None);
+    e.evaluate(&spot(Parameter::Spo2, 88.0, 10), None);
+    assert!(
+        e.evaluate(&spot(Parameter::Spo2, 91.0, 20), None)
+            .is_empty(),
+        "between 90 and 92"
+    );
+    let ev = e.evaluate(&spot(Parameter::Spo2, 93.0, 30), None);
+    assert!(matches!(&ev[..], [Event::ClearedAwaitingAck(_)]));
+    assert!(e
+        .evaluate(&spot(Parameter::Spo2, 93.0, 35), None)
+        .is_empty());
+    let ev = e.evaluate(&spot(Parameter::Spo2, 88.0, 40), None);
+    assert!(
+        matches!(&ev[..], [Event::Reactivated(a)] if a.why.readings.len() == 3),
+        "{ev:?}"
+    );
+    assert!(
+        e.evaluate(&spot(Parameter::Spo2, 88.0, 50), None)
+            .is_empty(),
+        "already active"
+    );
+}
+
+/// SR-006: a lower spot alarm is not opened while a higher one in its group is open; a repeat
+/// breach after the higher one ends raises it at once.
+#[test]
+fn a_blocked_spot_breach_is_remembered_for_confirmation() {
+    let mut e = engine_with(|r| r.id.starts_with("spo2."));
+    stream(&mut e, Parameter::Spo2, 80.0, 0, 15);
+    assert!(
+        e.evaluate(&spot(Parameter::Spo2, 88.0, 20), None)
+            .is_empty(),
+        "blocked by critical"
+    );
+    let crit = e.open_alarms().next().unwrap().id;
+    stream(&mut e, Parameter::Spo2, 95.0, 21, 81);
+    e.acknowledge(crit);
+    let ev = e.evaluate(&spot(Parameter::Spo2, 88.0, 100), None);
+    assert!(
+        matches!(&ev[..], [Event::Raised(a)] if a.rule_id == "spo2.warning"),
+        "{ev:?}"
+    );
+}
+
+/// SR-018: an at-rest baseline with unknown activity is evaluated, and the why says so.
+#[test]
+fn at_rest_baseline_with_unknown_activity_is_evaluated() {
+    let mut e = engine_with(|_| false);
+    let b = BaselineStats {
+        median: 60.0,
+        mad: 2.0,
+        n: 500,
+    };
+    let ev = stream_with_baseline(&mut e, Parameter::HeartRate, 75.0, 0, 600, b);
+    match ev.last() {
+        Some(Event::Raised(a)) => {
+            assert!(a.why.notes.iter().any(|n| n.contains("activity unknown")))
+        }
+        other => panic!("{other:?}"),
+    }
+}
+
+#[test]
+fn engines_use_random_ids_and_expose_their_ruleset() {
+    let mut a = Engine::new(bundled());
+    assert_eq!(a.ruleset().version, "1.0.0-draft.2");
+    stream(&mut a, Parameter::Spo2, 80.0, 0, 15);
+    let mut b = Engine::new(bundled());
+    stream(&mut b, Parameter::Spo2, 80.0, 0, 15);
+    let ida = a.open_alarms().next().unwrap().id;
+    let idb = b.open_alarms().next().unwrap().id;
+    assert_ne!(ida, idb);
+}
