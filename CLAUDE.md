@@ -10,6 +10,8 @@ alarms never depend on the medical data system.
 
 Read before any work: `docs/01_FEATURE_LOCK.md` (scope), `docs/06_SAFETY_AND_ALARMS.md`
 (safety), and the current milestone in `docs/10_BUILD_PLAN.md`.
+Project state, decisions, open items and how to resume: `docs/PROGRESS.md`; update it with every
+push, so each push carries its context.
 
 ## Non-negotiable rules
 1. **Scope is locked.** Build only features listed in `docs/01_FEATURE_LOCK.md`. If something
