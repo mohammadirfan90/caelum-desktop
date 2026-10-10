@@ -31,3 +31,7 @@ Thumbs.db
 
 # Claude Code agent worktrees (local only).
 /.claude/worktrees/
+
+# Python cache
+__pycache__/
+*.pyc

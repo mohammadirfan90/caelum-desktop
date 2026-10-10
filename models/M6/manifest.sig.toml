@@ -1,0 +1,8 @@
+kind = "model"
+version = "1.0.0"
+sha256 = "0ff1959190ddaf9f917e6a6521e61731d623132004ea538d8fbfd9ac7dbf0dc8"
+[[signature]]
+role = "author"
+key_id = "fe812c12f3ab4ce6"
+signature = "acf435ef074c81c0272881369037f42dd787f671cf8ff8435f2b68911c73091aa302ac053fb1fd86365c1e6425b6d6d9909d5ccff9dfc1e5fff84486e695e40f"
+

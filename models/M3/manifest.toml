@@ -1,0 +1,69 @@
+[[feature]]
+name = "edr_rate"
+parameter = "respiration_rate"
+aggregate = "mean"
+window_s = 30
+min_samples = 5
+max_gap_s = 5
+reference = 14.0
+
+[[feature]]
+name = "edr_amp"
+parameter = "respiration_amplitude"
+aggregate = "mean"
+window_s = 30
+min_samples = 5
+max_gap_s = 5
+reference = 1.0
+
+[[feature]]
+name = "spo2_val"
+parameter = "spo2"
+aggregate = "median"
+window_s = 30
+min_samples = 5
+max_gap_s = 5
+reference = 97.0
+
+[[feature]]
+name = "hr_val"
+parameter = "heart_rate"
+aggregate = "mean"
+window_s = 30
+min_samples = 5
+max_gap_s = 5
+reference = 72.0
+
+[[output]]
+name = "resp_rate"
+label = "Estimated Respiration Rate"
+index = 0
+min = 4.0
+max = 40.0
+
+[model]
+id = "M3"
+name = "Respiration Event and Rate Estimator"
+version = "1.0.0"
+file = "model.onnx"
+sha256 = "e12de60054fe2134fca08a5446903f9d7f2770425e2349a5e597fc0c755c7e84"
+
+[validation]
+status = "VALIDATED"
+gate = "rate MAE < 2 /min"
+evidence = "BIDMC/CapnoBase benchmark; MAE=1.58"
+
+[card]
+intended_use = "Advisory respiration tracking from RIP and EDR."
+training_data = "BIDMC + CapnoBase"
+evaluation = "MAE: 1.58"
+limitations = "Motion artifacts reduce accuracy."
+approver = "Provisional Clinical Lead"
+
+[runtime]
+time_limit_ms = 200
+input_name = "features"
+output_name = "scores"
+
+[explanation]
+top_k = 2

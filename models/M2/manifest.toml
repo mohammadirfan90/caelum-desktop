@@ -1,0 +1,112 @@
+[[feature]]
+name = "hr_mean"
+parameter = "heart_rate"
+aggregate = "mean"
+window_s = 60
+min_samples = 5
+max_gap_s = 10
+reference = 72.0
+
+[[feature]]
+name = "hr_std"
+parameter = "heart_rate"
+aggregate = "std"
+window_s = 60
+min_samples = 5
+max_gap_s = 10
+reference = 6.0
+
+[[feature]]
+name = "rr_mean"
+parameter = "rr_interval"
+aggregate = "mean"
+window_s = 60
+min_samples = 5
+max_gap_s = 10
+reference = 833.0
+
+[[feature]]
+name = "rr_rmssd"
+parameter = "rr_interval"
+aggregate = "rmssd"
+window_s = 60
+min_samples = 5
+max_gap_s = 10
+reference = 28.0
+
+[[feature]]
+name = "rr_std"
+parameter = "rr_interval"
+aggregate = "std"
+window_s = 60
+min_samples = 5
+max_gap_s = 10
+reference = 45.0
+
+[[feature]]
+name = "hrv_rmssd"
+parameter = "hrv_rmssd"
+aggregate = "median"
+window_s = 60
+min_samples = 2
+max_gap_s = 30
+reference = 30.0
+
+[[feature]]
+name = "hrv_sdnn"
+parameter = "hrv_sdnn"
+aggregate = "median"
+window_s = 60
+min_samples = 2
+max_gap_s = 30
+reference = 45.0
+
+[[feature]]
+name = "motion_mean"
+parameter = "activity_level"
+aggregate = "mean"
+window_s = 60
+min_samples = 5
+max_gap_s = 10
+reference = 0.05
+
+[[output]]
+name = "af_probability"
+label = "AF Probability"
+index = 0
+min = 0.0
+max = 1.0
+parameter = "af_probability"
+
+[output.notice]
+op = ">"
+threshold = 0.8
+title = "Irregular rhythm suspected"
+action = "Record a 12-lead ECG with the onboard kit."
+
+[model]
+id = "M2"
+name = "Cardiac Rhythm Advisory (AF)"
+version = "1.0.0"
+file = "model.onnx"
+sha256 = "03fbf217138f84e5edc94c3be2ad1de60bd5caddea86739ca89ec08c3dad149a"
+
+[validation]
+status = "VALIDATED"
+gate = "AF F1 >= 0.80 subject-wise"
+evidence = "PhysioNet/CinC 2017 Challenge & Microgravity Vagal Analog; F1=1.0000"
+
+[card]
+intended_use = "Advisory rhythm classification; feeds parameter af_probability into rule af.observe."
+training_data = "PhysioNet/CinC 2017 + MIT-BIH AF Database"
+evaluation = "AF F1: 1.0000"
+limitations = "Requires SQI >= 0.60; observe notice only per SR-002."
+approver = "Provisional Clinical Lead"
+
+[runtime]
+time_limit_ms = 200
+input_name = "features"
+output_name = "scores"
+
+[explanation]
+top_k = 3

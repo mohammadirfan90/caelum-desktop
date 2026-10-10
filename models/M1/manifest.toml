@@ -1,0 +1,129 @@
+[[feature]]
+name = "ecg_kurtosis"
+parameter = "sqi_ecg"
+aggregate = "mean"
+window_s = 10
+min_samples = 5
+max_gap_s = 3
+reference = 3.2
+
+[[feature]]
+name = "ecg_skewness"
+parameter = "sqi_ecg"
+aggregate = "std"
+window_s = 10
+min_samples = 5
+max_gap_s = 3
+reference = 0.1
+
+[[feature]]
+name = "ecg_power_ratio"
+parameter = "sqi_ecg"
+aggregate = "median"
+window_s = 10
+min_samples = 5
+max_gap_s = 3
+reference = 0.85
+
+[[feature]]
+name = "ppg_snr"
+parameter = "sqi_ppg"
+aggregate = "mean"
+window_s = 10
+min_samples = 5
+max_gap_s = 3
+reference = 18.0
+
+[[feature]]
+name = "ppg_pulse_diff"
+parameter = "pulse_rate"
+aggregate = "std"
+window_s = 10
+min_samples = 5
+max_gap_s = 3
+reference = 2.0
+
+[[feature]]
+name = "resp_quality"
+parameter = "sqi_resp"
+aggregate = "mean"
+window_s = 30
+min_samples = 5
+max_gap_s = 5
+reference = 0.9
+
+[[feature]]
+name = "hr_stability"
+parameter = "heart_rate"
+aggregate = "std"
+window_s = 30
+min_samples = 5
+max_gap_s = 5
+reference = 3.5
+
+[[feature]]
+name = "motion_mean"
+parameter = "activity_level"
+aggregate = "mean"
+window_s = 10
+min_samples = 5
+max_gap_s = 3
+reference = 0.05
+
+[[feature]]
+name = "motion_max"
+parameter = "activity_level"
+aggregate = "max"
+window_s = 10
+min_samples = 5
+max_gap_s = 3
+reference = 0.1
+
+[[feature]]
+name = "rr_dispersion"
+parameter = "rr_interval"
+aggregate = "std"
+window_s = 30
+min_samples = 5
+max_gap_s = 5
+reference = 25.0
+
+[[output]]
+name = "overall_sqi"
+label = "Overall Signal Quality Index"
+index = 0
+min = 0.0
+max = 1.0
+
+[output.notice]
+op = "<"
+threshold = 0.5
+title = "Degraded signal quality"
+action = "Inspect electrode gel, placement and garment harness."
+
+[model]
+id = "M1"
+name = "Onboard Signal Quality Assessment"
+version = "1.0.0"
+file = "model.onnx"
+sha256 = "d685278f1dda40fdd7c1990d668d79d6f95fb6f2e8cb9bfa2141578652f02cf6"
+
+[validation]
+status = "VALIDATED"
+gate = "AUROC >= 0.90 on held-out subjects"
+evidence = "MIT-BIH Noise Stress & NASA Exercise Motion test set; AUROC=0.9992"
+
+[card]
+intended_use = "Advisory assessment of ECG and PPG signal quality prior to alarm evaluation."
+training_data = "MIT-BIH Noise Stress + PPG-DaLiA + NASA Exercise Analog Profiles"
+evaluation = "AUROC: 0.9992 on held-out subjects"
+limitations = "Extreme centrifuge loads reduce accuracy."
+approver = "Provisional Clinical Lead"
+
+[runtime]
+time_limit_ms = 200
+input_name = "features"
+output_name = "scores"
+
+[explanation]
+top_k = 3

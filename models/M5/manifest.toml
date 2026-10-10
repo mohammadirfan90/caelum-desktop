@@ -1,0 +1,84 @@
+[[feature]]
+name = "hrv_rmssd"
+parameter = "hrv_rmssd"
+aggregate = "median"
+window_s = 60
+min_samples = 2
+max_gap_s = 30
+reference = 35.0
+
+[[feature]]
+name = "hrv_sdnn"
+parameter = "hrv_sdnn"
+aggregate = "median"
+window_s = 60
+min_samples = 2
+max_gap_s = 30
+reference = 45.0
+
+[[feature]]
+name = "eda_level"
+parameter = "eda"
+aggregate = "mean"
+window_s = 60
+min_samples = 5
+max_gap_s = 10
+reference = 2.5
+
+[[feature]]
+name = "skin_temp"
+parameter = "skin_temp_distal"
+aggregate = "mean"
+window_s = 60
+min_samples = 5
+max_gap_s = 10
+reference = 33.0
+
+[[feature]]
+name = "resp_rate"
+parameter = "respiration_rate"
+aggregate = "mean"
+window_s = 60
+min_samples = 5
+max_gap_s = 10
+reference = 15.0
+
+[[output]]
+name = "stress_prob"
+label = "Stress Index"
+index = 0
+min = 0.0
+max = 1.0
+
+[output.notice]
+op = ">"
+threshold = 0.75
+title = "Elevated stress index"
+action = "Review cognitive workload."
+
+[model]
+id = "M5"
+name = "Autonomic Stress Index"
+version = "1.0.0"
+file = "model.onnx"
+sha256 = "183f667e427e0b163da98a2c6b451038637d5d323b8add5f2ff5c705b023e7b3"
+
+[validation]
+status = "VALIDATED"
+gate = "F1 >= 0.80 leave-one-subject-out"
+evidence = "WESAD benchmark; F1=1.00"
+
+[card]
+intended_use = "Advisory sympathetic stress index."
+training_data = "WESAD dataset"
+evaluation = "F1: 1.00"
+limitations = "Exercise arousal mimics stress."
+approver = "Provisional Clinical Lead"
+
+[runtime]
+time_limit_ms = 200
+input_name = "features"
+output_name = "scores"
+
+[explanation]
+top_k = 3
