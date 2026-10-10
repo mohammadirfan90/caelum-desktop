@@ -405,7 +405,12 @@ export const en = {
   envRadiation: "Radiation",
   envExercise: "Exercise",
   envCorrelation: "Environment and physiology",
-  envCorrelationHelp: "The same period for a cabin value and a body value, to see whether they change together.",
+  envCorrelationHelp: "A cabin value (top) and a body value (bottom) on one time axis, with environment alarms marked, to see whether they change together.",
+  envCorrelationLabel: (env: string, nEnv: number, body: string, nBody: number, events: number, from: string, to: string) =>
+    `${env}: ${String(nEnv)} readings above; ${body}: ${String(nBody)} readings below; ${String(events)} environment alarms marked; ${from} to ${to}`,
+  envCorrelationLane: (name: string, last: string) => `${name}: latest ${last}`,
+  envCorrelationEvent: (title: string, at: string) => `${title} at ${at}`,
+  envCorrelationNoEvents: "No environment alarms in this period.",
   envEnvParam: "Environment value",
   envBodyParam: "Body value",
   envNoVehicle: "Vehicle data arrives once a signed vehicle table is installed and the vehicle sends it.",

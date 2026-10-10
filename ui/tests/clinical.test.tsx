@@ -253,6 +253,35 @@ describe("Environment, Ground and kiosk", () => {
     expect(screen.queryByText("Vehicle data arrives once a signed vehicle table is installed and the vehicle sends it.")).not.toBeInTheDocument();
   });
 
+  it("puts a cabin value and a body value on one time axis with environment alarms marked (F-ENV-04)", async () => {
+    const reading = (parameter: string, value: number, unit: string, at: number) => ({
+      parameter, value, text: null, unit, measuredAtTai: "1", measuredAtUtcMs: at, quality: "good", classification: "measured", deviceId: "d9",
+    });
+    const series: Record<string, ReturnType<typeof reading>[]> = {
+      cabin_co2: [reading("cabin_co2", 3.0, "mm[Hg]", T), reading("cabin_co2", 5.2, "mm[Hg]", T + 3_600_000)],
+      respiration_rate: [reading("respiration_rate", 14, "/min", T + 600_000), reading("respiration_rate", 19, "/min", T + 4_200_000)],
+    };
+    const alarm = (id: string, category: string, crew: string, title: string) => ({
+      id, crewMemberId: crew, kind: "physiological", category, priority: "warning", state: "active", title, ruleId: "x",
+      createdAtTai: "1", createdAtUtcMs: T + 3_000_000, acknowledgedAtUtcMs: null, resolvedAtUtcMs: null, acknowledgedAtTai: null,
+      groundAcknowledgedAtTai: null, silencedUntilTai: null, resolvedAtTai: null, escalationStage: 1, opsOnly: false,
+    });
+    const a = api({
+      vitalsLatest: () => ok([]),
+      vitalsTrend: (_c: string, p: string) => ok({ points: series[p] ?? [], baseline: null }),
+      alarmList: () =>
+        ok([alarm("a1", "ENVIRONMENT", "c1", "Cabin CO2 elevated"), alarm("a2", "CARDIO", "c1", "High heart rate"), alarm("a3", "ENVIRONMENT", "c2", "Other crew")]),
+    });
+    render(<Environment api={a} crewId="c1" version={0} />);
+    const chart = await screen.findByRole("img", { name: /Cabin CO₂: 2 readings above.*Breathing rate: 2 readings below.*1 environment alarms marked/ });
+    expect(chart).toBeInTheDocument();
+    // One shared axis: from the first reading of either series to the last.
+    expect(chart).toHaveAccessibleName(expect.stringMatching(/12:00:00 UTC to 13:10:00 UTC$/));
+    expect(screen.getByText("Cabin CO2 elevated at 12:50:00 UTC")).toBeInTheDocument();
+    expect(screen.queryByText(/High heart rate at/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Other crew at/)).not.toBeInTheDocument();
+  });
+
   it("says when path B and the vehicle bridge are not configured (SR-015)", async () => {
     const a = api({
       groundStatus: () =>
