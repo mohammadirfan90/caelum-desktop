@@ -60,10 +60,11 @@ export function authenticode(path: string): Signature {
     "$o | ConvertTo-Json -Compress",
   ].join("\n");
   const powershell = join(process.env["SystemRoot"] ?? "C:\\Windows", "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
-  const r = spawnSync(powershell, ["-NoProfile", "-NonInteractive", "-Command", script], {
-    encoding: "utf8",
-    env: { ...process.env, CAELUM_SIGNED_FILE: path },
-  });
+  // Windows PowerShell 5.1 must not inherit PowerShell 7's PSModulePath (as on CI runners), or it
+  // cannot load its own Microsoft.PowerShell.Security module (Get-AuthenticodeSignature).
+  const env: NodeJS.ProcessEnv = { ...process.env, CAELUM_SIGNED_FILE: path };
+  for (const key of Object.keys(env)) if (key.toLowerCase() === "psmodulepath") delete env[key];
+  const r = spawnSync(powershell, ["-NoProfile", "-NonInteractive", "-Command", script], { encoding: "utf8", env });
   if (r.status !== 0) throw new Error(`Get-AuthenticodeSignature failed: ${r.stderr}`);
   return JSON.parse(r.stdout) as Signature;
 }
