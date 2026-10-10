@@ -31,8 +31,20 @@ pub const DEVICE_STATUS_SQI: &str = "sqi-device-status/1";
 /// A gap larger than this restarts the ECG stream (the detector relearns), s.
 const STREAM_GAP_S: f64 = 0.5;
 
+/// ECG-derived respiration window, s (F-SIG-03; the algorithm's minimum is 20 s).
+pub const EDR_WINDOW_S: f64 = 30.0;
+
+/// Beats collected for ECG-derived respiration over one window.
+#[derive(Debug, Clone)]
+struct EdrWindow {
+    start: i64,
+    beats: Vec<caelum_signal::respiration::EdrBeat>,
+    worst: Quality,
+}
+
 /// One device's running ECG stream.
 pub(super) struct EcgStream {
+    edr: Option<EdrWindow>,
     processor: EcgProcessor,
     /// TAI of the stream's first sample.
     origin: i64,
@@ -112,6 +124,7 @@ impl Station {
                 self.ecg.insert(
                     device,
                     EcgStream {
+                        edr: None,
                         processor,
                         origin: start,
                         fs,
@@ -150,10 +163,69 @@ impl Station {
                 continue;
             };
             let at = |sample: u64| TaiNs(origin + (sample as f64 / sfs * 1e9) as i64);
+            // F-SIG-03: R amplitudes for ECG-derived respiration, one window at a time.
+            let worst = result
+                .reports
+                .iter()
+                .map(|r| r.sqi.quality)
+                .fold(Quality::Good, Quality::max);
+            let mut edr_done = None;
+            if let Some(stream) = self.ecg.get_mut(&device) {
+                for q in &result.qrs {
+                    let t = at(q.sample).0;
+                    let w = stream.edr.get_or_insert(EdrWindow {
+                        start: t,
+                        beats: Vec::new(),
+                        worst: Quality::Good,
+                    });
+                    w.beats.push(caelum_signal::respiration::EdrBeat {
+                        t_s: (t - w.start) as f64 / 1e9,
+                        amplitude_mv: q.amplitude_mv,
+                    });
+                }
+                if let Some(w) = stream.edr.as_mut() {
+                    w.worst = w.worst.max(worst);
+                }
+                let span = stream
+                    .edr
+                    .as_ref()
+                    .and_then(|w| w.beats.last().map(|b| b.t_s))
+                    .unwrap_or(0.0);
+                if span >= EDR_WINDOW_S {
+                    edr_done = stream.edr.take();
+                }
+            }
             for q in result.qrs {
                 let o = self.alarms.event(&self.db, crew, "qrs", at(q.sample))?;
                 out.events.extend(o.events);
                 out.notices.extend(o.notices);
+            }
+            // One respiration source per device: a device with a RIP band is measured there.
+            let has_rip = self.kit_has_rip(device);
+            if let (Some(w), false) = (edr_done, has_rip) {
+                let end = TaiNs(w.start + (EDR_WINDOW_S * 1e9) as i64);
+                let beats: Vec<_> = w
+                    .beats
+                    .into_iter()
+                    .filter(|b| b.t_s < EDR_WINDOW_S)
+                    .collect();
+                if let Ok(est) =
+                    caelum_signal::respiration::respiration_from_edr(&beats, EDR_WINDOW_S, w.worst)
+                {
+                    if let Some(rate) = est.rate {
+                        let o = self.store_derived(
+                            crew,
+                            device,
+                            Parameter::RespirationRate,
+                            rate.value,
+                            rate.quality,
+                            rate.algorithm,
+                            end,
+                        )?;
+                        out.events.extend(o.events);
+                        out.notices.extend(o.notices);
+                    }
+                }
             }
             for r in result.reports {
                 let t = at(r.end_sample);
@@ -179,7 +251,7 @@ impl Station {
 
     /// Stores and evaluates one derived observation (docs/03 §3 step 4).
     #[allow(clippy::too_many_arguments)]
-    fn store_derived(
+    pub(super) fn store_derived(
         &mut self,
         crew: CrewMemberId,
         device: DeviceId,
@@ -195,6 +267,43 @@ impl Station {
             device_id: device,
             parameter,
             value: Value::Number(value),
+            unit: parameter.spec().unit,
+            measured_at: at,
+            received_at: now,
+            quality,
+            classification: Classification::Derived,
+            mode: MeasurementMode::Continuous,
+            provenance: Provenance {
+                time: TimeSource::Receipt,
+                original: None,
+                site: None,
+            },
+        };
+        let mut row =
+            observation_record(&obs).map_err(|e| StationError::Rejected(e.to_string()))?;
+        row.algorithm_version = Some(algorithm.to_owned());
+        self.db.insert_observation(&row)?;
+        self.observe(&obs)
+    }
+
+    /// Stores and evaluates one derived state (e.g. `sleep_stage`).
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn store_derived_state(
+        &mut self,
+        crew: CrewMemberId,
+        device: DeviceId,
+        parameter: Parameter,
+        state: &'static str,
+        quality: Quality,
+        algorithm: &'static str,
+        at: TaiNs,
+    ) -> Result<Output, StationError> {
+        let now = self.now()?;
+        let obs = Observation {
+            crew_member_id: crew,
+            device_id: device,
+            parameter,
+            value: Value::State(state),
             unit: parameter.spec().unit,
             measured_at: at,
             received_at: now,

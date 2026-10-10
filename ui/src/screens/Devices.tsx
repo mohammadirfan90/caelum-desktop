@@ -75,7 +75,7 @@ function Scan({ api, onPaired }: { readonly api: Api; readonly onPaired: () => v
   };
   const pair = (d: NearbyDevice) => {
     const name = d.name ?? strings.unnamed;
-    void api.devicePair(d.address, d.name, d.services).then((r) => {
+    void api.devicePair(d.address, d.name, d.services, d.sensorKit).then((r) => {
       if (r.status === "error") {
         setNotice({ kind: "error", text: errorText(r.error) });
       } else if (r.data.result === "registered") {

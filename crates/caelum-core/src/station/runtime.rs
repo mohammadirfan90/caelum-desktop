@@ -3,7 +3,7 @@
 //! alarm engine synchronously, and link changes into the technical monitor. Pairing registers a
 //! device after the role check (CR-012 §4). The radio work itself is in the application shell.
 
-use caelum_devices::ble::WRISTBAND_ADAPTER;
+use caelum_devices::ble::{SENSOR_KIT_ADAPTER, WRISTBAND_ADAPTER};
 use caelum_devices::registry::{DeviceIdentity, DeviceStatus, Registry};
 use caelum_domain::ids::{CrewMemberId, DeviceId};
 use caelum_security::audit::{Actor, AuditAction};
@@ -19,8 +19,12 @@ use crate::alarms::Output;
 pub const BLE_SIG_ADAPTER: &str = "ble-sig";
 
 /// Adapters the device runtime connects (test equipment only exists in test builds' scans).
-pub const RUNTIME_ADAPTERS: [&str; 3] =
-    [BLE_SIG_ADAPTER, WRISTBAND_ADAPTER, TEST_EQUIPMENT_ADAPTER];
+pub const RUNTIME_ADAPTERS: [&str; 4] = [
+    BLE_SIG_ADAPTER,
+    WRISTBAND_ADAPTER,
+    SENSOR_KIT_ADAPTER,
+    TEST_EQUIPMENT_ADAPTER,
+];
 
 /// What one notification produced.
 #[derive(Debug, Default)]

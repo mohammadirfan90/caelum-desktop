@@ -73,7 +73,7 @@ export const commands = {
 	/**  Scans for health devices nearby (CMO, BME, administrator). */
 	deviceScan: () => typedError<NearbyDevice[], CommandError>(__TAURI_INVOKE("device_scan")),
 	/**  Pairs (OS bonding) and registers a scanned device (CMO, BME, administrator; audited). */
-	devicePair: (address: string, name: string | null, services: number[]) => typedError<PairResult, CommandError>(__TAURI_INVOKE("device_pair", { address, name, services })),
+	devicePair: (address: string, name: string | null, services: number[], sensorKit: boolean) => typedError<PairResult, CommandError>(__TAURI_INVOKE("device_pair", { address, name, services, sensorKit })),
 	/**  Crew overview (CMO, flight surgeon). */
 	crewOverview: () => typedError<OverviewEntry[], CommandError>(__TAURI_INVOKE("crew_overview")),
 	/**  A crew member's encounters. */
@@ -709,6 +709,8 @@ export type NearbyDevice = {
 	services: number[],
 	/**  An emulated device (test equipment builds only). */
 	emulated: boolean,
+	/**  A CAELUM sensor-kit device (F-ACQ-05). */
+	sensorKit: boolean,
 };
 
 /**

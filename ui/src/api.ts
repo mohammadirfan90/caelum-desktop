@@ -74,7 +74,7 @@ export interface Api {
   readonly deviceAssign: (deviceId: string, crewMemberId: string, deviceUser: number | null) => Promise<Res<null>>;
   readonly deviceUnassign: (deviceId: string) => Promise<Res<null>>;
   readonly deviceScan: () => Promise<Res<NearbyDevice[]>>;
-  readonly devicePair: (address: string, name: string | null, services: number[]) => Promise<Res<PairResult>>;
+  readonly devicePair: (address: string, name: string | null, services: number[], sensorKit: boolean) => Promise<Res<PairResult>>;
   readonly auditList: () => Promise<Res<AuditItem[]>>;
   readonly auditVerify: () => Promise<Res<AuditStatus>>;
   // Clinical workflows (CR-019)

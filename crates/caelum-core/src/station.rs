@@ -29,6 +29,7 @@ mod cluster_link;
 pub use clinical::{CrewOverviewItem, PvtResult, PROTOCOLS_KIND};
 pub mod export;
 pub mod files;
+mod kit;
 pub mod mds_link;
 pub mod pathb;
 pub mod reads;
@@ -107,6 +108,10 @@ pub struct Station {
     /// Advisory models (F-ML-01, CR-018). Empty until signed packages are installed; outputs
     /// are advisory only and never reach the rules except through the observe-only gate.
     models: caelum_ml::registry::Registry,
+    /// Sensor-kit signal buffers per device (F-ACQ-05, F-SIG-03/04/07).
+    kit: std::collections::HashMap<caelum_domain::ids::DeviceId, kit::KitDevice>,
+    /// Running core-temperature estimates per crew member (F-SIG-05).
+    core_temp: std::collections::HashMap<caelum_domain::ids::CrewMemberId, kit::CoreTrack>,
     /// Running ECG streams per device (F-SIG-01).
     ecg: std::collections::HashMap<caelum_domain::ids::DeviceId, signal::EcgStream>,
     /// Personal baselines in force (F-ALM-08).
@@ -203,6 +208,8 @@ impl Station {
             path_b: None,
             models: caelum_ml::registry::Registry::new(),
             ecg: std::collections::HashMap::new(),
+            kit: std::collections::HashMap::new(),
+            core_temp: std::collections::HashMap::new(),
             baselines: std::collections::HashMap::new(),
             baselines_at: None,
             acquisition: crate::acquisition::Acquisition::new()
@@ -471,6 +478,7 @@ impl Station {
     /// Evaluates a stored observation in the ingest path (docs/03 §3 step 5) and refreshes the
     /// technical monitor (staleness, battery).
     pub fn observe(&mut self, obs: &caelum_ingest::Observation) -> Result<Output, StationError> {
+        self.core_temp_measured(obs);
         let value = match obs.value {
             caelum_ingest::Value::Number(v) => Some(v),
             caelum_ingest::Value::State(_) => None,
@@ -554,7 +562,10 @@ impl Station {
         }
         self.apply_technical(changes, now)?;
         self.refresh_baselines(now)?;
-        let out = self.alarms.tick(&self.db, now)?;
+        let core = self.core_temp_tick(now)?;
+        let mut out = self.alarms.tick(&self.db, now)?;
+        out.events.extend(core.events);
+        out.notices.extend(core.notices);
         // SR-015: the ground stage goes to the vehicle on path B, never via the medical system.
         self.publish_ops(&out.events, &out.notices, now)?;
         Ok(out)

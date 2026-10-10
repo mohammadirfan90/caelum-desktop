@@ -165,7 +165,7 @@ describe("Devices", () => {
       deviceList: () => ok([device]),
       deviceAssign,
       authReauth,
-      deviceScan: () => ok([{ address: "TE:00:00:00:00:01", name: "Test equipment oximeter", rssi: null, services: [0x1822], emulated: true }]),
+      deviceScan: () => ok([{ address: "TE:00:00:00:00:01", name: "Test equipment oximeter", rssi: null, services: [0x1822], emulated: true, sensorKit: false }]),
       devicePair,
     });
     render(<Devices api={a} userRole="cmo" crew={crew} version={0} />);
@@ -182,7 +182,7 @@ describe("Devices", () => {
     fireEvent.click(screen.getByRole("button", { name: "Scan for devices" }));
     fireEvent.click(await screen.findByRole("button", { name: "Pair Test equipment oximeter" }));
     expect(await screen.findByText("Test equipment oximeter paired. Assign it to a crew member.")).toBeInTheDocument();
-    expect(devicePair).toHaveBeenCalledWith("TE:00:00:00:00:01", "Test equipment oximeter", [0x1822]);
+    expect(devicePair).toHaveBeenCalledWith("TE:00:00:00:00:01", "Test equipment oximeter", [0x1822], false);
   });
 
   it("shows an astronaut their devices without management controls", async () => {

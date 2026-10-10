@@ -55,6 +55,8 @@ pub struct Discovered {
     pub rssi: Option<i16>,
     /// Advertised health services (16-bit).
     pub services: Vec<u16>,
+    /// Advertises the CAELUM sensor-kit service (F-ACQ-05, ICD-SENSOR-KIT §3).
+    pub sensor_kit: bool,
 }
 
 /// Events from a supervised device.
@@ -74,6 +76,15 @@ pub enum BleEvent {
         /// Monotonic arrival time.
         at: Instant,
     },
+    /// A CAELUM sensor-kit Data notification (F-ACQ-05): one frame, for `sensor_kit::decode_frame`.
+    KitFrame {
+        /// Raw frame.
+        value: Vec<u8>,
+        /// Monotonic arrival time.
+        at: Instant,
+    },
+    /// The sensor-kit Info characteristic, read once after connecting (a read, not a write).
+    KitInfo(Vec<u8>),
     /// Signal strength reported by the radio.
     Rssi(i16),
     /// The link was lost; the supervisor reconnects.
@@ -143,9 +154,9 @@ impl BleCentral {
 
     /// Scans for `duration` and returns devices advertising a health service.
     pub async fn scan(&self, duration: Duration) -> Result<Vec<Discovered>, BleError> {
-        let filter = ScanFilter {
-            services: HEALTH_SERVICES.iter().map(|s| sig_uuid(*s)).collect(),
-        };
+        let mut services: Vec<Uuid> = HEALTH_SERVICES.iter().map(|s| sig_uuid(*s)).collect();
+        services.push(crate::sensor_kit::SERVICE_UUID);
+        let filter = ScanFilter { services };
         self.adapter.start_scan(filter).await?;
         tokio::time::sleep(duration).await;
         self.adapter.stop_scan().await?;
@@ -160,7 +171,8 @@ impl BleCentral {
                 .filter_map(|u| short_uuid(*u))
                 .filter(|s| HEALTH_SERVICES.contains(s))
                 .collect();
-            if services.is_empty() {
+            let sensor_kit = props.services.contains(&crate::sensor_kit::SERVICE_UUID);
+            if services.is_empty() && !sensor_kit {
                 continue;
             }
             found.push(Discovered {
@@ -169,6 +181,7 @@ impl BleCentral {
                 name: props.local_name,
                 rssi: props.rssi,
                 services,
+                sensor_kit,
             });
         }
         Ok(found)
@@ -225,6 +238,16 @@ impl BleCentral {
                         {
                             return;
                         }
+                        // Sensor kit: identity and calibration records, read once (no write).
+                        if let Some(info) = peripheral
+                            .characteristics()
+                            .into_iter()
+                            .find(|c| c.uuid == crate::sensor_kit::INFO_UUID)
+                        {
+                            if let Ok(value) = peripheral.read(&info).await {
+                                let _ = events.send(BleEvent::KitInfo(value)).await;
+                            }
+                        }
                         self.stream(&peripheral, &mut link, &now, &events).await;
                         link.disconnected(now());
                         let _ = events.send(BleEvent::Disconnected).await;
@@ -254,7 +277,11 @@ impl BleCentral {
                 flags.contains(CharPropFlags::NOTIFY) || flags.contains(CharPropFlags::INDICATE),
             )
         }));
-        if wanted.is_empty() {
+        // F-ACQ-05: the CAELUM sensor kit's Data characteristic (ICD-SENSOR-KIT §3; WX-001).
+        let kit = characteristics.iter().find(|c| {
+            c.uuid == crate::sensor_kit::DATA_UUID && c.properties.contains(CharPropFlags::NOTIFY)
+        });
+        if wanted.is_empty() && kit.is_none() {
             let _ = peripheral.disconnect().await;
             return Err(BleError::NothingToAcquire);
         }
@@ -262,6 +289,9 @@ impl BleCentral {
             .iter()
             .filter(|c| short_uuid(c.uuid).is_some_and(|s| wanted.contains(&s)))
         {
+            enable_notifications(&peripheral, c).await?;
+        }
+        if let Some(c) = kit {
             enable_notifications(&peripheral, c).await?;
         }
         Ok((peripheral, wanted))
@@ -319,9 +349,13 @@ impl BleCentral {
             tokio::select! {
                 value = values.next() => {
                     let Some(v) = value else { return };
-                    let Some(characteristic) = short_uuid(v.uuid) else { continue };
+                    let event = if v.uuid == crate::sensor_kit::DATA_UUID {
+                        BleEvent::KitFrame { value: v.value, at: Instant::now() }
+                    } else {
+                        let Some(characteristic) = short_uuid(v.uuid) else { continue };
+                        BleEvent::Notification { characteristic, value: v.value, at: Instant::now() }
+                    };
                     link.notification(now());
-                    let event = BleEvent::Notification { characteristic, value: v.value, at: Instant::now() };
                     if events.send(event).await.is_err() {
                         return;
                     }
@@ -346,6 +380,8 @@ pub const IMMEDIATE_ALERT_SERVICE: u16 = 0x1802;
 pub const ALERT_LEVEL: u16 = 0x2A06;
 /// Adapter name of a registered crew wristband (device registry).
 pub const WRISTBAND_ADAPTER: &str = "ble-wristband";
+/// Adapter of CAELUM sensor-kit devices (shirt, wristband; F-ACQ-05).
+pub const SENSOR_KIT_ADAPTER: &str = "ble-sensor-kit";
 
 /// Alert Level values (Immediate Alert Service).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

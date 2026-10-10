@@ -43,11 +43,19 @@ pub struct Outcome {
     pub rejected: Vec<Rejection>,
     /// Set if the payload could not be decoded (then nothing was stored).
     pub malformed: Option<DecodeError>,
-    /// Waveforms of a completed GHS observation (F-ACQ-03), with the crew member they belong to.
+    /// Waveforms of a completed GHS observation (F-ACQ-03) or a sensor-kit frame (F-ACQ-05), with
+    /// the crew member they belong to.
     pub waveforms: Vec<(
         caelum_domain::ids::CrewMemberId,
         caelum_devices::ghs::Waveform,
     )>,
+    /// Heat flux of a sensor-kit temperature frame, with its crew member (F-SIG-05).
+    pub heat_flux: Option<(
+        caelum_domain::ids::CrewMemberId,
+        caelum_devices::sensor_kit::HeatFlux,
+    )>,
+    /// Frames lost before this one (sensor-kit sequence gap, F-ACQ-10).
+    pub frames_lost: u32,
 }
 
 /// Acquisition state: the leap-second table for device timestamps, each device's measured clock
@@ -58,6 +66,8 @@ pub struct Acquisition {
     dropped: HashMap<(DeviceId, &'static str), u64>,
     /// GHS observation segments being joined, per device (F-ACQ-03).
     ghs: HashMap<DeviceId, caelum_devices::ghs::Reassembler>,
+    /// Sensor-kit frame sequence per device (F-ACQ-10).
+    kit_sequence: HashMap<DeviceId, caelum_devices::sensor_kit::SequenceTracker>,
 }
 
 impl Acquisition {
@@ -68,6 +78,7 @@ impl Acquisition {
             offsets: HashMap::new(),
             dropped: HashMap::new(),
             ghs: HashMap::new(),
+            kit_sequence: HashMap::new(),
         })
     }
 
@@ -90,6 +101,88 @@ impl Acquisition {
 
     fn count(&mut self, device: DeviceId, code: &'static str) {
         *self.dropped.entry((device, code)).or_default() += 1;
+    }
+
+    /// Processes one CAELUM sensor-kit Data frame (F-ACQ-05, ICD-SENSOR-KIT): CRC, version and
+    /// layout checked by the decoder; duplicates dropped and gaps counted (F-ACQ-10); catalog
+    /// readings (skin temperatures, EDA, battery) go through ingest like any device reading;
+    /// waveforms and heat flux are handed on with their crew member for signal processing.
+    pub fn sensor_kit(
+        &mut self,
+        db: &Database,
+        device: DeviceId,
+        frame: &[u8],
+        received_at: TaiNs,
+    ) -> Result<Outcome, AcquisitionError> {
+        use caelum_devices::sensor_kit::{decode_frame, SequenceEvent};
+        let registry = Registry::new(db);
+        let record = db
+            .device(&device.to_string())?
+            .ok_or(RegistryError::UnknownDevice(device))?;
+        registry.record_status(device, DeviceStatus::Connected, Some(received_at), None)?;
+        let f = match decode_frame(frame) {
+            Ok(f) => f,
+            Err(e) => {
+                self.count(device, "malformed");
+                return Ok(Outcome {
+                    malformed: Some(e),
+                    ..Outcome::default()
+                });
+            }
+        };
+        let mut outcome = Outcome::default();
+        match self
+            .kit_sequence
+            .entry(device)
+            .or_default()
+            .observe(f.sequence)
+        {
+            SequenceEvent::Duplicate => {
+                self.count(device, "duplicate");
+                return Ok(outcome);
+            }
+            SequenceEvent::Gap { missing } => {
+                for _ in 0..missing {
+                    self.count(device, "sequence_gap");
+                }
+                outcome.frames_lost = u32::from(missing);
+            }
+            SequenceEvent::First | SequenceEvent::InOrder | SequenceEvent::Restart => {}
+        }
+        let owner = registry.owner(device, None)?;
+        let emulated = record.adapter == TEST_EQUIPMENT_ADAPTER;
+        let flagged = |flags: caelum_ingest::DeviceFlags| flags.demonstration || flags.test_data;
+        // SR-017: demonstration or test data never reaches a release build's records.
+        let keep = |flags| emulated || !flagged(flags) || cfg!(feature = "test-equipment");
+        if let Some(crew) = owner {
+            outcome.waveforms = f
+                .waveforms
+                .into_iter()
+                .filter(|w| keep(w.flags))
+                .map(|w| (crew, w))
+                .collect();
+            outcome.heat_flux = f.heat_flux.filter(|h| keep(h.flags)).map(|h| (crew, h));
+        }
+        let offset = self.offsets.get(&device).copied();
+        for decoded in f.readings {
+            let mut raw = raw_reading(decoded, device, received_at, MeasurementMode::Continuous);
+            if emulated {
+                raw.flags.test_data = true;
+            }
+            match ingest(raw, owner, offset.as_ref()) {
+                Ok(obs) => {
+                    let row = observation_record(&obs)?;
+                    db.insert_observation(&row)?;
+                    outcome.stored.push(row.id);
+                    outcome.observations.push(obs);
+                }
+                Err(rejection) => {
+                    self.count(device, rejection.code());
+                    outcome.rejected.push(rejection);
+                }
+            }
+        }
+        Ok(outcome)
     }
 
     /// Processes one notification from a registered device.

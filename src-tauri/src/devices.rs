@@ -161,6 +161,20 @@ fn start_device(app: AppHandle, d: DeviceRecord) {
                     value,
                     ..
                 } => ingest(&app, device, characteristic, &value),
+                // F-ACQ-05: CAELUM sensor kit (ICD-SENSOR-KIT).
+                BleEvent::KitFrame { value, .. } => {
+                    if let Ok(ingested) = app
+                        .state::<AppState>()
+                        .with(|s| Ok(s.ingest_sensor_kit(device, &value)?))
+                    {
+                        emit_ingested(&app, &ingested);
+                    }
+                }
+                BleEvent::KitInfo(value) => {
+                    let _ = app
+                        .state::<AppState>()
+                        .with(|s| Ok(s.sensor_kit_info(device, &value)?));
+                }
                 BleEvent::Rssi(_) => {}
             }
         }
@@ -202,6 +216,8 @@ pub struct NearbyDevice {
     pub services: Vec<u16>,
     /// An emulated device (test equipment builds only).
     pub emulated: bool,
+    /// A CAELUM sensor-kit device (F-ACQ-05).
+    pub sensor_kit: bool,
 }
 
 impl From<Discovered> for NearbyDevice {
@@ -212,6 +228,7 @@ impl From<Discovered> for NearbyDevice {
             rssi: d.rssi,
             services: d.services,
             emulated: false,
+            sensor_kit: d.sensor_kit,
         }
     }
 }
@@ -270,6 +287,7 @@ pub async fn device_scan(
         rssi: None,
         services: vec![0x1822],
         emulated: true,
+        sensor_kit: false,
     });
     Ok(found)
 }
@@ -283,6 +301,7 @@ pub async fn device_pair(
     address: String,
     name: Option<String>,
     services: Vec<u16>,
+    sensor_kit: bool,
 ) -> Result<PairResult, CommandError> {
     state.with(|s| Ok(s.device_scan_allowed()?))?;
     let emulated = address == TEST_EQUIPMENT_ADDRESS;
@@ -293,6 +312,8 @@ pub async fn device_pair(
             ));
         }
         caelum_core::acquisition::TEST_EQUIPMENT_ADAPTER
+    } else if sensor_kit {
+        caelum_core::devices::ble::SENSOR_KIT_ADAPTER
     } else if services.contains(&IMMEDIATE_ALERT_SERVICE) {
         WRISTBAND_ADAPTER
     } else {

@@ -144,5 +144,8 @@
     mapping, sentinels, truncation at every length, sequence gaps/duplicates/wrap); firmware
     conformance against the example frames.
 12. **Open items:** OI-1 firmware conformance test vectors from the firmware team; OI-2 whether
-    fractional sample rates are needed (would need protocol version 2). **Change history:** v1
+    fractional sample rates are needed (would need protocol version 2); OI-3 the wristband's
+    SpO₂ calibration curve (a, b, c and the valid R range), without which CAELUM computes no
+    SpO₂ from kit PPG (CR-021 §3); OI-4 the PPG polarity (whether raw counts rise or fall with
+    blood volume), without which no pulse arrival time or BP trend is computed (CR-021 §3). **Change history:** v1
     created under CR-013. **Approvals:** engineering (standing delegation, CR-013).

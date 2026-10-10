@@ -389,7 +389,7 @@ pub const CATALOG: [ParamSpec; 44] = [
         "Sleep stage",
         One,
         Derived,
-        ValueType::Enum(&["wake", "light", "deep", "rem"]),
+        ValueType::Enum(&["wake", "sleep", "light", "deep", "rem"]),
         600,
         None,
         PHYSIOLOGY
