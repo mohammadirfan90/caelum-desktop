@@ -12,10 +12,10 @@ marked `complete` (`09` §3).
 ## Milestone status
 | Milestone | Status | Date | Commit |
 |---|---|---|---|
-| M0 | in progress | 2026-10-09 | |
-| M1 | not started | | |
-| M2 | not started | | |
-| M3 | not started | | |
+| M0 | complete | 2026-10-10 | 13292b4 (evidence: docs/gates/M0.md) |
+| M1 | complete | 2026-10-10 | 13292b4 (evidence: docs/gates/M1.md) |
+| M2 | in progress | 2026-10-10 | |
+| M3 | in progress | 2026-10-10 | |
 | M4 | not started | | |
 | M5 | not started | | |
 | M6 | not started | | |
