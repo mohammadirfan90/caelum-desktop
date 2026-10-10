@@ -1,0 +1,23 @@
+[package]
+name = "caelum-ruleset-signer"
+description = "Signs and verifies CAELUM alarm rulesets (CR-009, SR-009)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "ruleset-signer"
+path = "src/main.rs"
+
+[dependencies]
+caelum-alarms.workspace = true
+ed25519-dalek = "3"
+getrandom = "0.4"
+toml = "1"
+zeroize = "1.9.1"
+
+[lints]
+workspace = true

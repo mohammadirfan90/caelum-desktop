@@ -10,6 +10,12 @@ publish.workspace = true
 
 [dependencies]
 caelum-domain.workspace = true
+# CR-009: ruleset signatures and format.
+ed25519-dalek = "3"
+serde = { version = "1.0.229", features = ["derive"] }
+sha2 = "0.11"
+thiserror = "2.0.21"
+toml = "1"
 
 [lints]
 workspace = true

@@ -29,6 +29,9 @@ const DOCUMENTED_CRATES: [&str; 14] = [
     "caelum-test-equipment",
 ];
 
+/// Tools listed in docs/03_ARCHITECTURE.md §2 (`tools/`) that are Rust crates.
+const DOCUMENTED_TOOLS: [&str; 1] = ["caelum-ruleset-signer"];
+
 /// The Tauri app crate in `src-tauri/`; no other crate may depend on it.
 const APP_CRATE: &str = "caelum-desktop";
 
@@ -83,7 +86,10 @@ fn workspace_has_exactly_the_documented_crates() {
         .map(|p| p.name.as_str())
         .filter(|name| *name != APP_CRATE)
         .collect();
-    let expected: BTreeSet<&str> = DOCUMENTED_CRATES.into_iter().collect();
+    let expected: BTreeSet<&str> = DOCUMENTED_CRATES
+        .into_iter()
+        .chain(DOCUMENTED_TOOLS)
+        .collect();
     assert_eq!(actual, expected);
 }
 

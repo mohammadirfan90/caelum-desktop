@@ -1,0 +1,3 @@
+# Flight ruleset keys (CR-009 §2): Ed25519 public keys, hex, one per line.
+# None yet: a licensed clinician advisor must countersign before any flight key exists (CR-003).
+# Release builds therefore load no ruleset and start in the SR-009 safe state.

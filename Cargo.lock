@@ -385,6 +385,11 @@ name = "caelum-alarms"
 version = "0.1.0"
 dependencies = [
  "caelum-domain",
+ "ed25519-dalek",
+ "serde",
+ "sha2 0.11.0",
+ "thiserror 2.0.21",
+ "toml 1.1.8+spec-1.1.0",
 ]
 
 [[package]]
@@ -492,6 +497,17 @@ name = "caelum-ml"
 version = "0.1.0"
 dependencies = [
  "caelum-domain",
+]
+
+[[package]]
+name = "caelum-ruleset-signer"
+version = "0.1.0"
+dependencies = [
+ "caelum-alarms",
+ "ed25519-dalek",
+ "getrandom 0.4.3",
+ "toml 1.1.8+spec-1.1.0",
+ "zeroize",
 ]
 
 [[package]]

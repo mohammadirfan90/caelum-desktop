@@ -1,0 +1,268 @@
+# CAELUM alarm ruleset (docs/06 §3). Single source of truth for alarm rules (CLAUDE.md rule 7).
+# ⚕ DRAFT: every clinical value is approved only by the provisional medical lead (CR-003) and needs
+# flight-surgeon approval before operational use. Change [ruleset].version on every edit, update
+# the hazard log and add tests (CLAUDE.md rule 4), then re-sign (tools/ruleset-signer).
+#
+# Spot confirmation (SR-019, docs/06 §3): confirm_window_s 300; recheck_timeout_s 120 for critical
+# and 600 for warning rules. max_gap_s 30 for every rule until the flight-surgeon review.
+
+[ruleset]
+version = "1.0.0-draft.1"
+status = "DRAFT"
+approved_by = "Provisional medical lead (CR-003), DRAFT"
+
+[[rule]]
+id = "spo2.critical"
+type = "threshold"
+parameter = "spo2"
+category = "RESPIRATORY"
+priority = "critical"
+op = "<"
+fire = 85.0
+clear = 90.0
+fire_for_s = 15
+clear_for_s = 60
+max_gap_s = 30
+title = "Severe low blood oxygen"
+action = "Start the low-oxygen protocol: check cabin O2, give oxygen, confirm with the clinical pulse oximeter."
+spot = { confirm_window_s = 300, recheck_timeout_s = 120 }
+
+[[rule]]
+id = "spo2.warning"
+type = "threshold"
+parameter = "spo2"
+category = "RESPIRATORY"
+priority = "warning"
+op = "<"
+fire = 90.0
+clear = 92.0
+fire_for_s = 60
+clear_for_s = 60
+max_gap_s = 30
+title = "Low blood oxygen"
+action = "Check sensor fit and cabin O2; confirm with the clinical pulse oximeter."
+spot = { confirm_window_s = 300, recheck_timeout_s = 600 }
+
+[[rule]]
+id = "hr.critical.high"
+type = "threshold"
+parameter = "heart_rate"
+category = "CARDIO"
+priority = "critical"
+op = ">"
+fire = 180.0
+clear = 160.0
+fire_for_s = 30
+clear_for_s = 60
+max_gap_s = 30
+title = "Extreme heart rate"
+action = "Stop all activity, record a 12-lead ECG, contact the flight surgeon."
+spot = { confirm_window_s = 300, recheck_timeout_s = 120 }
+
+[[rule]]
+id = "hr.warning.high"
+type = "threshold"
+parameter = "heart_rate"
+category = "CARDIO"
+priority = "warning"
+op = ">"
+fire = 130.0
+clear = 120.0
+fire_for_s = 120
+clear_for_s = 120
+max_gap_s = 30
+title = "High heart rate at rest"
+action = "Rest, re-check in 5 minutes, record a 12-lead ECG if it persists."
+at_rest = { parameter = "activity_level", max = 0.3 }
+spot = { confirm_window_s = 300, recheck_timeout_s = 600 }
+
+[[rule]]
+id = "hr.critical.low"
+type = "threshold"
+parameter = "heart_rate"
+category = "CARDIO"
+priority = "critical"
+op = "<"
+fire = 40.0
+clear = 45.0
+fire_for_s = 30
+clear_for_s = 60
+max_gap_s = 30
+title = "Very low heart rate"
+action = "Check responsiveness, record a 12-lead ECG, contact the flight surgeon."
+spot = { confirm_window_s = 300, recheck_timeout_s = 120 }
+
+[[rule]]
+id = "rr.critical.low"
+type = "threshold"
+parameter = "respiration_rate"
+category = "RESPIRATORY"
+priority = "critical"
+op = "<"
+fire = 6.0
+clear = 8.0
+fire_for_s = 30
+clear_for_s = 60
+max_gap_s = 30
+title = "Very slow breathing"
+action = "Check responsiveness and airway immediately."
+spot = { confirm_window_s = 300, recheck_timeout_s = 120 }
+
+[[rule]]
+id = "rr.warning.high"
+type = "threshold"
+parameter = "respiration_rate"
+category = "RESPIRATORY"
+priority = "warning"
+op = ">"
+fire = 30.0
+clear = 25.0
+fire_for_s = 120
+clear_for_s = 120
+max_gap_s = 30
+title = "Fast breathing"
+action = "Check symptoms and cabin CO2."
+spot = { confirm_window_s = 300, recheck_timeout_s = 600 }
+
+[[rule]]
+id = "temp.warning"
+type = "threshold"
+parameter = "core_temp"
+category = "THERMAL"
+priority = "warning"
+group = "THERMAL"
+op = ">"
+fire = 38.0
+clear = 37.7
+fire_for_s = 600
+clear_for_s = 600
+max_gap_s = 30
+title = "Fever or heat strain"
+action = "Stop exercise, symptom check, follow the fever protocol."
+
+[[rule]]
+id = "temp.critical"
+type = "threshold"
+parameter = "core_temp"
+category = "THERMAL"
+priority = "critical"
+group = "THERMAL"
+op = ">"
+fire = 39.5
+clear = 39.0
+fire_for_s = 300
+clear_for_s = 300
+max_gap_s = 30
+title = "High body temperature"
+action = "Begin cooling, medical officer assessment, contact the flight surgeon."
+
+# CR-003 §3: measured temperature by site class; peripheral values are engineering placeholders
+# (core minus 0.5 °C); an unknown site uses the lowest threshold.
+[[rule]]
+id = "bodytemp.warning"
+type = "threshold"
+parameter = "body_temp_measured"
+category = "THERMAL"
+priority = "warning"
+group = "THERMAL"
+op = ">"
+fire_for_s = 0
+clear_for_s = 0
+max_gap_s = 30
+title = "Measured fever"
+action = "Re-measure, symptom check, follow the fever protocol."
+spot = { confirm_window_s = 300, recheck_timeout_s = 600 }
+sites = { core_equivalent = { fire = 38.0, clear = 37.7 }, peripheral = { fire = 37.5, clear = 37.2 }, unknown = { fire = 37.5, clear = 37.2 } }
+
+[[rule]]
+id = "bodytemp.critical"
+type = "threshold"
+parameter = "body_temp_measured"
+category = "THERMAL"
+priority = "critical"
+group = "THERMAL"
+op = ">"
+fire_for_s = 0
+clear_for_s = 0
+max_gap_s = 30
+title = "High measured temperature"
+action = "Re-measure now, begin cooling, medical officer assessment, contact the flight surgeon."
+spot = { confirm_window_s = 300, recheck_timeout_s = 120 }
+sites = { core_equivalent = { fire = 39.5, clear = 39.0 }, peripheral = { fire = 39.0, clear = 38.5 }, unknown = { fire = 39.0, clear = 38.5 } }
+
+[[rule]]
+id = "af.observe"
+type = "threshold"
+parameter = "af_probability"
+category = "CARDIO"
+priority = "observe"
+op = ">"
+fire = 0.8
+clear = 0.5
+fire_for_s = 300
+clear_for_s = 600
+max_gap_s = 30
+title = "Possible atrial fibrillation"
+action = "Record a 12-lead ECG with the onboard kit."
+
+# ⚕ DRAFT engineering value (CR-009 §3): "good ECG SQI" = sqi_ecg ≥ 0.7 until the BME and medical
+# lead set it.
+[[rule]]
+id = "asystole.critical"
+type = "absence"
+event = "qrs"
+gate = { parameter = "sqi_ecg", min = 0.7 }
+category = "CARDIO"
+priority = "critical"
+fire_for_s = 6
+clear_for_s = 10
+max_gap_s = 30
+title = "No heartbeat detected"
+action = "Check responsiveness now; start the cardiac arrest protocol if unresponsive."
+
+[[rule]]
+id = "co2.warning"
+type = "threshold"
+parameter = "cabin_co2"
+category = "ENVIRONMENT"
+priority = "warning"
+op = ">"
+fire = 4.0
+clear = 3.5
+fire_for_s = 900
+clear_for_s = 900
+max_gap_s = 30
+title = "Cabin CO2 elevated"
+action = "Check CO2 removal system status; watch for headache and fatigue."
+
+[[rule]]
+id = "o2.critical"
+type = "threshold"
+parameter = "cabin_o2"
+category = "ENVIRONMENT"
+priority = "critical"
+op = "<"
+fire = 16.0
+clear = 17.0
+fire_for_s = 30
+clear_for_s = 60
+max_gap_s = 30
+title = "Low cabin oxygen"
+action = "Follow the cabin atmosphere emergency procedure."
+
+# Baseline notices (F-ALM-08): robust z against the personal baseline, observe only (SR-002).
+[baseline]
+z_fire = 4.0
+z_clear = 2.5
+for_s = 600
+spot_k = 3
+spot_n = 4
+max_gap_s = 30
+parameters = [
+    { parameter = "heart_rate", at_rest = true },
+    { parameter = "hrv_rmssd", at_rest = false },
+    { parameter = "respiration_rate", at_rest = false },
+    { parameter = "core_temp", at_rest = false },
+    { parameter = "spo2", at_rest = true },
+    { parameter = "weight", at_rest = false },
+]

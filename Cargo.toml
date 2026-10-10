@@ -16,6 +16,7 @@ members = [
     "crates/caelum-cluster",
     "crates/caelum-core",
     "crates/caelum-test-equipment",
+    "tools/ruleset-signer",
     "src-tauri",
 ]
 
