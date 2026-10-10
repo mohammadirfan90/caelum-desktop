@@ -24,3 +24,11 @@ uuid = { version = "1.28.0", features = ["v4"] }
 
 [lints]
 workspace = true
+
+[target.'cfg(windows)'.dependencies]
+# Stack item (CLAUDE.md): WinRT pairing. Same version btleplug uses.
+windows = { version = "0.62.2", features = ["Devices_Bluetooth", "Devices_Enumeration", "Foundation"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+# Stack item (CLAUDE.md): BlueZ pairing.
+bluer = { version = "0.17", features = ["bluetoothd"] }

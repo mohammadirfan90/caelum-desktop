@@ -7,6 +7,7 @@
 
 pub mod ble;
 pub mod link;
+pub mod pairing;
 pub mod registry;
 pub mod serial;
 pub mod sig;

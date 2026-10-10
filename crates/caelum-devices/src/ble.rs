@@ -43,6 +43,8 @@ pub const HEALTH_SERVICES: [u16; 6] = [0x180D, 0x1822, 0x1810, 0x1809, 0x181D, 0
 pub struct Discovered {
     /// Platform peripheral ID (stable per adapter).
     pub id: String,
+    /// Bluetooth address (for pairing).
+    pub address: String,
     /// Advertised name, if any.
     pub name: Option<String>,
     /// RSSI of the advertisement, dBm.
@@ -157,6 +159,7 @@ impl BleCentral {
             }
             found.push(Discovered {
                 id: p.id().to_string(),
+                address: p.address().to_string(),
                 name: props.local_name,
                 rssi: props.rssi,
                 services,
