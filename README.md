@@ -311,3 +311,9 @@ The application installs and runs fully offline.
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE). Copyright © ChronoStrider.
+
+---
+
+<p align="center">
+  <img src=".github/assets/chronostrider-banner.webp" alt="ChronoStrider: open tools for a faster tomorrow" width="100%">
+</p>
