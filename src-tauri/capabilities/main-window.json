@@ -66,6 +66,10 @@
     "allow-ecg-view",
     "allow-dicom-view",
     "allow-config-apply-cluster",
-    "allow-cluster-identity-set"
+    "allow-cluster-identity-set",
+    "allow-config-apply-crew-station",
+    "allow-crew-lan-status",
+    "allow-crew-lan-sign-in",
+    "allow-crew-lan-sign-out"
   ]
 }

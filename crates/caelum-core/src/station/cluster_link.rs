@@ -8,7 +8,9 @@ use caelum_security::role::Command;
 use serde_json::json;
 
 use super::{Station, StationError};
-use crate::cluster::{ClusterConfig, CLUSTER_KIND, IDENTITY_CHAIN, IDENTITY_KEY};
+use crate::cluster::{
+    ClusterConfig, CrewStationConfig, CLUSTER_KIND, CREW_STATION_KIND, IDENTITY_CHAIN, IDENTITY_KEY,
+};
 
 /// Technical alarm of the fail-over pair (CR-011 table).
 pub const CLUSTER_RULE: &str = "technical.cluster";
@@ -59,6 +61,52 @@ impl Station {
             AuditAction::ConfigApplied,
             Some(CLUSTER_KIND),
             &json!({ "kind": CLUSTER_KIND, "version": verified.version, "sha256": verified.sha256 }),
+        )?;
+        Ok(verified.version)
+    }
+
+    /// `config_apply_crew_station`: what this installation is on the crew LAN (secondary display
+    /// or kiosk) and where the pair is (CR-017 §4). Takes effect at the next start. Audited.
+    pub fn config_apply_crew_station(
+        &mut self,
+        bundle: &[u8],
+        signature: &str,
+    ) -> Result<String, StationError> {
+        let user = self.admin_for(Command::ConfigApplyCrewStation)?;
+        let verified = verify_config(
+            CREW_STATION_KIND,
+            bundle,
+            signature,
+            &built_in_keys(),
+            TrustPolicy::for_this_build(),
+        )
+        .map_err(|e| {
+            rejected(format!(
+                "the crew-station configuration signature is not accepted: {e}"
+            ))
+        })?;
+        let text = std::str::from_utf8(bundle).map_err(|_| rejected("not UTF-8 text"))?;
+        let plan = CrewStationConfig::parse(text)
+            .map_err(|e| rejected(format!("the crew-station configuration is invalid: {e}")))?;
+        if plan.config.version != verified.version {
+            return Err(rejected(
+                "the configuration version is not the signed version",
+            ));
+        }
+        let now = self.now()?;
+        self.db.put_config_bundle(
+            &format!("{CREW_STATION_KIND}-{}", verified.sha256),
+            CREW_STATION_KIND,
+            &verified.version,
+            signature,
+            text,
+            now.0,
+        )?;
+        self.log().append(
+            &Actor::user(&user),
+            AuditAction::ConfigApplied,
+            Some(CREW_STATION_KIND),
+            &json!({ "kind": CREW_STATION_KIND, "version": verified.version, "sha256": verified.sha256 }),
         )?;
         Ok(verified.version)
     }

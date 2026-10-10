@@ -92,7 +92,10 @@ pub struct Me {
 
 /// The alarm service from the ruleset in force: an uplinked one (verified again here) before the
 /// built-in one, with the SR-009 fallback, and the open alarms restored from the record (SR-007).
-fn load_alarms(db: &Database, now: caelum_domain::time::TaiNs) -> Result<AlarmService, StationError> {
+fn load_alarms(
+    db: &Database,
+    now: caelum_domain::time::TaiNs,
+) -> Result<AlarmService, StationError> {
     let uplinked = db.latest_config_bundle(uplink::RULESET_UPLINK_KIND)?;
     let (ruleset_text, ruleset_sig) = match &uplinked {
         Some((_, sig, content)) => (content.as_str(), sig.as_str()),

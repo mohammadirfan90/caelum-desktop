@@ -271,6 +271,14 @@ pub enum Command {
     ConfigApplyCluster,
     /// Set this station's crew-LAN certificate chain and key (CR-017 §4).
     ClusterIdentitySet,
+    /// Apply the signed crew-station configuration (secondary display or kiosk; CR-017 §4).
+    ConfigApplyCrewStation,
+    /// This crew station: link to the primary and the alarms it streams (F-SYS-05).
+    CrewLanStatus,
+    /// Sign a user in on the primary from this crew station (F-SYS-05).
+    CrewLanSignIn,
+    /// Sign the crew-station user out (F-SYS-05).
+    CrewLanSignOut,
 }
 
 /// Who may call a command.
@@ -286,7 +294,7 @@ pub enum Access {
 
 impl Command {
     /// Every command.
-    pub const ALL: [Command; 64] = [
+    pub const ALL: [Command; 68] = [
         Command::AppInfo,
         Command::AuthLogin,
         Command::AuthLogout,
@@ -351,6 +359,10 @@ impl Command {
         Command::DicomView,
         Command::ConfigApplyCluster,
         Command::ClusterIdentitySet,
+        Command::ConfigApplyCrewStation,
+        Command::CrewLanStatus,
+        Command::CrewLanSignIn,
+        Command::CrewLanSignOut,
     ];
 
     /// The IPC command name.
@@ -420,6 +432,10 @@ impl Command {
             Command::DicomView => "dicom_view",
             Command::ConfigApplyCluster => "config_apply_cluster",
             Command::ClusterIdentitySet => "cluster_identity_set",
+            Command::ConfigApplyCrewStation => "config_apply_crew_station",
+            Command::CrewLanStatus => "crew_lan_status",
+            Command::CrewLanSignIn => "crew_lan_sign_in",
+            Command::CrewLanSignOut => "crew_lan_sign_out",
         }
     }
 
@@ -522,6 +538,10 @@ impl Command {
             Command::DicomView => Access::Roles(&[Role::Cmo, Role::FlightSurgeon]),
             Command::ConfigApplyCluster => Access::Roles(&[Role::Administrator]),
             Command::ClusterIdentitySet => Access::Roles(&[Role::Administrator]),
+            Command::ConfigApplyCrewStation => Access::Roles(&[Role::Administrator]),
+            Command::CrewLanStatus => Access::Public,
+            Command::CrewLanSignIn => Access::Public,
+            Command::CrewLanSignOut => Access::Public,
         }
     }
 

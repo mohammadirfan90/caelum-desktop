@@ -17,6 +17,7 @@ pub mod admin;
 pub mod clinical;
 pub mod cluster;
 pub mod commands;
+pub mod crewlan;
 pub mod devices;
 pub mod events;
 pub mod ground;
@@ -53,6 +54,7 @@ pub fn run() -> tauri::Result<()> {
             vehicle::start_vehicle_bridge(app.handle().clone());
             mds::start_mds(app.handle().clone(), state::open_mds_service(&data_dir));
             cluster::start_cluster(app.handle().clone(), &data_dir);
+            crewlan::start_crew_lan(app.handle().clone(), &data_dir);
             Ok(())
         })
         .invoke_handler(ipc::invoke_handler())

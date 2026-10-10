@@ -26,5 +26,5 @@ pub use repo_clinical::{
 };
 pub use repo_cluster::ClusterLogRecord;
 pub use repo_crew::CrewMemberRecord;
-pub use repo_replication::REPLICATED;
 pub use repo_reads::{AlarmView, BaselineRecord, NotificationRecord, WaveformChunkRecord};
+pub use repo_replication::REPLICATED;

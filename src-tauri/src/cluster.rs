@@ -15,8 +15,8 @@ use caelum_cluster::lan::tls::TlsMaterial;
 use caelum_cluster::log::InstanceSigner;
 use caelum_cluster::node::{Node, NodeConfig, NodeEvent, NodeParts};
 use caelum_core::cluster::{
-    config_in_force, identity, pending_rows, row_applier, trusted_signers, DbFenceStore, DbLogStore,
-    LanAlarms, LanAuthority,
+    config_in_force, identity, pending_rows, row_applier, trusted_signers, DbFenceStore,
+    DbLogStore, LanAlarms, LanAuthority,
 };
 use caelum_core::security::clock::Clock as _;
 use caelum_core::security::clock::SystemClock;
@@ -104,7 +104,11 @@ fn prepare(data_dir: &Path) -> Result<Option<(NodeConfig, NodeParts, Arc<LanAlar
     let mut config = NodeConfig::new(plan.node.clone(), plan.listen);
     config.peer = plan.peer.as_ref().map(|(p, _)| p.clone());
     let parts = NodeParts {
-        log: Box::new(DbLogStore::new(open(data_dir)?, clock()?, Some(row_applier()))),
+        log: Box::new(DbLogStore::new(
+            open(data_dir)?,
+            clock()?,
+            Some(row_applier()),
+        )),
         fences: Box::new(DbFenceStore::new(db)),
         signer: Box::new(InstanceSigner::new(plan.node.clone(), own_key)),
         trust,
@@ -160,10 +164,7 @@ async fn pump(app: AppHandle, db: Database, clock: Box<SystemClock>) {
         let mut sent = true;
         {
             let cluster = app.state::<ClusterState>();
-            let guard = cluster
-                .node
-                .lock()
-                .unwrap_or_else(PoisonError::into_inner);
+            let guard = cluster.node.lock().unwrap_or_else(PoisonError::into_inner);
             let Some(node) = guard.as_ref() else { continue };
             for body in bodies {
                 if node.append(body).is_err() {

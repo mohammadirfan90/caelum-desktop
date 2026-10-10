@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-crew-lan-status"
+description = "Enables the crew_lan_status command without any pre-configured scope."
+commands.allow = ["crew_lan_status"]
+
+[[permission]]
+identifier = "deny-crew-lan-status"
+description = "Denies the crew_lan_status command without any pre-configured scope."
+commands.deny = ["crew_lan_status"]

@@ -156,7 +156,10 @@ fn sr_005_a_lead_off_rip_frame_marks_respiration_unusable_and_restarts_the_windo
     assert_eq!(sqi.len(), 1);
     assert_eq!(sqi[0].quality, "unusable");
     breathe(&mut k, 15.0, 20, 0, T0 + 21 * S);
-    assert!(k.values("respiration_rate").is_empty(), "no window spans the lead-off");
+    assert!(
+        k.values("respiration_rate").is_empty(),
+        "no window spans the lead-off"
+    );
 }
 
 #[test]
@@ -169,7 +172,10 @@ fn f_acq_10_duplicates_are_dropped_and_a_gap_restarts_the_buffer() {
     // Five frames lost (sequence jumps), and the next one is 5 s later: a new window starts.
     k.seq += 5;
     breathe(&mut k, 15.0, 25, 0, T0 + 15 * S);
-    assert!(k.values("respiration_rate").is_empty(), "the gap restarted the window");
+    assert!(
+        k.values("respiration_rate").is_empty(),
+        "the gap restarted the window"
+    );
     breathe(&mut k, 15.0, 5, 0, T0 + 40 * S);
     assert_eq!(k.values("respiration_rate").len(), 1);
 }
@@ -284,11 +290,23 @@ fn f_sig_05_core_temperature_starts_only_from_a_measured_core_temperature() {
     }
     assert!(k.values("core_temp").is_empty());
     // A peripheral (armpit) reading does not start it either.
-    observe(&mut k, Parameter::BodyTempMeasured, 36.6, T0 + 300 * S, Some(TemperatureSite::Armpit));
+    observe(
+        &mut k,
+        Parameter::BodyTempMeasured,
+        36.6,
+        T0 + 300 * S,
+        Some(TemperatureSite::Armpit),
+    );
     k.station.tick().unwrap();
     assert!(k.values("core_temp").is_empty());
     // A tympanic (core-equivalent) reading does; each minute with heart rate gives an estimate.
-    observe(&mut k, Parameter::BodyTempMeasured, 37.0, T0 + 310 * S, Some(TemperatureSite::Tympanum));
+    observe(
+        &mut k,
+        Parameter::BodyTempMeasured,
+        37.0,
+        T0 + 310 * S,
+        Some(TemperatureSite::Tympanum),
+    );
     for m in 1..=5 {
         let t = T0 + 310 * S + m * 60 * S;
         observe(&mut k, Parameter::HeartRate, 80.0, t - 30 * S, None);
@@ -297,8 +315,14 @@ fn f_sig_05_core_temperature_starts_only_from_a_measured_core_temperature() {
     }
     let ct = k.values("core_temp");
     assert_eq!(ct.len(), 5);
-    assert!(ct.iter().all(|r| (r.value.unwrap() - 37.0).abs() < 1.0), "{ct:?}");
-    assert_eq!(ct[0].algorithm_version.as_deref(), Some("core-temp-ekf-hr-hf/1"));
+    assert!(
+        ct.iter().all(|r| (r.value.unwrap() - 37.0).abs() < 1.0),
+        "{ct:?}"
+    );
+    assert_eq!(
+        ct[0].algorithm_version.as_deref(),
+        Some("core-temp-ekf-hr-hf/1")
+    );
     // Without heart rate for 10 minutes the estimate stops (no extrapolation without data).
     let quiet = T0 + 310 * S + 5 * 60 * S;
     for m in 1..=12 {
@@ -348,5 +372,9 @@ fn f_sig_03_without_a_rip_band_respiration_comes_from_the_ecg() {
     let rr = k.values("respiration_rate");
     assert!(!rr.is_empty(), "EDR window");
     assert_eq!(rr[0].algorithm_version.as_deref(), Some("resp-edr-ramp/1"));
-    assert!((rr[0].value.unwrap() - 15.0).abs() < 2.0, "{:?}", rr[0].value);
+    assert!(
+        (rr[0].value.unwrap() - 15.0).abs() < 2.0,
+        "{:?}",
+        rr[0].value
+    );
 }

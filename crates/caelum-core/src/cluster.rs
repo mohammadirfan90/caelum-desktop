@@ -719,7 +719,8 @@ pub fn pending_rows(
         let Some(row) = db.replica_row(&table, &key).map_err(|e| e.to_string())? else {
             continue;
         };
-        let payload = serde_json::to_vec(&RowChange { table, key, row }).map_err(|e| e.to_string())?;
+        let payload =
+            serde_json::to_vec(&RowChange { table, key, row }).map_err(|e| e.to_string())?;
         bodies.push(EntryBody {
             kind: EventKind::new(ROW_KIND).map_err(|e| e.to_string())?,
             at_tai_ns: now_tai_ns,
@@ -741,4 +742,109 @@ pub fn row_applier() -> Applier {
         db.replica_apply(entry.fence.node.as_str(), &change.table, &change.row)
             .map_err(failure)
     })
+}
+
+/// Configuration kind of a crew station (secondary display or kiosk) on the crew LAN.
+pub const CREW_STATION_KIND: &str = "crew-station";
+
+/// One node of the pair, as a crew station reaches it.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct NodeEndpoint {
+    /// LAN address (`ip:port`).
+    pub address: String,
+    /// The name its certificate is issued for.
+    pub server_name: String,
+    /// SHA-256 of its certificate (hex), pinned.
+    pub fingerprint: String,
+}
+
+/// The signed `crew-station` bundle (CR-017 §4): what this station is and where the pair is.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CrewStationConfig {
+    /// Bundle version.
+    pub version: String,
+    /// `secondary` (users sign in) or `kiosk` (crew-wide emergency view, no sign-in).
+    pub role: String,
+    /// Crew-LAN CA certificate (PEM).
+    pub ca_pem: String,
+    /// The nodes of the pair; the station follows whichever is primary.
+    pub nodes: Vec<NodeEndpoint>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct CrewStationFile {
+    station: CrewStationConfig,
+}
+
+/// A checked crew-station configuration.
+#[derive(Debug, Clone)]
+pub struct CrewStationPlan {
+    /// The configuration.
+    pub config: CrewStationConfig,
+    /// Kiosk (true) or secondary display.
+    pub kiosk: bool,
+    /// Nodes: address, server name, pinned fingerprint.
+    pub nodes: Vec<(SocketAddr, String, Fingerprint)>,
+}
+
+impl CrewStationConfig {
+    /// Parses and checks the bundle content.
+    pub fn parse(text: &str) -> Result<CrewStationPlan, String> {
+        let f: CrewStationFile = toml::from_str(text).map_err(|e| e.to_string())?;
+        let c = f.station;
+        let kiosk = match c.role.as_str() {
+            "kiosk" => true,
+            "secondary" => false,
+            _ => return Err("role is secondary or kiosk".into()),
+        };
+        if !c.ca_pem.contains("BEGIN CERTIFICATE") {
+            return Err("ca_pem must be a PEM certificate".into());
+        }
+        if c.nodes.is_empty() || c.nodes.len() > 2 {
+            return Err("one or two nodes".into());
+        }
+        let mut nodes = Vec::new();
+        for n in &c.nodes {
+            let addr: SocketAddr = n
+                .address
+                .parse()
+                .map_err(|_| "node address must be ip:port".to_owned())?;
+            if n.server_name.trim().is_empty() {
+                return Err("node server_name is required".into());
+            }
+            nodes.push((
+                addr,
+                n.server_name.clone(),
+                hex32(&n.fingerprint, "node fingerprint")?,
+            ));
+        }
+        Ok(CrewStationPlan {
+            config: c,
+            kiosk,
+            nodes,
+        })
+    }
+}
+
+/// The crew-station configuration in force (re-verified, SR-009), if any.
+pub fn crew_station_in_force(db: &Database) -> Result<Option<CrewStationPlan>, String> {
+    let Some((version, signature, content)) = db
+        .latest_config_bundle(CREW_STATION_KIND)
+        .map_err(|e| e.to_string())?
+    else {
+        return Ok(None);
+    };
+    verify_config(
+        CREW_STATION_KIND,
+        content.as_bytes(),
+        &signature,
+        &built_in_keys(),
+        TrustPolicy::for_this_build(),
+    )
+    .map_err(|e| format!("the stored crew-station configuration no longer verifies: {e}"))?;
+    let plan = CrewStationConfig::parse(&content)?;
+    Ok((plan.config.version == version).then_some(plan))
 }

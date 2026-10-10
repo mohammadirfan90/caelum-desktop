@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 
 import { App } from "./App";
 import { commands, events } from "./bindings";
+import { CrewStation } from "./screens/CrewStation";
 import { WaveformWindow } from "./screens/Windows";
 import "./styles/index.css";
 
@@ -24,6 +25,34 @@ const dataEvents = {
     }),
 };
 
-createRoot(root).render(
-  <StrictMode>{waveform ? <WaveformWindow api={commands} events={dataEvents} /> : <App />}</StrictMode>,
+// F-SYS-05: an installation configured as a crew station shows what the primary streams.
+const onCrewLan = (handler: () => void) => {
+  let stop: (() => void) | null = null;
+  void events.crewLanChanged.listen(handler).then((u) => {
+    stop = u;
+  });
+  return () => {
+    stop?.();
+  };
+};
+const render = (crewStation: boolean) => {
+  createRoot(root).render(
+    <StrictMode>
+      {waveform ? (
+        <WaveformWindow api={commands} events={dataEvents} />
+      ) : crewStation ? (
+        <CrewStation api={commands} onChange={onCrewLan} />
+      ) : (
+        <App />
+      )}
+    </StrictMode>,
+  );
+};
+commands.crewLanStatus().then(
+  (r) => {
+    render(r.status === "ok" && r.data.configured);
+  },
+  () => {
+    render(false);
+  },
 );

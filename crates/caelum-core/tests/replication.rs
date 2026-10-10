@@ -84,7 +84,8 @@ impl Link {
             let (last, bodies) = pending_rows(&self.primary_db, 64, now).unwrap();
             let Some(last) = last else { return n };
             for body in bodies {
-                let e = LogEntry::create(&self.head, self.fence.clone(), body, &self.signer).unwrap();
+                let e =
+                    LogEntry::create(&self.head, self.fence.clone(), body, &self.signer).unwrap();
                 self.standby.append(&e).unwrap();
                 self.head = ChainHead::of(&e);
                 n += 1;
@@ -94,11 +95,23 @@ impl Link {
     }
 }
 
-fn spo2(a: &mut Node, acq: &mut Acquisition, device: caelum_domain::ids::DeviceId, pct: i16, t: i64) {
+fn spo2(
+    a: &mut Node,
+    acq: &mut Acquisition,
+    device: caelum_domain::ids::DeviceId,
+    pct: i16,
+    t: i64,
+) {
     a.at(t);
     let payload = emu::plx_continuous(emu::sfloat(pct, 0), emu::sfloat(80, 0), 0);
     let out = acq
-        .notification(a.station.db(), device, gatt::PLX_CONTINUOUS, &payload, TaiNs(t))
+        .notification(
+            a.station.db(),
+            device,
+            gatt::PLX_CONTINUOUS,
+            &payload,
+            TaiNs(t),
+        )
         .unwrap();
     for obs in &out.observations {
         a.station.observe(obs).unwrap();
@@ -109,7 +122,9 @@ fn spo2(a: &mut Node, acq: &mut Acquisition, device: caelum_domain::ids::DeviceI
 fn alarm_rows(db: &Database, rule: &str) -> Vec<(String, i64)> {
     let conn = db.connection();
     let mut stmt = conn
-        .prepare("SELECT id, escalation_stage FROM alarm WHERE rule_id = ?1 AND resolved_at_tai IS NULL")
+        .prepare(
+            "SELECT id, escalation_stage FROM alarm WHERE rule_id = ?1 AND resolved_at_tai IS NULL",
+        )
         .unwrap();
     stmt.query_map([rule], |r| Ok((r.get(0)?, r.get(1)?)))
         .unwrap()
@@ -122,7 +137,9 @@ fn f_sys_04_r_ops_02_the_standby_holds_the_record_and_resumes_the_alarm_on_promo
     let mut a = Node::new();
     let mut b = Node::new();
     // The pair is formed before any record exists on b; a held its record already.
-    a.station.create_first_administrator("admin", ADMIN).unwrap();
+    a.station
+        .create_first_administrator("admin", ADMIN)
+        .unwrap();
     a.station.login("admin", ADMIN.as_bytes()).unwrap();
     a.station.reauth(ADMIN.as_bytes()).unwrap();
     let fx = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/roster/");
@@ -209,7 +226,11 @@ fn f_sys_04_r_ops_02_the_standby_holds_the_record_and_resumes_the_alarm_on_promo
         b.station.alarm_acknowledge(alarm_id),
         Err(StationError::Rejected(r)) if r == STANDBY_REFUSAL
     ));
-    assert_eq!(alarm_rows(b.station.db(), "spo2.critical"), on_a, "nothing changed on b");
+    assert_eq!(
+        alarm_rows(b.station.db(), "spo2.critical"),
+        on_a,
+        "nothing changed on b"
+    );
 
     // a fails; b is promoted and the alarm continues from its stage (SR-007 restart path).
     b.station.promote().unwrap();
@@ -221,7 +242,12 @@ fn f_sys_04_r_ops_02_the_standby_holds_the_record_and_resumes_the_alarm_on_promo
     }
     let after = alarm_rows(b.station.db(), "spo2.critical");
     assert_eq!(after.len(), 1);
-    assert!(after[0].1 > stage_before, "escalation continued: {} -> {}", stage_before, after[0].1);
+    assert!(
+        after[0].1 > stage_before,
+        "escalation continued: {} -> {}",
+        stage_before,
+        after[0].1
+    );
     // And b accepts the acknowledgement now.
     b.station.alarm_acknowledge(alarm_id).unwrap();
 }
@@ -240,7 +266,12 @@ fn f_sys_04_a_replicated_row_for_an_unknown_table_or_column_is_refused() {
 #[test]
 fn f_sys_04_capture_is_off_until_an_instance_is_primary() {
     let mut a = Node::new();
-    a.station.create_first_administrator("admin", ADMIN).unwrap();
+    a.station
+        .create_first_administrator("admin", ADMIN)
+        .unwrap();
     let db = a.db();
-    assert!(db.cluster_outbox(10).unwrap().is_empty(), "a standalone station queues nothing");
+    assert!(
+        db.cluster_outbox(10).unwrap().is_empty(),
+        "a standalone station queues nothing"
+    );
 }

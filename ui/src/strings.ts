@@ -118,6 +118,12 @@ export const en = {
   emergencyTitle: "Emergency view",
   emergencyAlarms: "Active alarms, whole crew",
   emergencyNoAlarms: "No active alarms on this station.",
+  crewStationTitle: "Crew station",
+  crewStationConnected: "Connected to the primary station.",
+  crewStationNoLink: "No link to the primary station: NO DATA.",
+  crewStationSignIn: "Sign in on the primary",
+  crewStationSignedIn: (name: string) => `Signed in on the primary as ${name}.`,
+  crewStationState: (state: string, stage: number) => `${state.replaceAll("_", " ")}, stage ${String(stage)}`,
   emergencyNotAudited: "This opening could not be recorded in the audit log.",
   back: "Back",
   errors: {

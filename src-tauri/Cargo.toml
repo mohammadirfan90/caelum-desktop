@@ -23,6 +23,9 @@ caelum-domain.workspace = true
 tokio = { version = "1", features = ["sync", "time"] }
 # Fail-over pair and crew LAN (CR-017).
 caelum-cluster.workspace = true
+# Crew-station client over the crew LAN (CR-017; same versions as caelum-cluster).
+futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
+tokio-tungstenite = { version = "0.29", default-features = false, features = ["handshake"] }
 tracing = "0.1.44"
 # Default features minus `common-controls-v6`: CAELUM has no predefined `about` menu, and that
 # feature makes Windows test binaries fail to load (STATUS_ENTRYPOINT_NOT_FOUND).

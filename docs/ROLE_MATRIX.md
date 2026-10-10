@@ -107,6 +107,10 @@ lead (CR-003) until a licensed clinician advisor countersigns; it does not block
 | `dicom_view` | CMO, Flight Surgeon | Read-only; uncompressed and pure-Rust codecs only (CR-014) |
 | `config_apply_cluster` | Admin | Signed bundle kind cluster (CR-017 §4); re-authentication (§4); audited; takes effect at the next start |
 | `cluster_identity_set` | Admin | PEM, kept in the encrypted records; re-authentication (§4); audited without the key; takes effect at the next start |
+| `config_apply_crew_station` | Admin | Signed bundle kind crew-station; re-authentication (§4); audited; takes effect at the next start |
+| `crew_lan_status` | public | What the primary serves this station, already role-projected by the primary |
+| `crew_lan_sign_in` | public | Credentials checked by the primary (throttled, audited there) |
+| `crew_lan_sign_out` | public | Ends the session on the primary |
 
 ## 4. Sessions
 - Onboard: PIN plus device-bound key; auto-lock after 10 minutes (configurable). Ground: password

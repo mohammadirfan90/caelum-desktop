@@ -153,11 +153,23 @@ export const commands = {
 	 *  Takes effect at the next start.
 	 */
 	clusterIdentitySet: (chainPem: string, keyPem: string) => typedError<null, CommandError>(__TAURI_INVOKE("cluster_identity_set", { chainPem, keyPem })),
+	/**  Applies the signed crew-station configuration (administrator, re-authentication). */
+	configApplyCrewStation: (bundle: string, signature: string) => typedError<string, CommandError>(__TAURI_INVOKE("config_apply_crew_station", { bundle, signature })),
+	/**
+	 *  This crew station's link and the alarms the primary serves it (public: the primary decides
+	 *  what each viewer may see).
+	 */
+	crewLanStatus: () => typedError<CrewLanView, CommandError>(__TAURI_INVOKE("crew_lan_status")),
+	/**  Signs a user in on the primary from this station (the primary checks, throttles and audits). */
+	crewLanSignIn: (username: string, secret: string) => typedError<string, CommandError>(__TAURI_INVOKE("crew_lan_sign_in", { username, secret })),
+	/**  Signs the crew-station user out on the primary. */
+	crewLanSignOut: () => typedError<null, CommandError>(__TAURI_INVOKE("crew_lan_sign_out")),
 };
 
 /** Events */
 export const events = {
 	alarmBusEvent: makeEvent<AlarmBusEvent>("alarm-bus-event"),
+	crewLanChanged: makeEvent<CrewLanChanged>("crew-lan-changed"),
 	devicesChanged: makeEvent<DevicesChanged>("devices-changed"),
 	observationsChanged: makeEvent<ObservationsChanged>("observations-changed"),
 };
@@ -439,6 +451,25 @@ export type CommandError = {
 	message: string,
 	/**  For `throttled`: seconds until the next attempt is accepted. */
 	retryAfterS: number | null,
+};
+
+/**  The view changed (value-free: windows call `crew_lan_status`). */
+export type CrewLanChanged = null;
+
+/**  This crew station's view. */
+export type CrewLanView = {
+	/**  A signed crew-station configuration is in force. */
+	configured: boolean,
+	/**  A kiosk (emergency view without sign-in) rather than a secondary display. */
+	kiosk: boolean,
+	/**  Streaming from the primary now. */
+	connected: boolean,
+	/**  The user signed in on the primary from here. */
+	signedIn: string | null,
+	/**  Why the station shows NO DATA. */
+	problem: string | null,
+	/**  Alarms as served (empty when not connected: never the last known state). */
+	alarms: RemoteAlarm[],
 };
 
 /**  A crew member on the roster (no health data). */
@@ -799,6 +830,24 @@ export type Reading = {
 	classification: string,
 	/**  Source device ID. */
 	deviceId: string | null,
+};
+
+/**  One alarm as the primary serves it to this station. */
+export type RemoteAlarm = {
+	/**  Alarm ID. */
+	alarmId: string,
+	/**  Crew member. */
+	crewId: string,
+	/**  `critical` / `warning` / `observe`. */
+	priority: string,
+	/**  Category. */
+	category: string,
+	/**  State. */
+	state: string,
+	/**  Escalation stage. */
+	stage: number,
+	/**  Title, when the viewer may see the detail. */
+	title: string | null,
 };
 
 /**  A role (`docs/ROLE_MATRIX.md` §1). */

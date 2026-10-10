@@ -68,6 +68,10 @@ fn main() {
             "dicom_view",
             "config_apply_cluster",
             "cluster_identity_set",
+            "config_apply_crew_station",
+            "crew_lan_status",
+            "crew_lan_sign_in",
+            "crew_lan_sign_out",
         ]));
     if let Err(error) = tauri_build::try_build(attributes) {
         panic!("tauri-build failed: {error:#}");
