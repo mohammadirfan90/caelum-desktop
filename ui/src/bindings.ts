@@ -550,6 +550,11 @@ export type GroundStatus = {
 	pathBProblem: string | null,
 	/**  Vehicle bridge (inbound) health. */
 	vehicle: VehicleLink,
+	/**
+	 *  Fail-over role of this instance: `standalone` until a signed cluster configuration
+	 *  provisions a standby (F-SYS-04, docs/integration/M11.md).
+	 */
+	instanceRole: string,
 };
 
 /**  Link status (counts only). */

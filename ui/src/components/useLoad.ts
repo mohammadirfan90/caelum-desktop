@@ -18,7 +18,15 @@ export function useLoad<T>(load: (() => Promise<Res<T>>) | null, key: string): L
   useEffect(() => {
     if (load === null) return;
     let current = true;
-    load().then(
+    // A failure before the call even starts (e.g. the command is not available) is shown like
+    // any other failure, never thrown out of the effect.
+    let pending: Promise<Res<T>>;
+    try {
+      pending = load();
+    } catch (e: unknown) {
+      pending = Promise.reject(e instanceof Error ? e : new Error(String(e)));
+    }
+    pending.then(
       (r) => {
         if (!current) return;
         setResult(r.status === "ok" ? { state: "ok", data: r.data } : { state: "error", message: errorText(r.error) });

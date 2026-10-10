@@ -3,6 +3,7 @@ import { useEffect, useId, useState } from "react";
 import type { AlarmView } from "../alarmStore";
 import type { Api, DataEvents } from "../api";
 import type { CrewMember, SessionInfo } from "../bindings";
+import { useLoad } from "../components/useLoad";
 import { EmptyState, NoData } from "../components/Values";
 import { type Level, LevelGlyph } from "../components/LevelGlyph";
 import { type Screen, screensFor } from "../navigation";
@@ -17,6 +18,37 @@ import { Devices } from "./Devices";
 import { Environment } from "./Environment";
 import { Ground } from "./Ground";
 import { Medical } from "./Medical";
+
+/** Status footer (docs/07 §3): device links, ground link and instance role from the core; NO DATA
+ * when the role may not read them or they are not known. */
+function Footer({ api, version }: { readonly api: Api; readonly version: number }) {
+  const devices = useLoad(() => api.deviceList(), `d${String(version)}`);
+  const ground = useLoad(() => api.groundStatus(), `g${String(version)}`);
+  return (
+    <footer aria-label={strings.footerLabel} className="flex flex-wrap gap-6 border-t border-border px-5 py-2 text-sm">
+      <span className="flex items-center gap-2">
+        {strings.linkState}
+        {devices.state === "ok" ? (
+          <span>{strings.footerDevices(devices.data.filter((d) => d.status === "connected").length, devices.data.length)}</span>
+        ) : (
+          <NoData status="noData" />
+        )}
+      </span>
+      <span className="flex items-center gap-2">
+        {strings.groundLink}
+        {ground.state === "ok" ? <span>{strings.footerPathB[String(ground.data.pathBConfigured)]}</span> : <NoData status="noData" />}
+      </span>
+      <span className="flex items-center gap-2">
+        {strings.instanceRole}
+        {ground.state === "ok" ? (
+          <span>{strings.footerInstance[ground.data.instanceRole] ?? ground.data.instanceRole}</span>
+        ) : (
+          <NoData status="noData" />
+        )}
+      </span>
+    </footer>
+  );
+}
 
 const NO_EVENTS: DataEvents = {
   onObservations: () => Promise.resolve(() => undefined),
@@ -285,20 +317,7 @@ export function Shell({
             </section>
           )}
         </main>
-        <footer aria-label={strings.footerLabel} className="flex flex-wrap gap-6 border-t border-border px-5 py-2 text-sm">
-          <span className="flex items-center gap-2">
-            {strings.linkState}
-            <NoData status="noData" />
-          </span>
-          <span className="flex items-center gap-2">
-            {strings.groundLink}
-            <NoData status="noData" />
-          </span>
-          <span className="flex items-center gap-2">
-            {strings.instanceRole}
-            <NoData status="noData" />
-          </span>
-        </footer>
+        <Footer api={api} version={deviceVersion} />
       </div>
     </div>
   );

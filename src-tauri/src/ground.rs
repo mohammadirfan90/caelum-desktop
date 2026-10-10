@@ -25,6 +25,9 @@ pub struct GroundStatus {
     pub path_b_problem: Option<String>,
     /// Vehicle bridge (inbound) health.
     pub vehicle: VehicleLink,
+    /// Fail-over role of this instance: `standalone` until a signed cluster configuration
+    /// provisions a standby (F-SYS-04, docs/integration/M11.md).
+    pub instance_role: String,
 }
 
 /// Ground and path B status (all signed-in roles; counts only).
@@ -45,6 +48,7 @@ pub async fn ground_status(
         path_b_waiting: u32::try_from(p.waiting).unwrap_or(u32::MAX),
         path_b_problem: p.problem,
         vehicle,
+        instance_role: "standalone".to_owned(),
     })
 }
 

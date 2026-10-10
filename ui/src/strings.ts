@@ -86,6 +86,9 @@ export const en = {
   linkState: "Device links",
   groundLink: "Ground link",
   instanceRole: "Instance",
+  footerDevices: (connected: number, total: number) => `${String(connected)} of ${String(total)} connected`,
+  footerPathB: { true: "Status link configured", false: "Status link not configured" } as Record<string, string>,
+  footerInstance: { standalone: "Standalone", primary: "Primary", standby: "Standby", fenced: "Fenced" } as Record<string, string>,
   signedInAs: (name: string, role: string) => `${name} (${role})`,
   role: {
     astronaut: "Astronaut",
