@@ -22,7 +22,25 @@ tokio = { version = "1", features = ["rt", "time", "sync", "macros"] }
 serialport = { version = "4.10.1", default-features = false }
 thiserror = "2.0.21"
 uuid = { version = "1.28.0", features = ["v4"] }
+# --- Clinical file formats (M8, CR-014) ---
+# F-ACQ-06, F-ACQ-07: dicom-rs (stack item), pure Rust. Codecs limited to the pure-Rust JPEG
+# codec (jpeg-decoder, jpeg-encoder), RLE Lossless and Deflate (miniz_oxide): no JPEG 2000,
+# JPEG-LS or JPEG XL (native libraries or unsafe-heavy ports). No default features (no rayon/simd).
+dicom-core = "0.10.0"
+dicom-dictionary-std = "0.10.0"
+dicom-object = { version = "0.10.0", default-features = false, features = ["deflate"] }
+dicom-pixeldata = { version = "0.10.0", default-features = false }
+dicom-transfer-syntax-registry = { version = "0.10.0", default-features = false, features = ["jpeg", "rle", "deflate"] }
+# F-ACQ-07: HL7 aECG XML (stack item). DTDs are refused; no entity expansion.
+quick-xml = "0.42.0"
+# F-ACQ-08: FHIR R4 JSON import; base64 for DiagnosticReport.presentedForm attachments.
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+base64 = "0.22.1"
 
+[dev-dependencies]
+# Builds JPEG Baseline frames for the DICOM import tests (F-ACQ-06); test only.
+jpeg-encoder = "0.6.1"
 
 [lints]
 workspace = true
