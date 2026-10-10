@@ -196,6 +196,17 @@ export const en = {
     weight: "Weight",
     glucose: "Glucose",
     battery_level: "Battery",
+    pvt_median_rt: "Reaction time (PVT median)",
+    cabin_co2: "Cabin CO₂",
+    cabin_o2: "Cabin O₂",
+    cabin_pressure: "Cabin pressure",
+    cabin_temp: "Cabin temperature",
+    cabin_humidity: "Cabin humidity",
+    radiation_dose_rate: "Dose rate",
+    radiation_dose_cumulative: "Cumulative dose",
+    spe_state: "Solar particle event",
+    exercise_load: "Exercise load",
+    exercise_duration: "Exercise duration",
   } as Record<string, string>,
   unit: { "/min": "/min", "%": "%", Cel: "°C", "mm[Hg]": "mmHg", kg: "kg", ms: "ms", "mg/dL": "mg/dL" } as Record<string, string>,
   sourceAt: (source: string, at: string) => `${source} · ${at}`,
@@ -385,6 +396,38 @@ export const en = {
   pvtResult: (median: number | null, lapses: number, n: number) =>
     `Median reaction ${median === null ? "NO DATA" : `${median.toFixed(0)} ms`} · ${String(lapses)} lapses · ${String(n)} responses`,
   pvtStop: "Stop test",
+
+  // Environment (docs/07 §4; F-ENV-01..04)
+  envCabin: "Cabin atmosphere",
+  envRadiation: "Radiation",
+  envExercise: "Exercise",
+  envCorrelation: "Environment and physiology",
+  envCorrelationHelp: "The same period for a cabin value and a body value, to see whether they change together.",
+  envEnvParam: "Environment value",
+  envBodyParam: "Body value",
+  envNoVehicle: "Vehicle data arrives once a signed vehicle table is installed and the vehicle sends it.",
+
+  // Ground (docs/07 §4; F-GND-11, SR-015)
+  groundTitle: "Ground and vehicle links",
+  pathBTitle: "Status to the vehicle (path B)",
+  pathBConfigured: (v: string) => `Configured (ground configuration ${v})`,
+  pathBNotConfigured: "Not configured",
+  pathBWaiting: (n: number) => `${String(n)} status records waiting to be sent`,
+  vehicleTitle: "Vehicle data (inbound)",
+  vehicleRunning: (v: string) => `Receiving with vehicle table ${v}`,
+  vehicleStopped: "Not receiving",
+  vehicleCounts: (d: number, r: number) => `${String(d)} packets · ${String(r)} readings`,
+  vehicleClock: (c: string) => `Vehicle clock: ${c}`,
+  vehicleOffset: (ms: number) => `Receipt minus vehicle time: ${ms.toFixed(1)} ms`,
+  vehicleDropped: (code: string, n: number) => `${code}: ${String(n)} dropped`,
+  clockStates: { not_configured: "not configured", unknown: "unknown", set: "set", not_set: "not set", stale: "stale" } as Record<string, string>,
+
+  // Advisory models (F-ML-01)
+  modelsTitle: "Advisory models",
+  modelsEmpty: "No models are installed. Model outputs are advisory and never change alarm rules.",
+  modelStatus: { VALIDATED: "Validated", INVESTIGATIONAL: "Investigational", DISABLED: "Disabled", UNAVAILABLE: "Unavailable" } as Record<string, string>,
+  modelDevelopment: "DEVELOPMENT MODEL",
+  modelAdvisory: (status: string) => `ADVISORY · ${status}`,
 
   // Settings (F-SYS-10)
   settingsTitle: "Display",

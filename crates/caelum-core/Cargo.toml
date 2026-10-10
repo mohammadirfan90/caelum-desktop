@@ -27,6 +27,8 @@ caelum-test-equipment = { workspace = true, optional = true }
 # Free disk space for the storage watchdog (F-SYS-09); pure Rust, MIT OR Apache-2.0.
 fs4 = "1.1"
 serde = { version = "1", features = ["derive"] }
+# Path B item signing with the instance key (CR-016).
+ed25519-dalek = "3"
 serde_json = "1.0.151"
 # Signed configuration bundles (crew roster, CR-012 §2); same parser as the ruleset.
 toml = "1"

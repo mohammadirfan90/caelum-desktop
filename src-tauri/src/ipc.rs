@@ -82,6 +82,11 @@ static BUILDER: LazyLock<Builder<Wry>> = LazyLock::new(|| {
             crate::clinical::attachment_import,
             crate::clinical::attachment_list,
             crate::clinical::attachment_get,
+            crate::vehicle::config_apply_vehicle,
+            crate::vehicle::vehicle_link_status,
+            crate::ground::config_apply_ground,
+            crate::ground::ground_status,
+            crate::ground::model_list,
         ])
         .events(collect_events![
             crate::events::AlarmBusEvent,

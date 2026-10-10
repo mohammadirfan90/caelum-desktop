@@ -108,6 +108,16 @@ export const commands = {
 	attachmentList: (crewMemberId: string | null) => typedError<Attachment[], CommandError>(__TAURI_INVOKE("attachment_list", { crewMemberId })),
 	/**  One decrypted attachment's bytes. */
 	attachmentGet: (id: string) => typedError<number[], CommandError>(__TAURI_INVOKE("attachment_get", { id })),
+	/**  Applies a signed vehicle MID table (administrator, re-authentication). */
+	configApplyVehicle: (bundle: string, signature: string) => typedError<string, CommandError>(__TAURI_INVOKE("config_apply_vehicle", { bundle, signature })),
+	/**  Vehicle bridge health (technical roles). */
+	vehicleLinkStatus: () => typedError<VehicleLink, CommandError>(__TAURI_INVOKE("vehicle_link_status")),
+	/**  Applies the signed ground configuration (administrator, re-authentication). */
+	configApplyGround: (bundle: string, signature: string) => typedError<string, CommandError>(__TAURI_INVOKE("config_apply_ground", { bundle, signature })),
+	/**  Ground and path B status (all signed-in roles; counts only). */
+	groundStatus: () => typedError<GroundStatus, CommandError>(__TAURI_INVOKE("ground_status")),
+	/**  Installed advisory models with their validation status (F-ML-01). */
+	modelList: () => typedError<ModelItem[], CommandError>(__TAURI_INVOKE("model_list")),
 };
 
 /** Events */
@@ -509,6 +519,20 @@ export type Freshness =
 /**  Marked unusable by the device. */
 "unusable";
 
+/**  Path B and vehicle-bridge status. */
+export type GroundStatus = {
+	/**  A signed ground configuration is in force and path B is open. */
+	pathBConfigured: boolean,
+	/**  Ground configuration version. */
+	groundVersion: string | null,
+	/**  OPS records waiting for the vehicle endpoint. */
+	pathBWaiting: number,
+	/**  Why path B is not running. */
+	pathBProblem: string | null,
+	/**  Vehicle bridge (inbound) health. */
+	vehicle: VehicleLink,
+};
+
 /**  A medication or kit entry. */
 export type MedicationEntry = {
 	/**  ID. */
@@ -527,6 +551,28 @@ export type MedicationEntry = {
 	note: string | null,
 	/**  At, UTC ms. */
 	atUtcMs: number | null,
+};
+
+/**  An installed advisory model. */
+export type ModelItem = {
+	/**  Model ID. */
+	id: string,
+	/**  Name. */
+	name: string,
+	/**  Version. */
+	version: string,
+	/**  `VALIDATED` / `NOT_VALIDATED` / `RESEARCH`. */
+	validation: string,
+	/**  `VALIDATED` / `INVESTIGATIONAL` / `DISABLED` / `UNAVAILABLE`. */
+	status: string,
+	/**  Why disabled or unavailable. */
+	reason: string | null,
+	/**  Signed with development keys only. */
+	developmentSigned: boolean,
+	/**  Intended use. */
+	intendedUse: string,
+	/**  Limitations. */
+	limitations: string,
 };
 
 /**  A device found by a scan. */
@@ -754,6 +800,26 @@ export type UserItem = {
 	crewMemberId: string | null,
 	/**  Cannot sign in. */
 	disabled: boolean,
+};
+
+/**  Link health shown to technical roles (no physiology). */
+export type VehicleLink = {
+	/**  A signed MID table is in force and the receiver is bound. */
+	running: boolean,
+	/**  MID table version. */
+	version: string | null,
+	/**  Why the receiver is not running (bind failure, no table). */
+	problem: string | null,
+	/**  Datagrams received. */
+	datagrams: number,
+	/**  Readings decoded. */
+	readings: number,
+	/**  Drops by reason code. */
+	rejected: ([string, number])[],
+	/**  Vehicle clock state: `not_configured`, `unknown`, `set`, `not_set`, `stale`. */
+	clock: string | null,
+	/**  Latest receipt − vehicle time, ms. */
+	latestOffsetMs: number | null,
 };
 
 /**  The newest value of a parameter with its freshness and source. */

@@ -153,6 +153,11 @@ impl<S: QueueStore, K: PacketSink> PathBPublisher<S, K> {
         })
     }
 
+    /// OPS records waiting to be sent.
+    pub fn waiting(&self) -> usize {
+        self.queue.stats().pending
+    }
+
     /// The sink (tests, link statistics).
     pub fn sink(&self) -> &K {
         &self.sink

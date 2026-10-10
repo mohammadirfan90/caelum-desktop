@@ -51,6 +51,11 @@ fn main() {
             "attachment_import",
             "attachment_list",
             "attachment_get",
+            "config_apply_vehicle",
+            "vehicle_link_status",
+            "config_apply_ground",
+            "ground_status",
+            "model_list",
         ]));
     if let Err(error) = tauri_build::try_build(attributes) {
         panic!("tauri-build failed: {error:#}");

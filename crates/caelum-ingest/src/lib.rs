@@ -10,4 +10,6 @@ pub mod reading;
 
 pub use clock::{ClockOffset, SyncSample};
 pub use pipeline::{ingest, Rejection};
-pub use reading::{DeviceFlags, Observation, Provenance, RawReading, RawValue, TimeSource, Value};
+pub use reading::{
+    DeviceFlags, Observation, Original, Provenance, RawReading, RawValue, TimeSource, Value,
+};

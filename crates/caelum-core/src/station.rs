@@ -26,8 +26,10 @@ use crate::alarms::{AlarmService, AlarmServiceError, Output, RulesetStatus};
 mod admin;
 pub mod clinical;
 pub use clinical::{CrewOverviewItem, PvtResult, PROTOCOLS_KIND};
+pub mod pathb;
 pub mod reads;
 mod runtime;
+pub mod vehicle;
 pub use admin::{RosterApplied, UserSummary, CREW_KIND};
 pub use runtime::{Ingested, BLE_SIG_ADAPTER, RUNTIME_ADAPTERS};
 
@@ -95,6 +97,10 @@ pub struct Station {
     watch: Watch,
     acquisition: crate::acquisition::Acquisition,
     attachments: caelum_security::attachments::AttachmentStore,
+    path_b: Option<(String, pathb::PathB)>,
+    /// Advisory models (F-ML-01, CR-018). Empty until signed packages are installed; outputs
+    /// are advisory only and never reach the rules except through the observe-only gate.
+    models: caelum_ml::registry::Registry,
 }
 
 /// Watchdog state between ticks (F-SYS-09).
@@ -169,6 +175,8 @@ impl Station {
                 caelum_security::attachments::attachment_key(keystore)?,
             )
             .map_err(|e| StationError::Rejected(e.to_string()))?,
+            path_b: None,
+            models: caelum_ml::registry::Registry::new(),
             acquisition: crate::acquisition::Acquisition::new()
                 .map_err(|e| StationError::Rejected(format!("leap-second table: {e}")))?,
         };
@@ -185,6 +193,18 @@ impl Station {
                     &json!({"instance_key_id": key_id}),
                 )?;
             }
+        }
+        // Path B (SR-015): opened from the signed ground configuration in force. A stored
+        // configuration that no longer verifies leaves path B closed and raises its alarm.
+        if station.open_path_b().is_err() {
+            let now = station.now()?;
+            station.alarms.technical(
+                &station.db,
+                pathb::PATH_B_RULE,
+                None,
+                Some(json!({ "path_b": "the stored ground configuration could not be opened" })),
+                now,
+            )?;
         }
         // F-SYS-09: start-up self-test; failures raise technical alarms.
         station.run_self_test(caelum_alarms::technical::Limits::DEFAULT.storage_low_bytes)?;
@@ -497,7 +517,10 @@ impl Station {
             }
         }
         self.apply_technical(changes, now)?;
-        Ok(self.alarms.tick(&self.db, now)?)
+        let out = self.alarms.tick(&self.db, now)?;
+        // SR-015: the ground stage goes to the vehicle on path B, never via the medical system.
+        self.publish_ops(&out.notices, now)?;
+        Ok(out)
     }
 
     /// `ruleset_status` (public): the ruleset in force, for the SR-009 banner.

@@ -18,9 +18,11 @@ pub mod clinical;
 pub mod commands;
 pub mod devices;
 pub mod events;
+pub mod ground;
 pub mod ipc;
 pub mod reads;
 pub mod state;
+pub mod vehicle;
 
 /// Builds and runs the application. Errors are returned, never unwrapped.
 ///
@@ -39,6 +41,7 @@ pub fn run() -> tauri::Result<()> {
             state::inject_test_faults(&app.state::<state::AppState>());
             state::start_alarm_tick(app.handle().clone());
             devices::start_device_runtime(app.handle().clone());
+            vehicle::start_vehicle_bridge(app.handle().clone());
             Ok(())
         })
         .invoke_handler(ipc::invoke_handler())

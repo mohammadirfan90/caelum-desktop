@@ -102,6 +102,11 @@ impl InstanceKey {
     pub fn sign(&self, message: &[u8]) -> [u8; 64] {
         self.0.sign(message).to_bytes()
     }
+
+    /// The Ed25519 public key (for signed downlink items, CR-016); the secret never leaves.
+    pub fn public_key(&self) -> VerifyingKey {
+        self.0.verifying_key()
+    }
 }
 
 impl std::fmt::Debug for InstanceKey {

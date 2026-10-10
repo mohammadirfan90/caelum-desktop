@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-ground-status"
+description = "Enables the ground_status command without any pre-configured scope."
+commands.allow = ["ground_status"]
+
+[[permission]]
+identifier = "deny-ground-status"
+description = "Denies the ground_status command without any pre-configured scope."
+commands.deny = ["ground_status"]

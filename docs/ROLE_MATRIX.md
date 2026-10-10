@@ -90,6 +90,11 @@ lead (CR-003) until a licensed clinician advisor countersigns; it does not block
 | `attachment_import` | CMO, Flight Surgeon | AES-256-GCM store (CR-019 §6); audited |
 | `attachment_list` | CMO, Flight Surgeon | §2 attachments |
 | `attachment_get` | CMO, Flight Surgeon | Tag and hash checked; never partial data |
+| `config_apply_vehicle` | Admin | Signed bundle kind vehicle (CR-015); re-authentication (§4); audited |
+| `vehicle_link_status` | CMO, Flight Surgeon, BME, Admin | Technical health only, no physiology (F-GND-11, ICD-VEH §9) |
+| `config_apply_ground` | Admin | Signed bundle kind ground: APID plan, path B endpoint, CFDP entities (CR-016); re-authentication (§4); audited |
+| `ground_status` | Astronaut, CMO, Flight Surgeon, BME, MCC, Admin | Configuration, backlog counts and link state only (docs/06 §3a) |
+| `model_list` | Astronaut, CMO, Flight Surgeon, BME | Validation status shown in the UI (F-ML-01, CR-018); never MCC |
 
 ## 4. Sessions
 - Onboard: PIN plus device-bound key; auto-lock after 10 minutes (configurable). Ground: password

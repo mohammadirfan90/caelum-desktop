@@ -49,6 +49,11 @@
     "allow-checklist-list",
     "allow-attachment-import",
     "allow-attachment-list",
-    "allow-attachment-get"
+    "allow-attachment-get",
+    "allow-config-apply-vehicle",
+    "allow-vehicle-link-status",
+    "allow-config-apply-ground",
+    "allow-ground-status",
+    "allow-model-list"
   ]
 }

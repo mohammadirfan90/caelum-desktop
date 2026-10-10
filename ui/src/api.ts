@@ -8,6 +8,8 @@ import type {
   CheckinEntry,
   ChecklistRun,
   Encounter,
+  GroundStatus,
+  ModelItem,
   MedicationEntry,
   OverviewEntry,
   ProtocolItem,
@@ -100,6 +102,9 @@ export interface Api {
   readonly checklistList: () => Promise<Res<ChecklistRun[]>>;
   readonly attachmentImport: (crewMemberId: string, kind: string, filename: string, bytes: number[]) => Promise<Res<string>>;
   readonly attachmentList: (crewMemberId: string | null) => Promise<Res<Attachment[]>>;
+  // Ground, path B and models (M9, M10, M12)
+  readonly groundStatus: () => Promise<Res<GroundStatus>>;
+  readonly modelList: () => Promise<Res<ModelItem[]>>;
 }
 
 /** Subscriptions to the value-free change events (new readings, device changes). */

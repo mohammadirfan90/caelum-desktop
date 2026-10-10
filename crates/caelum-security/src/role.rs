@@ -237,6 +237,16 @@ pub enum Command {
     AttachmentList,
     /// One decrypted, integrity-checked attachment.
     AttachmentGet,
+    /// Apply a signed vehicle MID table; re-authentication required.
+    ConfigApplyVehicle,
+    /// Vehicle bridge health: datagrams, drops, clock correlation.
+    VehicleLinkStatus,
+    /// Apply the signed ground configuration; re-authentication required.
+    ConfigApplyGround,
+    /// Ground and path B link status (counts only, no physiology).
+    GroundStatus,
+    /// Installed advisory models with validation status (F-ML-01).
+    ModelList,
 }
 
 /// Who may call a command.
@@ -252,7 +262,7 @@ pub enum Access {
 
 impl Command {
     /// Every command.
-    pub const ALL: [Command; 47] = [
+    pub const ALL: [Command; 52] = [
         Command::AppInfo,
         Command::AuthLogin,
         Command::AuthLogout,
@@ -300,6 +310,11 @@ impl Command {
         Command::AttachmentImport,
         Command::AttachmentList,
         Command::AttachmentGet,
+        Command::ConfigApplyVehicle,
+        Command::VehicleLinkStatus,
+        Command::ConfigApplyGround,
+        Command::GroundStatus,
+        Command::ModelList,
     ];
 
     /// The IPC command name.
@@ -352,6 +367,11 @@ impl Command {
             Command::AttachmentImport => "attachment_import",
             Command::AttachmentList => "attachment_list",
             Command::AttachmentGet => "attachment_get",
+            Command::ConfigApplyVehicle => "config_apply_vehicle",
+            Command::VehicleLinkStatus => "vehicle_link_status",
+            Command::ConfigApplyGround => "config_apply_ground",
+            Command::GroundStatus => "ground_status",
+            Command::ModelList => "model_list",
         }
     }
 
@@ -437,6 +457,11 @@ impl Command {
             Command::AttachmentImport => Access::Roles(&[Role::Cmo, Role::FlightSurgeon]),
             Command::AttachmentList => Access::Roles(&[Role::Cmo, Role::FlightSurgeon]),
             Command::AttachmentGet => Access::Roles(&[Role::Cmo, Role::FlightSurgeon]),
+            Command::ConfigApplyVehicle => Access::Roles(&[Role::Administrator]),
+            Command::VehicleLinkStatus => Access::Roles(&[Role::Cmo, Role::FlightSurgeon, Role::Bme, Role::Administrator]),
+            Command::ConfigApplyGround => Access::Roles(&[Role::Administrator]),
+            Command::GroundStatus => Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon, Role::Bme, Role::Mcc, Role::Administrator]),
+            Command::ModelList => Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon, Role::Bme]),
         }
     }
 

@@ -14,6 +14,8 @@ import { Audit } from "./Audit";
 import { Checks } from "./Checks";
 import { Body, type CrewContext, Home } from "./Crew";
 import { Devices } from "./Devices";
+import { Environment } from "./Environment";
+import { Ground } from "./Ground";
 import { Medical } from "./Medical";
 
 const NO_EVENTS: DataEvents = {
@@ -278,7 +280,8 @@ export function Shell({
               {screen === "medical" ? (
                 <Medical api={api} userRole={session.role} self={session.userId} crewId={crewId} crew={crew} version={observed} />
               ) : null}
-              {screen === "env" || screen === "ground" ? <EmptyState detail={strings.screenNoData} /> : null}
+              {screen === "env" ? <Environment api={api} crewId={crewId} version={observed} /> : null}
+              {screen === "ground" ? <Ground api={api} version={deviceVersion} /> : null}
             </section>
           )}
         </main>

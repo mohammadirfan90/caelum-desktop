@@ -10,6 +10,7 @@ import { Card, NoData, SectionHead } from "../components/Values";
 import { strings } from "../strings";
 import { utcDateTime } from "../time";
 import { errorText } from "./Access";
+import { Models } from "./Ground";
 import { Protocols } from "./Protocols";
 
 const unitText = (u: string) => strings.unit[u] ?? u;
@@ -483,6 +484,7 @@ export function Medical({
       )}
       <Medication api={api} userRole={userRole} crew={crew} />
       <Protocols api={api} crewId={crewId} canRun={userRole === "cmo"} />
+      <Models api={api} />
     </div>
   );
 }

@@ -157,7 +157,7 @@ function EcgStrip({ chunks }: { readonly chunks: readonly WaveformChunk[] }) {
 }
 
 /** Trend chart: the readings over the window and the personal range when a baseline exists. */
-function TrendChart({ trend, parameter }: { readonly trend: TrendData; readonly parameter: string }) {
+export function TrendChart({ trend, parameter }: { readonly trend: TrendData; readonly parameter: string }) {
   const pts = trend.points.filter((p) => p.value !== null && p.measuredAtUtcMs !== null);
   const b = trend.baseline;
   if (pts.length === 0) return <p className="text-sm text-ink-3">{strings.trendNone}</p>;

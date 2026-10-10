@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-vehicle-link-status"
+description = "Enables the vehicle_link_status command without any pre-configured scope."
+commands.allow = ["vehicle_link_status"]
+
+[[permission]]
+identifier = "deny-vehicle-link-status"
+description = "Denies the vehicle_link_status command without any pre-configured scope."
+commands.deny = ["vehicle_link_status"]
