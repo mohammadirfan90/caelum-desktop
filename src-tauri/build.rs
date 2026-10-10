@@ -59,6 +59,9 @@ fn main() {
             "window_open_waveform",
             "export_fhir",
             "export_csv",
+            "config_apply_mds",
+            "mds_identity_set",
+            "mds_status",
         ]));
     if let Err(error) = tauri_build::try_build(attributes) {
         panic!("tauri-build failed: {error:#}");

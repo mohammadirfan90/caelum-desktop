@@ -422,6 +422,10 @@ export const en = {
   vehicleDropped: (code: string, n: number) => `${code}: ${String(n)} dropped`,
   clockStates: { not_configured: "not configured", unknown: "unknown", set: "set", not_set: "not set", stale: "stale" } as Record<string, string>,
 
+  mdsTitle: "Medical data system (path A)",
+  mdsHealth: { connected: "Connected", degraded: "Degraded", unreachable: "Unreachable", not_configured: "Not configured" } as Record<string, string>,
+  mdsCounts: (pending: number, held: number) => `${String(pending)} records waiting · ${String(held)} held for review`,
+
   // Advisory models (F-ML-01)
   modelsTitle: "Advisory models",
   modelsEmpty: "No models are installed. Model outputs are advisory and never change alarm rules.",

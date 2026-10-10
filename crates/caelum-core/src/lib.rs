@@ -8,10 +8,13 @@
 
 pub mod acquisition;
 pub mod alarms;
+pub mod mds;
 pub mod station;
 
 /// Device adapters (BLE central, pairing) for the application shell's device runtime.
 pub use caelum_devices as devices;
+/// The medical data system HTTPS transport (mutual TLS 1.3, CR-016 §9).
+pub use caelum_mds::https as mds_transport;
 /// Advisory models (status views for the shell).
 pub use caelum_ml as ml;
 /// Security types used by the application shell (roles, sessions, audit).

@@ -72,6 +72,22 @@ fn open_station(data_dir: &Path) -> Result<Station, StationError> {
     )
 }
 
+/// The medical data system service on its own connection to the records (CR-016), opened after
+/// the station (whose keys must exist). `None` when the records cannot be opened: the station
+/// reports why, and alarms never depend on this link.
+pub fn open_mds_service(data_dir: &Path) -> Option<caelum_core::mds::MdsService> {
+    use caelum_core::security::keys::{database_key, IfMissing};
+    let keystore = OsKeyStore::open().ok()?;
+    let (key, _) = database_key(&keystore, IfMissing::Fail).ok()?;
+    let db = caelum_core::store::Database::open(
+        &data_dir.join(caelum_core::station::DATABASE_FILE),
+        &key,
+    )
+    .ok()?;
+    let leap = caelum_domain::time::LeapSeconds::bundled().ok()?;
+    Some(caelum_core::mds::MdsService::new(db, leap))
+}
+
 /// The computer's name, used as the break-glass audit target; `None` if the OS does not say.
 fn station_name() -> Option<String> {
     ["COMPUTERNAME", "HOSTNAME"]

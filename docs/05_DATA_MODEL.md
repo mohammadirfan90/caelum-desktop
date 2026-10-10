@@ -51,8 +51,9 @@ OS keystore. Attachment file store: AES-256-GCM.
 | uplink_item | id, kind, signature, verified_by, applied_at |
 | audit_entry | id, at, actor, role, action, target, details JSON, prev_hash, hash, signature |
 | config_bundle | id, kind, version, signature, applied_at, content (verified bytes, re-verified before use; SR-009 fallback) |
-| mds_outbox | id, resource_type, client_id (idempotency), payload, state (pending/sent/acked/failed), attempts, last_error, created_at, acked_at |
-| mds_inbox | id, source_id, resource_type, received_at, ingested (bool), dedup_key |
+| mds_outbox | client_id (idempotency), record JSON: resource, kind, priority, state (pending/in flight/acknowledged/held for review), attempts, next attempt, last error, server id (CR-016) |
+| mds_inbox_seen | source_id (SR-016 de-duplication), version |
+| mds_state | key, value: read-back high-water mark, summary watermark, client identity (CR-016 §10) |
 
 ## 3. Provenance and simulation guard
 `Observation.classification` is an enum with no "simulated" variant in release builds. In

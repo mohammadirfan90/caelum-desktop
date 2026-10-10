@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mds-identity-set"
+description = "Enables the mds_identity_set command without any pre-configured scope."
+commands.allow = ["mds_identity_set"]
+
+[[permission]]
+identifier = "deny-mds-identity-set"
+description = "Denies the mds_identity_set command without any pre-configured scope."
+commands.deny = ["mds_identity_set"]

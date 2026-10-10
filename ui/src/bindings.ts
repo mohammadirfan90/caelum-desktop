@@ -124,6 +124,12 @@ export const commands = {
 	exportFhir: (crewMemberId: string, windowS: number) => typedError<string, CommandError>(__TAURI_INVOKE("export_fhir", { crewMemberId, windowS })),
 	/**  One parameter over the last `window_s` as CSV. */
 	exportCsv: (crewMemberId: string, parameter: string, windowS: number) => typedError<string, CommandError>(__TAURI_INVOKE("export_csv", { crewMemberId, parameter, windowS })),
+	/**  Applies the signed medical data system configuration (administrator, re-authentication). */
+	configApplyMds: (bundle: string, signature: string) => typedError<string, CommandError>(__TAURI_INVOKE("config_apply_mds", { bundle, signature })),
+	/**  Sets this station's client certificate and key (PEM; administrator, re-authentication). */
+	mdsIdentitySet: (certPem: string, keyPem: string) => typedError<null, CommandError>(__TAURI_INVOKE("mds_identity_set", { certPem, keyPem })),
+	/**  Medical data system link status (counts only). */
+	mdsStatus: () => typedError<MdsLink, CommandError>(__TAURI_INVOKE("mds_status")),
 };
 
 /** Events */
@@ -542,6 +548,22 @@ export type GroundStatus = {
 	pathBProblem: string | null,
 	/**  Vehicle bridge (inbound) health. */
 	vehicle: VehicleLink,
+};
+
+/**  Link status (counts only). */
+export type MdsLink = {
+	/**  Configured with a signed configuration and a client identity. */
+	configured: boolean,
+	/**  Configuration version. */
+	version: string | null,
+	/**  `connected` / `degraded` / `unreachable` / `not_configured`. */
+	health: string,
+	/**  Records not yet acknowledged. */
+	pending: number,
+	/**  Records held for review. */
+	held: number,
+	/**  Why it is not running. */
+	problem: string | null,
 };
 
 /**  A medication or kit entry. */

@@ -7,6 +7,7 @@ import { strings } from "../strings";
 /** Ground (docs/07 §4; F-GND-11, SR-015): path B to the vehicle and the inbound vehicle bridge. */
 export function Ground({ api, version }: { readonly api: Api; readonly version: number }) {
   const status = useLoad(() => api.groundStatus(), String(version));
+  const mds = useLoad(() => api.mdsStatus(), String(version));
   if (status.state === "error") return <NoticeLine notice={{ kind: "error", text: status.message }} />;
   if (status.state !== "ok") return null;
   const s = status.data;
@@ -18,6 +19,17 @@ export function Ground({ api, version }: { readonly api: Api; readonly version: 
         <p className="mt-3 font-semibold">{s.pathBConfigured && s.groundVersion !== null ? strings.pathBConfigured(s.groundVersion) : strings.pathBNotConfigured}</p>
         {s.pathBProblem === null ? null : <p className="text-sm">{s.pathBProblem}</p>}
         {s.pathBConfigured ? <p className="text-sm">{strings.pathBWaiting(s.pathBWaiting)}</p> : null}
+      </Card>
+      <Card label={strings.mdsTitle}>
+        <SectionHead title={strings.mdsTitle} />
+        {mds.state === "error" ? <NoticeLine notice={{ kind: "error", text: mds.message }} /> : null}
+        {mds.state === "ok" ? (
+          <>
+            <p className="mt-3 font-semibold">{strings.mdsHealth[mds.data.health] ?? mds.data.health}</p>
+            {mds.data.problem === null ? null : <p className="text-sm">{mds.data.problem}</p>}
+            {mds.data.configured ? <p className="text-sm">{strings.mdsCounts(mds.data.pending, mds.data.held)}</p> : null}
+          </>
+        ) : null}
       </Card>
       <Card label={strings.vehicleTitle}>
         <SectionHead title={strings.vehicleTitle} />

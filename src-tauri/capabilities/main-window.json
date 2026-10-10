@@ -57,6 +57,9 @@
     "allow-model-list",
     "allow-window-open-waveform",
     "allow-export-fhir",
-    "allow-export-csv"
+    "allow-export-csv",
+    "allow-config-apply-mds",
+    "allow-mds-identity-set",
+    "allow-mds-status"
   ]
 }

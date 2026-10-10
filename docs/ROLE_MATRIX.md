@@ -98,6 +98,9 @@ lead (CR-003) until a licensed clinician advisor countersigns; it does not block
 | `window_open_waveform` | Astronaut, CMO, Flight Surgeon, BME | Second window on the same session; its data still comes from authorised commands (F-SYS-13) |
 | `export_fhir` | CMO, Flight Surgeon | At most 30 days; simulated data never exported (docs/05 §3); audited |
 | `export_csv` | CMO, Flight Surgeon, BME | RFC 4180, UTC times; simulated data never exported; audited |
+| `config_apply_mds` | Admin | Signed bundle kind mds (CR-016 §10); re-authentication (§4); audited |
+| `mds_identity_set` | Admin | PEM, kept in the encrypted records; re-authentication (§4); audited without the key |
+| `mds_status` | CMO, Flight Surgeon, BME, Admin | Health, pending and held counts; no record content |
 
 ## 4. Sessions
 - Onboard: PIN plus device-bound key; auto-lock after 10 minutes (configurable). Ground: password

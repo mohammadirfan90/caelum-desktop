@@ -12,6 +12,7 @@ mod repo;
 mod repo_acquisition;
 mod repo_clinical;
 mod repo_crew;
+mod repo_mds;
 mod repo_reads;
 
 pub use db::{Database, StoreError};

@@ -253,6 +253,12 @@ pub enum Command {
     ExportFhir,
     /// Export one parameter as CSV (F-SYS-08).
     ExportCsv,
+    /// Apply the signed medical data system configuration; re-authentication required.
+    ConfigApplyMds,
+    /// Set the station's client certificate and key for the medical data system.
+    MdsIdentitySet,
+    /// Medical data system link status (counts only).
+    MdsStatus,
 }
 
 /// Who may call a command.
@@ -268,7 +274,7 @@ pub enum Access {
 
 impl Command {
     /// Every command.
-    pub const ALL: [Command; 55] = [
+    pub const ALL: [Command; 58] = [
         Command::AppInfo,
         Command::AuthLogin,
         Command::AuthLogout,
@@ -324,6 +330,9 @@ impl Command {
         Command::WindowOpenWaveform,
         Command::ExportFhir,
         Command::ExportCsv,
+        Command::ConfigApplyMds,
+        Command::MdsIdentitySet,
+        Command::MdsStatus,
     ];
 
     /// The IPC command name.
@@ -384,6 +393,9 @@ impl Command {
             Command::WindowOpenWaveform => "window_open_waveform",
             Command::ExportFhir => "export_fhir",
             Command::ExportCsv => "export_csv",
+            Command::ConfigApplyMds => "config_apply_mds",
+            Command::MdsIdentitySet => "mds_identity_set",
+            Command::MdsStatus => "mds_status",
         }
     }
 
@@ -477,6 +489,9 @@ impl Command {
             Command::WindowOpenWaveform => Access::Roles(&[Role::Astronaut, Role::Cmo, Role::FlightSurgeon, Role::Bme]),
             Command::ExportFhir => Access::Roles(&[Role::Cmo, Role::FlightSurgeon]),
             Command::ExportCsv => Access::Roles(&[Role::Cmo, Role::FlightSurgeon, Role::Bme]),
+            Command::ConfigApplyMds => Access::Roles(&[Role::Administrator]),
+            Command::MdsIdentitySet => Access::Roles(&[Role::Administrator]),
+            Command::MdsStatus => Access::Roles(&[Role::Cmo, Role::FlightSurgeon, Role::Bme, Role::Administrator]),
         }
     }
 

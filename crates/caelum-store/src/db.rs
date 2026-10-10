@@ -54,6 +54,8 @@ impl Database {
             return Err(StoreError::WrongKeyOrNotDatabase);
         }
         conn.pragma_update(None, "journal_mode", "WAL")?;
+        // The MDS connector has its own connection (CR-016): wait for the other's writes.
+        conn.busy_timeout(std::time::Duration::from_secs(5))?;
         conn.pragma_update(None, "synchronous", "FULL")?;
         conn.pragma_update(None, "foreign_keys", "ON")?;
         conn.pragma_update(None, "secure_delete", "ON")?;

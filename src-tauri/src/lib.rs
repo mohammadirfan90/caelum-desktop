@@ -20,6 +20,7 @@ pub mod devices;
 pub mod events;
 pub mod ground;
 pub mod ipc;
+pub mod mds;
 pub mod reads;
 pub mod state;
 pub mod vehicle;
@@ -49,6 +50,7 @@ pub fn run() -> tauri::Result<()> {
             state::start_alarm_tick(app.handle().clone());
             devices::start_device_runtime(app.handle().clone());
             vehicle::start_vehicle_bridge(app.handle().clone());
+            mds::start_mds(app.handle().clone(), state::open_mds_service(&data_dir));
             Ok(())
         })
         .invoke_handler(ipc::invoke_handler())

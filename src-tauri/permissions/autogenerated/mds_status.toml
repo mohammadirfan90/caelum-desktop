@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mds-status"
+description = "Enables the mds_status command without any pre-configured scope."
+commands.allow = ["mds_status"]
+
+[[permission]]
+identifier = "deny-mds-status"
+description = "Denies the mds_status command without any pre-configured scope."
+commands.deny = ["mds_status"]
