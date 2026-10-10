@@ -23,7 +23,7 @@ function stateText(state: string): string {
   return state in strings.alarmState ? strings.alarmState[state as keyof typeof strings.alarmState] : state;
 }
 
-function level(priority: string): Level {
+export function level(priority: string): Level {
   return priority === "critical" || priority === "warning" || priority === "observe" ? priority : "technical";
 }
 

@@ -18,6 +18,10 @@ import { Card, EmptyState, NoData, SectionHead, Stat } from "../../src/component
 import type { Api } from "../../src/api";
 import { RulesetBanner } from "../../src/RulesetBanner";
 import { Administration } from "../../src/screens/Admin";
+import { Alerts } from "../../src/screens/Alerts";
+import { Audit } from "../../src/screens/Audit";
+import { Body, Home } from "../../src/screens/Crew";
+import { Devices } from "../../src/screens/Devices";
 import { Locked, SignIn } from "../../src/screens/Access";
 import { EmergencyView, Shell } from "../../src/screens/Shell";
 import { applyPrefs, DEFAULT_PREFS, type Prefs } from "../../src/settings";
@@ -53,7 +57,52 @@ const api = {
         { id: "u2", username: "cmo.b", role: "cmo" as const, crewMemberId: "c2", disabled: true },
       ],
     }),
+  vitalsLatest: () =>
+    Promise.resolve({
+      status: "ok" as const,
+      data: [
+        { reading: { parameter: "spo2", value: 97, text: null, unit: "%", measuredAtTai: "1", measuredAtUtcMs: Date.UTC(2026, 9, 10, 12), quality: "good", classification: "measured", deviceId: "d1" }, status: "live" as const, ageS: 2, deviceModel: "Oximeter X" },
+        { reading: { parameter: "heart_rate", value: 72, text: null, unit: "/min", measuredAtTai: "1", measuredAtUtcMs: Date.UTC(2026, 9, 10, 11), quality: "good", classification: "measured", deviceId: "d1" }, status: "stale" as const, ageS: 3600, deviceModel: "Strap Y" },
+      ],
+    }),
+  vitalsTrend: () =>
+    Promise.resolve({
+      status: "ok" as const,
+      data: {
+        points: [70, 72, 75, 73].map((v, i) => ({ parameter: "heart_rate", value: v, text: null, unit: "/min", measuredAtTai: String(i), measuredAtUtcMs: Date.UTC(2026, 9, 10, 12, i), quality: "good", classification: "measured", deviceId: "d1" })),
+        baseline: { median: 71, mad: 2, n: 500, status: "established" },
+      },
+    }),
+  waveformRecent: () => Promise.resolve({ status: "ok" as const, data: [] }),
+  alarmList: () =>
+    Promise.resolve({
+      status: "ok" as const,
+      data: [
+        { id: "a1", crewMemberId: "c1", kind: "physiological", category: "RESPIRATORY", priority: "critical", state: "active", title: "Severe low blood oxygen", ruleId: "spo2.critical", createdAtTai: "1", createdAtUtcMs: Date.UTC(2026, 9, 10, 12), acknowledgedAtUtcMs: null, resolvedAtUtcMs: null, acknowledgedAtTai: null, groundAcknowledgedAtTai: null, silencedUntilTai: null, resolvedAtTai: null, escalationStage: 2, opsOnly: false },
+      ],
+    }),
+  alarmReport: () =>
+    Promise.resolve({
+      status: "ok" as const,
+      data: { fromTai: "0", toTai: "1", history: [], rules: [{ ruleId: "spo2.critical", priority: "critical", count: 2, medianAckS: 31, ackedEarly: 1, silenced: 0, selfResolved: 0, repeatBursts: 0 }], perCrew: [] },
+    }),
+  deviceList: () =>
+    Promise.resolve({
+      status: "ok" as const,
+      data: [
+        { id: "d1", adapter: "ble-sig", model: "Oximeter X", vendor: "unknown", serial: "AA:BB:CC:DD:EE:FF", firmware: null, crewMemberId: "c1", deviceUser: null, status: "connected", lastSeenTai: "1", lastSeenUtcMs: Date.UTC(2026, 9, 10, 12), clockOffsetMs: 3.2, batteryPct: 81 },
+        { id: "d2", adapter: "ble-wristband", model: "Band Z", vendor: "unknown", serial: "11:22:33:44:55:66", firmware: null, crewMemberId: null, deviceUser: null, status: "registered", lastSeenTai: null, lastSeenUtcMs: null, clockOffsetMs: null, batteryPct: null },
+      ],
+    }),
+  auditVerify: () => Promise.resolve({ status: "ok" as const, data: { entries: "3", intact: false, problems: [{ seq: "3", kind: "hashMismatch" as const }] } }),
+  auditList: () =>
+    Promise.resolve({
+      status: "ok" as const,
+      data: [{ seq: "1", id: "e1", atTai: "1", atUtcMs: Date.UTC(2026, 9, 10, 12), actor: "system", role: "system", action: "key.create", target: null, details: "{}" }],
+    }),
 } as unknown as Api;
+
+const crew = [{ id: "c1", name: "Fixture Astronaut A", position: "flight engineer", mission: "TEST-1", active: true }];
 
 function Gallery() {
   return (
@@ -89,6 +138,11 @@ const SCREENS: Record<string, () => ReactElement> = {
   ),
   gallery: () => <Gallery />,
   administration: () => <Administration api={api} self="u0" />,
+  home: () => <Home ctx={{ api, crewId: "c1", version: 0, alarms }} />,
+  body: () => <Body ctx={{ api, crewId: "c1", version: 0, alarms }} />,
+  alerts: () => <Alerts api={api} userRole="cmo" crew={crew} version={0} />,
+  devices: () => <Devices api={api} userRole="cmo" crew={crew} version={0} />,
+  audit: () => <Audit api={api} version={0} />,
 };
 
 const VARIANTS: Record<string, Prefs> = {
@@ -150,7 +204,13 @@ describe("accessibility (axe, WCAG 2.1 AA)", () => {
       it(`${name} in ${variant}`, async () => {
         applyPrefs(prefs);
         document.body.style.background = "var(--canvas)";
-        render(<main className="bg-canvas p-4 text-ink">{make()}</main>);
+        render(
+          // The scroll region is focusable, as in the shell (scrollable-region-focusable).
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+          <main tabIndex={0} className="h-screen overflow-auto bg-canvas p-4 text-ink">
+            {make()}
+          </main>,
+        );
         await settle();
         expect(await violations()).toEqual([]);
         if (variant === "200-glove") await page.screenshot({ path: `__screenshots__/${name}-200-glove.png` });
@@ -169,11 +229,23 @@ describe("accessibility (axe, WCAG 2.1 AA)", () => {
   for (const [name, make] of [...Object.entries(SCREENS), ["shell", shell] as const]) {
     it(`${name}: text doubles at 200 % and nothing is clipped (docs/07 §5)`, async () => {
       applyPrefs(DEFAULT_PREFS);
-      const view = render(<main className="bg-canvas p-4 text-ink">{make()}</main>);
+      const view = render(
+          // The scroll region is focusable, as in the shell (scrollable-region-focusable).
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+          <main tabIndex={0} className="h-screen overflow-auto bg-canvas p-4 text-ink">
+            {make()}
+          </main>,
+        );
       await settle();
       const normal = textSizes();
       applyPrefs({ ...DEFAULT_PREFS, textScale: 200, glove: true });
-      view.rerender(<main className="bg-canvas p-4 text-ink">{make()}</main>);
+      view.rerender(
+          // The scroll region is focusable, as in the shell (scrollable-region-focusable).
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+          <main tabIndex={0} className="h-screen overflow-auto bg-canvas p-4 text-ink">
+            {make()}
+          </main>,
+        );
       await settle();
       const large = textSizes();
       expect(normal.length).toBeGreaterThan(0);

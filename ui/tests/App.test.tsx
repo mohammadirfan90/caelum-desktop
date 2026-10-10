@@ -25,14 +25,17 @@ function api(overrides: Partial<Api> = {}): Partial<Api> {
       Promise.resolve({ status: "ok" as const, data: { state: "verified" as const, version: "1.0.0", development: false, reason: null } }),
     setupStatus: () => Promise.resolve({ status: "ok" as const, data: false }),
     authMe: () => Promise.resolve(err("signInRequired")),
+    crewList: () => Promise.resolve({ status: "ok" as const, data: [] }),
+    vitalsLatest: () => Promise.resolve({ status: "ok" as const, data: [] }),
     ...overrides,
   };
 }
 
 const noAlarms = () => Promise.resolve(() => undefined);
+const noData = { onObservations: () => Promise.resolve(() => undefined), onDevices: () => Promise.resolve(() => undefined) };
 
 function renderApp(a: Partial<Api>, subscribe: Parameters<typeof App>[0]["subscribeAlarms"] = noAlarms) {
-  return render(<App api={a} subscribeAlarms={subscribe} makeAudio={() => ({ loop: false, currentTime: 0, play: () => Promise.resolve(), pause: () => undefined })} />);
+  return render(<App api={a} subscribeAlarms={subscribe} dataEvents={noData} makeAudio={() => ({ loop: false, currentTime: 0, play: () => Promise.resolve(), pause: () => undefined })} />);
 }
 
 describe("App", () => {
@@ -180,7 +183,7 @@ describe("App", () => {
         paused += 1;
       },
     });
-    render(<App api={api()} subscribeAlarms={subscribe} makeAudio={makeAudio} />);
+    render(<App api={api()} subscribeAlarms={subscribe} dataEvents={noData} makeAudio={makeAudio} />);
     await waitFor(() => {
       expect(handler).toBeDefined();
     });

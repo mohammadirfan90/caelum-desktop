@@ -1,14 +1,23 @@
-import { useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import type { AlarmView } from "../alarmStore";
-import type { Api } from "../api";
-import type { SessionInfo } from "../bindings";
+import type { Api, DataEvents } from "../api";
+import type { CrewMember, SessionInfo } from "../bindings";
 import { EmptyState, NoData } from "../components/Values";
 import { type Level, LevelGlyph } from "../components/LevelGlyph";
 import { type Screen, screensFor } from "../navigation";
 import { type Prefs, TEXT_SCALES, type Theme } from "../settings";
 import { strings } from "../strings";
 import { Administration } from "./Admin";
+import { Alerts } from "./Alerts";
+import { Audit } from "./Audit";
+import { Body, type CrewContext, Home } from "./Crew";
+import { Devices } from "./Devices";
+
+const NO_EVENTS: DataEvents = {
+  onObservations: () => Promise.resolve(() => undefined),
+  onDevices: () => Promise.resolve(() => undefined),
+};
 
 /** Crew-wide emergency view (F-ALM-07, SR-014): every active alarm on this station. */
 export function EmergencyView({
@@ -128,15 +137,68 @@ export function Shell({
   prefs,
   onPrefs,
   onSignOut,
+  alarms = [],
+  events = NO_EVENTS,
 }: {
   readonly api: Api;
   readonly session: SessionInfo;
   readonly prefs: Prefs;
   readonly onPrefs: (p: Prefs) => void;
   readonly onSignOut: () => void;
+  /** Open alarms from the alarm bus (no values). */
+  readonly alarms?: readonly AlarmView[];
+  /** Value-free change events (new readings, device changes). */
+  readonly events?: DataEvents;
 }) {
   const screens = screensFor(session.role);
   const [screen, setScreen] = useState<Screen>(screens[0] ?? "settings");
+  const crewSelectId = useId();
+  const [crew, setCrew] = useState<CrewMember[]>([]);
+  const [chosen, setChosen] = useState<string | null>(null);
+  const [observed, setObserved] = useState(0);
+  const [deviceVersion, setDeviceVersion] = useState(0);
+  const seesCrew = session.role !== "mcc" && session.role !== "device_gateway";
+  useEffect(() => {
+    if (!seesCrew) return;
+    let current = true;
+    void api.crewList().then((r) => {
+      if (current && r.status === "ok") setCrew(r.data);
+    });
+    return () => {
+      current = false;
+    };
+  }, [api, seesCrew]);
+  // An astronaut sees only their own data (ROLE_MATRIX §2); others choose a crew member.
+  const crewId = session.role === "astronaut" ? session.crewMemberId : chosen;
+  useEffect(() => {
+    let stops: (() => void)[] = [];
+    let current = true;
+    void Promise.all([
+      events.onObservations((id) => {
+        if (id === crewId) setObserved((n) => n + 1);
+      }),
+      events.onDevices(() => {
+        setDeviceVersion((n) => n + 1);
+      }),
+    ]).then((s) => {
+      if (current) {
+        stops = s;
+      } else {
+        s.forEach((stop) => {
+          stop();
+        });
+      }
+    });
+    return () => {
+      current = false;
+      stops.forEach((stop) => {
+        stop();
+      });
+    };
+  }, [events, crewId]);
+  const ctx: CrewContext = { api, crewId, version: observed, alarms };
+  const alarmVersion = alarms.length + alarms.reduce((n, a) => n + a.stages.length, 0);
+  const crewName = crew.find((c) => c.id === crewId)?.name;
   return (
     <div className="flex min-h-0 flex-1">
       <nav aria-label={strings.navLabel} className="w-48 shrink-0 border-r border-border bg-surface p-3">
@@ -159,7 +221,32 @@ export function Shell({
       </nav>
       <div className="flex min-w-0 flex-1 flex-col">
         <section aria-label={strings.crewStripLabel} className="flex items-center justify-between gap-4 border-b border-border px-5 py-3">
-          <span className="text-sm text-ink-3">{strings.crewNotSelected}</span>
+          {session.role === "astronaut" || !seesCrew ? (
+            <span className="text-sm text-ink-3">{crewName ?? strings.crewNotSelected}</span>
+          ) : (
+            <span className="flex items-center gap-2">
+              <label htmlFor={crewSelectId} className="text-sm font-semibold">
+                {strings.crewSelect}
+              </label>
+              <select
+                id={crewSelectId}
+                className="min-h-12 rounded-lg border border-ink-3 bg-surface px-3"
+                value={chosen ?? ""}
+                onChange={(e) => {
+                  setChosen(e.target.value === "" ? null : e.target.value);
+                }}
+              >
+                <option value="">{crew.length === 0 ? strings.crewNoRoster : strings.crewSelectNone}</option>
+                {crew
+                  .filter((c) => c.active)
+                  .map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+              </select>
+            </span>
+          )}
           <span className="flex items-center gap-3">
             <span className="text-sm font-semibold">{strings.signedInAs(session.username, strings.role[session.role])}</span>
             <button type="button" className="btn btn-soft" onClick={onSignOut}>
@@ -167,18 +254,27 @@ export function Shell({
             </button>
           </span>
         </section>
-        <main id="content" tabIndex={-1} className="flex-1 overflow-auto p-6">
+        {/* Focusable so keyboard users can scroll it (axe scrollable-region-focusable). */}
+        {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
+        <main id="content" tabIndex={0} className="flex-1 overflow-auto p-6">
           {screen === "settings" ? (
             <div className="flex flex-col gap-10">
               <SettingsScreen prefs={prefs} onChange={onPrefs} />
               {session.role === "administrator" ? <Administration api={api} self={session.userId} /> : null}
             </div>
           ) : (
-            <section aria-labelledby="screen-title" className="flex flex-col gap-2">
+            <section aria-labelledby="screen-title" className="flex flex-col gap-4">
               <h2 id="screen-title" className="text-2xl font-semibold">
                 {strings.screen[screen]}
               </h2>
-              <EmptyState detail={strings.screenNoData} />
+              {screen === "home" ? <Home ctx={ctx} /> : null}
+              {screen === "body" ? <Body ctx={ctx} /> : null}
+              {screen === "alerts" ? <Alerts api={api} userRole={session.role} crew={crew} version={alarmVersion} /> : null}
+              {screen === "devices" ? <Devices api={api} userRole={session.role} crew={crew} version={deviceVersion} /> : null}
+              {screen === "audit" ? <Audit api={api} version={deviceVersion} /> : null}
+              {screen === "checks" || screen === "env" || screen === "medical" || screen === "ground" ? (
+                <EmptyState detail={strings.screenNoData} />
+              ) : null}
             </section>
           )}
         </main>

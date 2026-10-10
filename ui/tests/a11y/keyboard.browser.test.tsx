@@ -35,6 +35,8 @@ function station() {
     },
     alarmAcknowledge: vi.fn(() => Promise.resolve({ status: "ok" as const, data: "onboard" as const })),
     breakGlassOpen: () => Promise.resolve({ status: "ok", data: { opened: true, audited: true } }),
+    crewList: () => Promise.resolve({ status: "ok", data: [{ id: "c1", name: "Fixture Astronaut A", position: "flight engineer", mission: "TEST-1", active: true }] }),
+    vitalsLatest: () => Promise.resolve({ status: "ok", data: [] }),
   };
   const subscribe = (h: (e: AlarmBusEvent) => void) => {
     handler = h;
@@ -45,6 +47,7 @@ function station() {
       api={api}
       subscribeAlarms={subscribe}
       pollMs={3_600_000}
+      dataEvents={{ onObservations: () => Promise.resolve(() => undefined), onDevices: () => Promise.resolve(() => undefined) }}
       makeAudio={() => ({ loop: false, currentTime: 0, play: () => Promise.resolve(), pause: () => undefined })}
     />,
   );
@@ -73,6 +76,8 @@ function name(el: HTMLElement): string {
 async function tabTo(match: RegExp, max = 40): Promise<HTMLElement> {
   for (let i = 0; i < max; i++) {
     await userEvent.keyboard("{Tab}");
+    // Past the last control focus leaves the page (browser chrome) and the next Tab wraps around.
+    if (document.activeElement === document.body) continue;
     const el = focused();
     if (match.test(name(el))) return el;
   }
@@ -122,10 +127,10 @@ describe("keyboard-only walkthrough", () => {
     expect(settings).toHaveAttribute("aria-current", "page");
 
     // Theme by arrow keys inside the radio group, glove mode by Space.
-    await tabTo(/Light/);
+    await tabTo(/^Light$/);
     await userEvent.keyboard("{ArrowDown}");
     expect(document.documentElement.dataset.theme).toBe("dark");
-    await tabTo(/Glove/);
+    await tabTo(/^Glove/);
     await userEvent.keyboard(" ");
     expect(document.documentElement.dataset.glove).toBe("on");
     await noViolations();

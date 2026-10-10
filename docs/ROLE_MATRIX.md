@@ -109,5 +109,6 @@ Screens in the nav rail per role. A screen is shown only where §2 grants the da
 | Medical | — | yes | yes | — | — | — |
 | Devices | yes | yes | yes | yes | — | yes |
 | Ground | — | — | yes | yes | yes | yes |
+| Audit | — | yes | yes | yes | — | yes |
 | Settings | yes | yes | yes | yes | yes | yes |
 

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
 import { AlarmSounder, type AudioLike } from "./alarmSound";
-import type { Api, Res } from "./api";
+import type { Api, DataEvents, Res } from "./api";
 import { type AlarmMap, ranked, reduce } from "./alarmStore";
 import { type AlarmBusEvent, type AppInfo, commands, events, type SessionInfo } from "./bindings";
 import { AlarmBar } from "./components/AlarmBar";
@@ -26,11 +26,25 @@ export interface AppProps {
   readonly subscribeAlarms?: (handler: (e: AlarmBusEvent) => void) => Promise<() => void>;
   /** Audio factory for alarm sounds. */
   readonly makeAudio?: (src: string) => AudioLike;
+  /** Value-free change events (new readings, device changes); the typed events by default. */
+  readonly dataEvents?: DataEvents;
   /** How often the session state is read (auto-lock detection), ms. */
   readonly pollMs?: number;
 }
 
 const newAudio = (src: string): AudioLike => new Audio(src);
+
+/** The value-free change events (CR-012 §4), from the generated typed events. */
+const tauriDataEvents: DataEvents = {
+  onObservations: (handler) =>
+    events.observationsChanged.listen((e) => {
+      handler(e.payload.crewId);
+    }),
+  onDevices: (handler) =>
+    events.devicesChanged.listen(() => {
+      handler();
+    }),
+};
 
 const listenAlarms = (handler: (e: AlarmBusEvent) => void) =>
   events.alarmBusEvent.listen((e) => {
@@ -60,7 +74,7 @@ function done(r: Res<unknown>): Result {
   return r.status === "ok" ? { status: "ok" } : { status: "error", error: r.error };
 }
 
-export function App({ api: overrides = {}, subscribeAlarms = listenAlarms, makeAudio = newAudio, pollMs = 10_000 }: AppProps) {
+export function App({ api: overrides = {}, subscribeAlarms = listenAlarms, makeAudio = newAudio, dataEvents = tauriDataEvents, pollMs = 10_000 }: AppProps) {
   const [api] = useState<Api>(() => ({ ...commands, ...overrides }));
   const [load, setLoad] = useState<Load>({ state: "loading" });
   const [phase, setPhase] = useState<Phase>({ kind: "loading" });
@@ -255,6 +269,8 @@ export function App({ api: overrides = {}, subscribeAlarms = listenAlarms, makeA
       {phase.kind === "active" ? (
         <Shell
           api={api}
+          alarms={list}
+          events={dataEvents}
           session={phase.session}
           prefs={prefs}
           onPrefs={onPrefs}

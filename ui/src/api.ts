@@ -1,13 +1,24 @@
 import type {
   AcknowledgeScope,
+  AlarmEntry,
+  AlarmInfo,
+  AlarmReportData,
   AppInfo,
+  AuditItem,
+  AuditStatus,
   BreakGlass,
   CommandError,
   CrewMember,
+  DeviceEntry,
+  NearbyDevice,
+  PairResult,
   RoleName,
   RosterResult,
   SessionInfo,
+  TrendData,
   UserItem,
+  VitalItem,
+  WaveformChunk,
 } from "./bindings";
 import type { RulesetResult } from "./RulesetBanner";
 
@@ -33,4 +44,25 @@ export interface Api {
   readonly userList: () => Promise<Res<UserItem[]>>;
   readonly userCreate: (username: string, role: RoleName, crewMemberId: string | null, secret: string) => Promise<Res<string>>;
   readonly userDisable: (userId: string) => Promise<Res<null>>;
+  // Crew screens (CR-012 §4)
+  readonly vitalsLatest: (crewMemberId: string) => Promise<Res<VitalItem[]>>;
+  readonly vitalsTrend: (crewMemberId: string, parameter: string, windowS: number) => Promise<Res<TrendData>>;
+  readonly waveformRecent: (crewMemberId: string, signal: string, seconds: number) => Promise<Res<WaveformChunk[]>>;
+  readonly alarmList: () => Promise<Res<AlarmEntry[]>>;
+  readonly alarmDetail: (alarm: string) => Promise<Res<AlarmInfo>>;
+  readonly alarmReport: (windowS: number) => Promise<Res<AlarmReportData>>;
+  readonly alarmEscalate: (alarm: string) => Promise<Res<null>>;
+  readonly deviceList: () => Promise<Res<DeviceEntry[]>>;
+  readonly deviceAssign: (deviceId: string, crewMemberId: string, deviceUser: number | null) => Promise<Res<null>>;
+  readonly deviceUnassign: (deviceId: string) => Promise<Res<null>>;
+  readonly deviceScan: () => Promise<Res<NearbyDevice[]>>;
+  readonly devicePair: (address: string, name: string | null, services: number[]) => Promise<Res<PairResult>>;
+  readonly auditList: () => Promise<Res<AuditItem[]>>;
+  readonly auditVerify: () => Promise<Res<AuditStatus>>;
+}
+
+/** Subscriptions to the value-free change events (new readings, device changes). */
+export interface DataEvents {
+  readonly onObservations: (handler: (crewId: string) => void) => Promise<() => void>;
+  readonly onDevices: (handler: () => void) => Promise<() => void>;
 }
