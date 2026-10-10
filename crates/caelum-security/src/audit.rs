@@ -69,11 +69,19 @@ pub enum AuditAction {
     UserCreated,
     /// Key created in the keystore (new installation).
     KeyCreated,
+    /// Alarm acknowledged onboard (F-ALM-05).
+    AlarmAcknowledged,
+    /// Ground escalation stage acknowledged by the flight surgeon.
+    AlarmGroundAcknowledged,
+    /// Alarm silenced (SR-008).
+    AlarmSilenced,
+    /// Alarm escalated by hand (F-ALM-05).
+    AlarmEscalated,
 }
 
 impl AuditAction {
     /// Every action.
-    pub const ALL: [AuditAction; 9] = [
+    pub const ALL: [AuditAction; 13] = [
         AuditAction::Login,
         AuditAction::LoginFailed,
         AuditAction::Logout,
@@ -83,6 +91,10 @@ impl AuditAction {
         AuditAction::BreakGlassOpened,
         AuditAction::UserCreated,
         AuditAction::KeyCreated,
+        AuditAction::AlarmAcknowledged,
+        AuditAction::AlarmGroundAcknowledged,
+        AuditAction::AlarmSilenced,
+        AuditAction::AlarmEscalated,
     ];
 
     /// Stored name.
@@ -97,6 +109,10 @@ impl AuditAction {
             AuditAction::BreakGlassOpened => "break_glass.open",
             AuditAction::UserCreated => "user.create",
             AuditAction::KeyCreated => "key.create",
+            AuditAction::AlarmAcknowledged => "alarm.acknowledge",
+            AuditAction::AlarmGroundAcknowledged => "alarm.ground_acknowledge",
+            AuditAction::AlarmSilenced => "alarm.silence",
+            AuditAction::AlarmEscalated => "alarm.escalate",
         }
     }
 
@@ -117,6 +133,10 @@ impl AuditAction {
             | AuditAction::BreakGlassOpened
             | AuditAction::UserCreated
             | AuditAction::KeyCreated => AuditCategory::Security,
+            AuditAction::AlarmAcknowledged
+            | AuditAction::AlarmGroundAcknowledged
+            | AuditAction::AlarmSilenced
+            | AuditAction::AlarmEscalated => AuditCategory::Clinical,
         }
     }
 }

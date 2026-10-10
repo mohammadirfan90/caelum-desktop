@@ -434,3 +434,163 @@ fn states_are_not_evaluated_and_safe_state_evaluates_nothing() {
     assert!(safe.observe(&t.db, &low, None).unwrap().is_empty());
     assert!(safe.event(&t.db, crew, "qrs", T).unwrap().is_empty());
 }
+
+fn stages(t: &TempDb) -> Vec<(String, i64)> {
+    let mut stmt =
+        t.db.connection()
+            .prepare("SELECT audience, stage FROM alarm_notification ORDER BY stage")
+            .unwrap();
+    stmt.query_map([], |r| Ok((r.get(0)?, r.get(1)?)))
+        .unwrap()
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap()
+}
+
+/// M4 gate, SR-007: stop CAELUM mid-escalation and start it again on the same records: the alarm
+/// is not raised twice, sound resumes, and escalation continues from the stored stage.
+#[test]
+fn sr_007_restart_mid_escalation_resumes_from_the_records() {
+    use caelum_alarms::escalation::{Notice, SoundScope};
+    use caelum_domain::observation::MeasurementMode::Continuous;
+    use caelum_domain::parameters::Parameter;
+    let t = TempDb::new();
+    let (crew, device) = crew_and_device(&t);
+    {
+        let mut s = load(&t.db, BUNDLED_RULESET, TrustPolicy::Development);
+        for k in 0..=15 {
+            s.observe(
+                &t.db,
+                &observation(crew, device, Parameter::Spo2, 80.0, k, Continuous),
+                None,
+            )
+            .unwrap();
+        }
+        // Created at 15 s (persistence); sound stage due 15 s later.
+        s.tick(&t.db, TaiNs(T.0 + 31 * 1_000_000_000)).unwrap();
+        assert_eq!(
+            stages(&t)
+                .iter()
+                .map(|(a, _)| a.as_str())
+                .collect::<Vec<_>>(),
+            ["astronaut", "cmo", "sound"]
+        );
+    } // CAELUM stops.
+    let mut s = load(&t.db, BUNDLED_RULESET, TrustPolicy::Development);
+    let resumed = s.take_restored();
+    assert!(
+        matches!(
+            &resumed[..],
+            [Notice::SoundOn {
+                scope: SoundScope::AllCrewStations,
+                wristband: true,
+                ..
+            }]
+        ),
+        "{resumed:?}"
+    );
+    // Still desaturated: no second alarm.
+    for k in 32..=40 {
+        let out = s
+            .observe(
+                &t.db,
+                &observation(crew, device, Parameter::Spo2, 80.0, k, Continuous),
+                None,
+            )
+            .unwrap();
+        assert!(out.events.is_empty(), "{:?}", out.events);
+    }
+    assert_eq!(state_of(&t, "spo2.critical"), ["active"]);
+    let crew_stage = s.tick(&t.db, TaiNs(T.0 + 45 * 1_000_000_000)).unwrap();
+    assert!(
+        crew_stage
+            .notices
+            .iter()
+            .any(|n| matches!(n, Notice::Stage { stage: 3, .. })),
+        "{crew_stage:?}"
+    );
+    let ground = s.tick(&t.db, TaiNs(T.0 + 75 * 1_000_000_000)).unwrap();
+    assert!(ground.notices.iter().any(|n| matches!(n, Notice::Ops(_))));
+    assert_eq!(
+        stages(&t).len(),
+        5,
+        "each stage delivered once: {:?}",
+        stages(&t)
+    );
+}
+
+/// F-ALM-05, SR-008: acknowledgement and silence are recorded and survive a restart.
+#[test]
+fn acknowledgement_and_silence_are_recorded_and_survive_a_restart() {
+    use caelum_alarms::escalation::Notice;
+    use caelum_domain::observation::MeasurementMode::Continuous;
+    use caelum_domain::parameters::Parameter;
+    let t = TempDb::new();
+    let (crew, device) = crew_and_device(&t);
+    let user = uuid::Uuid::new_v4().to_string();
+    t.db.connection()
+        .execute(
+            "INSERT INTO user (id, username, role, crew_member_id, credential) VALUES (?1, 'cmo', 'cmo', ?2, 'x')",
+            (&user, crew.to_string()),
+        )
+        .unwrap();
+    let mut s = load(&t.db, BUNDLED_RULESET, TrustPolicy::Development);
+    for k in 0..=15 {
+        s.observe(
+            &t.db,
+            &observation(crew, device, Parameter::Spo2, 80.0, k, Continuous),
+            None,
+        )
+        .unwrap();
+    }
+    let id: caelum_domain::ids::AlarmId =
+        t.db.connection()
+            .query_row(
+                "SELECT id FROM alarm WHERE rule_id = 'spo2.critical'",
+                [],
+                |r| r.get::<_, String>(0),
+            )
+            .unwrap()
+            .parse()
+            .unwrap();
+    assert_eq!(s.crew_of(id), Some(crew));
+    let (_, applied) = s
+        .silence(&t.db, id, 999, TaiNs(T.0 + 16 * 1_000_000_000))
+        .unwrap();
+    assert_eq!(applied, 120);
+    let out = s
+        .acknowledge(&t.db, id, &user, TaiNs(T.0 + 20 * 1_000_000_000))
+        .unwrap();
+    assert!(matches!(out.notices.first(), Some(Notice::SoundOff { .. })));
+    s.acknowledge_ground(&t.db, id, &user, TaiNs(T.0 + 21 * 1_000_000_000))
+        .unwrap();
+    let (by, ground): (Option<String>, Option<String>) =
+        t.db.connection()
+            .query_row(
+                "SELECT acknowledged_by, ground_acknowledged_by FROM alarm WHERE id = ?1",
+                [id.to_string()],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .unwrap();
+    assert_eq!(
+        (by.as_deref(), ground.as_deref()),
+        (Some(user.as_str()), Some(user.as_str()))
+    );
+    drop(s);
+    let mut again = load(&t.db, BUNDLED_RULESET, TrustPolicy::Development);
+    assert!(
+        again.take_restored().is_empty(),
+        "acknowledged: no sound after the restart"
+    );
+    assert!(
+        again
+            .tick(&t.db, TaiNs(T.0 + 600 * 1_000_000_000))
+            .unwrap()
+            .notices
+            .is_empty(),
+        "no escalation after acknowledgement"
+    );
+    let esc = again.escalate(&t.db, id, TaiNs(T.0 + 601 * 1_000_000_000));
+    assert!(esc.is_ok());
+    let ghost = caelum_domain::ids::AlarmId::from_uuid(uuid::Uuid::new_v4());
+    assert!(again.acknowledge_ground(&t.db, ghost, &user, T).is_err());
+}

@@ -209,3 +209,45 @@ fn role_names_round_trip_and_match_the_schema() {
     }
     assert_eq!(Role::parse("superuser"), None);
 }
+
+/// §2 "Alarm actions: acknowledge, silence" (F-ALM-05): own / all / ground stage only / none,
+/// read from the document.
+#[test]
+fn alarm_actions_match_role_matrix_section_2() {
+    use caelum_domain::ids::CrewMemberId;
+    use caelum_security::role::{alarm_authority, AlarmAuthority};
+    let rows = table_rows("## 2. Data access");
+    let header_start = MATRIX.find("## 2. Data access").unwrap();
+    let header: Vec<String> = MATRIX[header_start..]
+        .lines()
+        .find(|l| l.starts_with("| Data"))
+        .unwrap()
+        .trim_matches('|')
+        .split('|')
+        .map(|c| c.trim().to_owned())
+        .collect();
+    let row = rows
+        .iter()
+        .find(|r| r[0].starts_with("Alarm actions"))
+        .expect("alarm actions row");
+    let mine = CrewMemberId::from_uuid(uuid::Uuid::from_u128(1));
+    let theirs = CrewMemberId::from_uuid(uuid::Uuid::from_u128(2));
+    for (label, cell) in header.iter().zip(row).skip(1) {
+        let role = role_from_label(label);
+        let user = UserIdentity {
+            crew_member_id: Some(mine),
+            ..identity(role)
+        };
+        let (own, other) = match cell.as_str() {
+            "own" => (AlarmAuthority::Onboard, AlarmAuthority::None),
+            "all" => (AlarmAuthority::Onboard, AlarmAuthority::Onboard),
+            c if c.starts_with("ground stage only") => {
+                (AlarmAuthority::GroundStage, AlarmAuthority::GroundStage)
+            }
+            "—" => (AlarmAuthority::None, AlarmAuthority::None),
+            other => panic!("unrecognised alarm-actions cell {other:?} for {label}"),
+        };
+        assert_eq!(alarm_authority(&user, mine), own, "{label} own");
+        assert_eq!(alarm_authority(&user, theirs), other, "{label} other");
+    }
+}

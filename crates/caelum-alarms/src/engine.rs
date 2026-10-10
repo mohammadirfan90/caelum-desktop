@@ -120,6 +120,23 @@ pub struct Why {
     pub notes: Vec<String>,
 }
 
+/// An alarm to restore after a restart (from the stored record).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Restored {
+    /// ID.
+    pub id: AlarmId,
+    /// Crew member.
+    pub crew: CrewMemberId,
+    /// Rule.
+    pub rule_id: String,
+    /// State.
+    pub state: AlarmState,
+    /// Acknowledged.
+    pub acknowledged: bool,
+    /// Creation (TAI ns).
+    pub created_at: i64,
+}
+
 /// An open alarm.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Alarm {
@@ -453,6 +470,64 @@ impl Engine {
             }
         }
         events
+    }
+
+    /// Restores an alarm that was open when CAELUM stopped (SR-007), so its rule continues it
+    /// instead of raising a duplicate. Returns false if the rule is not in this ruleset (then the
+    /// caller keeps it on record for acknowledgement only).
+    pub fn restore(&mut self, r: &Restored) -> bool {
+        let Some(rule) = self
+            .ruleset
+            .rules
+            .iter()
+            .find(|x| x.id == r.rule_id)
+            .cloned()
+        else {
+            return false;
+        };
+        let recheck_due = match (&rule.condition, r.state) {
+            (Condition::Threshold(t), AlarmState::Confirming) => {
+                t.spot.map(|s| r.created_at + secs(s.recheck_timeout_s))
+            }
+            _ => None,
+        };
+        let why = self.why(
+            &rule,
+            None,
+            None,
+            None,
+            Vec::new(),
+            vec!["restored after a restart; values are in the stored record".to_owned()],
+        );
+        let alarm = Alarm {
+            id: r.id,
+            crew: r.crew,
+            rule_id: rule.id.clone(),
+            priority: rule.priority.as_str(),
+            category: rule.category.as_str(),
+            state: r.state,
+            latched: rule.priority.latching(),
+            trigger_value: None,
+            title: rule.title.clone(),
+            action: rule.action.clone(),
+            why,
+            created_at: r.created_at,
+        };
+        self.state
+            .entry((r.crew, rule.id.clone()))
+            .or_default()
+            .open = Some(r.id);
+        self.open.insert(
+            r.id,
+            OpenAlarm {
+                alarm,
+                priority: rule.priority,
+                group: rule.group.clone(),
+                acknowledged: r.acknowledged,
+                recheck_due,
+            },
+        );
+        true
     }
 
     /// Acknowledges an alarm: a latched alarm whose condition cleared ends; otherwise it stays

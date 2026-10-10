@@ -380,3 +380,127 @@ impl Database {
             .optional()?)
     }
 }
+
+/// An alarm that has not ended, with its escalation state (restart, SR-007).
+#[derive(Debug, Clone, PartialEq)]
+pub struct OpenAlarmRecord {
+    /// Alarm ID.
+    pub id: String,
+    /// Crew member.
+    pub crew_member_id: Option<String>,
+    /// `physiological` or `technical`.
+    pub kind: String,
+    /// Category.
+    pub category: String,
+    /// Rule ID.
+    pub rule_id: String,
+    /// Priority.
+    pub priority: String,
+    /// State.
+    pub state: String,
+    /// Latched.
+    pub latched: bool,
+    /// Creation (TAI ns).
+    pub created_at_tai: i64,
+    /// Next escalation stage.
+    pub escalation_stage: i64,
+    /// Acknowledged by (user ID).
+    pub acknowledged_by: Option<String>,
+    /// Silenced until (TAI ns).
+    pub silenced_until_tai: Option<i64>,
+}
+
+impl Database {
+    /// Persists the next escalation stage (SR-007).
+    pub fn set_alarm_escalation_stage(&self, id: &str, stage: i64) -> Result<bool, StoreError> {
+        let n = self.connection().execute(
+            "UPDATE alarm SET escalation_stage = ?2 WHERE id = ?1",
+            rusqlite::params![id, stage],
+        )?;
+        Ok(n == 1)
+    }
+
+    /// Records the onboard acknowledgement.
+    pub fn set_alarm_acknowledged(
+        &self,
+        id: &str,
+        by: &str,
+        at_tai: i64,
+    ) -> Result<bool, StoreError> {
+        let n = self.connection().execute(
+            "UPDATE alarm SET acknowledged_by = ?2, acknowledged_at_tai = ?3, silenced_until_tai = NULL
+             WHERE id = ?1 AND acknowledged_at_tai IS NULL",
+            rusqlite::params![id, by, at_tai],
+        )?;
+        Ok(n == 1)
+    }
+
+    /// Records the ground-stage acknowledgement (ROLE_MATRIX §5.4).
+    pub fn set_alarm_ground_acknowledged(
+        &self,
+        id: &str,
+        by: &str,
+        at_tai: i64,
+    ) -> Result<bool, StoreError> {
+        let n = self.connection().execute(
+            "UPDATE alarm SET ground_acknowledged_by = ?2, ground_acknowledged_at_tai = ?3
+             WHERE id = ?1 AND ground_acknowledged_at_tai IS NULL",
+            rusqlite::params![id, by, at_tai],
+        )?;
+        Ok(n == 1)
+    }
+
+    /// Records a silence (SR-008).
+    pub fn set_alarm_silenced(&self, id: &str, until_tai: i64) -> Result<bool, StoreError> {
+        let n = self.connection().execute(
+            "UPDATE alarm SET silenced_until_tai = ?2 WHERE id = ?1",
+            rusqlite::params![id, until_tai],
+        )?;
+        Ok(n == 1)
+    }
+
+    /// Every alarm that has not ended, oldest first.
+    pub fn open_alarm_records(&self) -> Result<Vec<OpenAlarmRecord>, StoreError> {
+        let mut stmt = self.connection().prepare(
+            "SELECT id, crew_member_id, kind, category, rule_id, priority, state, latched,
+                    created_at_tai, escalation_stage, acknowledged_by, silenced_until_tai
+             FROM alarm WHERE resolved_at_tai IS NULL ORDER BY created_at_tai, id",
+        )?;
+        let rows = stmt
+            .query_map([], |r| {
+                Ok(OpenAlarmRecord {
+                    id: r.get(0)?,
+                    crew_member_id: r.get(1)?,
+                    kind: r.get(2)?,
+                    category: r.get(3)?,
+                    rule_id: r.get(4)?,
+                    priority: r.get(5)?,
+                    state: r.get(6)?,
+                    latched: r.get::<_, i64>(7)? != 0,
+                    created_at_tai: r.get(8)?,
+                    escalation_stage: r.get(9)?,
+                    acknowledged_by: r.get(10)?,
+                    silenced_until_tai: r.get(11)?,
+                })
+            })?
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(rows)
+    }
+}
+
+impl Database {
+    /// Records a delivered escalation stage; delivering a stage twice is refused (primary key).
+    pub fn insert_alarm_notification(
+        &self,
+        alarm_id: &str,
+        audience: &str,
+        stage: i64,
+        at_tai: i64,
+    ) -> Result<(), StoreError> {
+        self.connection().execute(
+            "INSERT INTO alarm_notification (alarm_id, audience, stage, at_tai) VALUES (?1, ?2, ?3, ?4)",
+            rusqlite::params![alarm_id, audience, stage, at_tai],
+        )?;
+        Ok(())
+    }
+}

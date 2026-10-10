@@ -39,7 +39,7 @@ OS keystore. Attachment file store: AES-256-GCM.
 | observation | id, crew_member_id, device_id, parameter, value, unit, measured_at (TAI ns), received_at, quality, classification (measured/derived/entered/imported), measurement_mode (continuous/spot, from the device profile), algorithm_version?, context JSON |
 | waveform_chunk | id, crew_member_id, device_id, signal, start_tai, sample_rate, encoding, data (compressed), quality |
 | baseline | crew_member_id, parameter, median, mad, n, window, status, method_version |
-| alarm | id, crew_member_id?, kind (physiological/technical), category (CARDIO/RESPIRATORY/THERMAL/ENVIRONMENT/TECHNICAL), rule_id, ruleset_version, priority, state (incl. CONFIRMING for spot readings, SR-019), confirming_readings JSON?, latched, trigger_value, why JSON, action, created_at, acknowledged_by/at, silenced_until, resolved_at, escalation_stage |
+| alarm | id, crew_member_id?, kind (physiological/technical), category (CARDIO/RESPIRATORY/THERMAL/ENVIRONMENT/TECHNICAL), rule_id, ruleset_version, priority, state (incl. CONFIRMING for spot readings, SR-019), confirming_readings JSON?, latched, trigger_value, why JSON, action, created_at, acknowledged_by/at, ground_acknowledged_by/at (ground stage only, ROLE_MATRIX §5.4), silenced_until, resolved_at, escalation_stage |
 | alarm_notification | alarm_id, audience, stage, at, delivered_to |
 | encounter | id, crew_member_id, author, SOAP fields, signed_at, attachments |
 | attachment | id, kind (dicom/ecg/file), content_hash, metadata JSON |

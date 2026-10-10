@@ -89,6 +89,30 @@ impl fmt::Display for Role {
     }
 }
 
+/// What a user may do with a physiological alarm (`docs/ROLE_MATRIX.md` §2 "Alarm actions", §5).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AlarmAuthority {
+    /// Acknowledge and silence the alarm onboard.
+    Onboard,
+    /// Acknowledge only the ground escalation stage ("seen by ground"), §5.4.
+    GroundStage,
+    /// No alarm actions.
+    None,
+}
+
+/// Alarm actions by role and crew scope: astronauts their own alarms, the CMO anyone's, the flight
+/// surgeon the ground stage only; BME, MCC, administrator and device gateway none (§5.1–5.4).
+pub fn alarm_authority(user: &UserIdentity, alarm_crew: CrewMemberId) -> AlarmAuthority {
+    match user.role {
+        Role::Astronaut if user.crew_member_id == Some(alarm_crew) => AlarmAuthority::Onboard,
+        Role::Cmo => AlarmAuthority::Onboard,
+        Role::FlightSurgeon => AlarmAuthority::GroundStage,
+        Role::Astronaut | Role::Bme | Role::Mcc | Role::Administrator | Role::DeviceGateway => {
+            AlarmAuthority::None
+        }
+    }
+}
+
 /// A signed-in user.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct UserIdentity {

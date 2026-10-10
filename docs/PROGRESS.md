@@ -11,7 +11,7 @@ picture). Last updated: 2026-10-10 (M3 independent review recorded; CI runs no l
 | M1 Domain, storage, security core | **complete** (13292b4) | `docs/gates/M1.md` | First-administrator enrolment arrives with the M3/M6 login screen (CR-007 §4) |
 | M2 Ingest pipeline and device framework | code complete; closes on the next all-green CI run | `docs/gates/M2.md` | Physical devices on the hardware-in-the-loop bench (docs/09) |
 | M3 Alarm engine | gate items met; closes on the next all-green CI run | `docs/gates/M3.md` (independent review: Mohammad Irfan, 2026-10-10) | ⚕ clinical content stays DRAFT |
-| M4 Escalation, technical alarms, notifications, self-test | **in progress**: step 1 escalation done | | Wristband alert needs a reviewed write-exception entry (category c) |
+| M4 Escalation, technical alarms, notifications, self-test | **in progress**: escalation, acknowledgement, silence and restart persistence done | | Wristband alert needs a reviewed write-exception entry (category c) |
 | M5–M13 | not started | | |
 
 Status of record: the table in `docs/10_BUILD_PLAN.md` (the trace enforces milestones marked
@@ -78,3 +78,4 @@ Write exceptions: `docs/write-exceptions.md` (WX-001 CCCD enable, reviewed by th
 | 2026-10-10 | 5ceaf9d.. | PROGRESS.md added; M3 independent review by Mohammad Irfan recorded; CI concurrency per commit so every pushed commit gets a complete run (pushes happen after every commit) |
 | 2026-10-10 | (this push) | rustfmt on the station test (CI run 38030239526 failed `cargo fmt --check` on Ubuntu); the run on this commit is the M2/M3 closing candidate |
 | 2026-10-10 | (this push) | M4 step 1: escalation plans moved into the signed ruleset (1.0.0-draft.3, equal to docs/06 by test); sans-I/O escalator with restart resume, SR-008 silence, sound scopes and the docs/06 §3a OPS record (CR-010) |
+| 2026-10-10 | (this push) | M4 step 2a: escalator in the alarm service; stages, acknowledgement (onboard and ground stage), silence and escalation stage persisted (migration V4, alarm_notification); open alarms restored into engine and escalator after a restart (no duplicates, sound resumes); alarm authority per ROLE_MATRIX §2 tested; clinical audit actions defined |
