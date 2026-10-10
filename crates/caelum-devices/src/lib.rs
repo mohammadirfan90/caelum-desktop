@@ -6,10 +6,12 @@
 //! Implemented in M2, M7 and M8: F-ACQ-01..11.
 
 pub mod ble;
+pub mod ghs;
 pub mod hid;
 pub mod link;
 pub mod pairing;
 pub mod registry;
+pub mod sensor_kit;
 pub mod serial;
 pub mod sig;
 

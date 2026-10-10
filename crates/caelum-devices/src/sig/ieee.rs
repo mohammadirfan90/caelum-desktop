@@ -56,6 +56,27 @@ impl<'a> Reader<'a> {
         Ok(u32::from_le_bytes(self.take::<4>(field)?))
     }
 
+    pub(crate) fn u48(&mut self, field: &'static str) -> Result<u64, DecodeError> {
+        let [a, b, c, d, e, f] = self.take::<6>(field)?;
+        Ok(u64::from_le_bytes([a, b, c, d, e, f, 0, 0]))
+    }
+
+    pub(crate) fn u64(&mut self, field: &'static str) -> Result<u64, DecodeError> {
+        Ok(u64::from_le_bytes(self.take::<8>(field)?))
+    }
+
+    /// The next `n` bytes, borrowed.
+    pub(crate) fn bytes(&mut self, n: usize, field: &'static str) -> Result<&'a [u8], DecodeError> {
+        let start = self.pos;
+        self.skip(n, field)?;
+        Ok(self.bytes.get(start..self.pos).unwrap_or_default())
+    }
+
+    /// The unread bytes, without consuming them.
+    pub(crate) fn rest(&self) -> &'a [u8] {
+        self.bytes.get(self.pos..).unwrap_or_default()
+    }
+
     pub(crate) fn skip(&mut self, n: usize, field: &'static str) -> Result<(), DecodeError> {
         let end = self.pos + n;
         if end > self.bytes.len() {
