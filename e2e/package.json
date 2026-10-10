@@ -1,0 +1,19 @@
+{
+  "name": "@caelum/e2e",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "description": "End-to-end tests (tauri-driver + WebdriverIO) on a test-equipment debug build; M6 gate.",
+  "scripts": {
+    "build-app": "cargo build -p caelum-desktop --features test-equipment",
+    "test": "wdio run ./wdio.conf.ts"
+  },
+  "devDependencies": {
+    "@wdio/cli": "9.20.0",
+    "@wdio/local-runner": "9.20.0",
+    "@wdio/mocha-framework": "9.20.0",
+    "@wdio/spec-reporter": "9.20.0",
+    "typescript": "6.0.3"
+  }
+}
