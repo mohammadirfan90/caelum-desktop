@@ -736,3 +736,14 @@ pub async fn dicom_view(
         pixel_spacing_mm: v.pixel_spacing_mm,
     })
 }
+
+/// Applies the signed retention limits (administrator, re-authentication; CR-022).
+#[tauri::command]
+#[specta::specta]
+pub async fn config_apply_retention(
+    state: State<'_, AppState>,
+    bundle: String,
+    signature: String,
+) -> Result<String, CommandError> {
+    state.with(|s| Ok(s.config_apply_retention(bundle.as_bytes(), &signature)?))
+}

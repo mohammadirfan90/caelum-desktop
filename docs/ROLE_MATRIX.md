@@ -111,6 +111,7 @@ lead (CR-003) until a licensed clinician advisor countersigns; it does not block
 | `crew_lan_status` | public | What the primary serves this station, already role-projected by the primary |
 | `crew_lan_sign_in` | public | Credentials checked by the primary (throttled, audited there) |
 | `crew_lan_sign_out` | public | Ends the session on the primary |
+| `config_apply_retention` | Admin | Signed bundle kind retention; re-authentication (§4); audited; Mission data never removed |
 
 ## 4. Sessions
 - Onboard: PIN plus device-bound key; auto-lock after 10 minutes (configurable). Ground: password

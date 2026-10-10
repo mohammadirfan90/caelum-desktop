@@ -164,6 +164,8 @@ export const commands = {
 	crewLanSignIn: (username: string, secret: string) => typedError<string, CommandError>(__TAURI_INVOKE("crew_lan_sign_in", { username, secret })),
 	/**  Signs the crew-station user out on the primary. */
 	crewLanSignOut: () => typedError<null, CommandError>(__TAURI_INVOKE("crew_lan_sign_out")),
+	/**  Applies the signed retention limits (administrator, re-authentication; CR-022). */
+	configApplyRetention: (bundle: string, signature: string) => typedError<string, CommandError>(__TAURI_INVOKE("config_apply_retention", { bundle, signature })),
 };
 
 /** Events */

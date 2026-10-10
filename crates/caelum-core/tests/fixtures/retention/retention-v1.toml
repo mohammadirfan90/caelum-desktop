@@ -1,0 +1,6 @@
+# Test fixture (CR-022): retention limits signed with the development key.
+[retention]
+version = "1"
+technical_days = 7
+waveform_days = 3
+alarm_guard_minutes = 30

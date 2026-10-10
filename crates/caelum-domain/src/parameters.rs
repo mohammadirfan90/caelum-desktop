@@ -122,6 +122,9 @@ pub enum XtceType {
 pub enum Retention {
     /// Kept for the mission.
     Mission,
+    /// Technical data (link and data quality): kept for the signed retention limit, except
+    /// around alarms (CR-022).
+    Technical,
 }
 
 /// One catalog entry.
@@ -178,7 +181,11 @@ macro_rules! spec {
                 ValueType::Enum(_) | ValueType::EnumPending(_) => XtceType::UInt8Enum,
             },
             channels: $channels,
-            retention: Retention::Mission,
+            retention: if matches!(Category::$cat, Category::Technical) {
+                Retention::Technical
+            } else {
+                Retention::Mission
+            },
         }
     };
 }

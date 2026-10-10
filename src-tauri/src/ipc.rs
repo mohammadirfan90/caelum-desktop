@@ -103,6 +103,7 @@ static BUILDER: LazyLock<Builder<Wry>> = LazyLock::new(|| {
             crate::crewlan::crew_lan_status,
             crate::crewlan::crew_lan_sign_in,
             crate::crewlan::crew_lan_sign_out,
+            crate::clinical::config_apply_retention,
         ])
         .events(collect_events![
             crate::events::AlarmBusEvent,

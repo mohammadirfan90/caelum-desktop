@@ -72,6 +72,7 @@ fn main() {
             "crew_lan_status",
             "crew_lan_sign_in",
             "crew_lan_sign_out",
+            "config_apply_retention",
         ]));
     if let Err(error) = tauri_build::try_build(attributes) {
         panic!("tauri-build failed: {error:#}");

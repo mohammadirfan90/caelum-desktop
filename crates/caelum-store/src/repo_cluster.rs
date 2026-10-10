@@ -170,3 +170,39 @@ impl Database {
             .optional()?)
     }
 }
+
+impl Database {
+    /// Retention (F-SYS-08, CR-022): removes observations of `parameters` measured before
+    /// `before_tai` and not within `guard_ns` of any alarm of the same crew member. Returns the
+    /// number removed.
+    pub fn purge_observations(
+        &self,
+        parameters: &[&str],
+        before_tai: i64,
+        guard_ns: i64,
+    ) -> Result<usize, StoreError> {
+        let mut n = 0;
+        for p in parameters {
+            n += self.connection().execute(
+                "DELETE FROM observation WHERE parameter = ?1 AND measured_at_tai < ?2
+                 AND NOT EXISTS (SELECT 1 FROM alarm a WHERE a.crew_member_id = observation.crew_member_id
+                     AND a.created_at_tai BETWEEN observation.measured_at_tai - ?3
+                                              AND observation.measured_at_tai + ?3)",
+                rusqlite::params![p, before_tai, guard_ns],
+            )?;
+        }
+        Ok(n)
+    }
+
+    /// Retention (CR-022): removes raw waveform chunks that start before `before_tai` and lie
+    /// more than `guard_ns` from every alarm of their crew member. Returns the number removed.
+    pub fn purge_waveforms(&self, before_tai: i64, guard_ns: i64) -> Result<usize, StoreError> {
+        Ok(self.connection().execute(
+            "DELETE FROM waveform_chunk WHERE start_tai < ?1
+             AND NOT EXISTS (SELECT 1 FROM alarm a WHERE a.crew_member_id = waveform_chunk.crew_member_id
+                 AND a.created_at_tai BETWEEN waveform_chunk.start_tai - ?2
+                                          AND waveform_chunk.start_tai + ?2)",
+            rusqlite::params![before_tai, guard_ns],
+        )?)
+    }
+}

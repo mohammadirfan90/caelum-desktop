@@ -279,6 +279,8 @@ pub enum Command {
     CrewLanSignIn,
     /// Sign the crew-station user out (F-SYS-05).
     CrewLanSignOut,
+    /// Apply the signed retention limits (F-SYS-08, CR-022).
+    ConfigApplyRetention,
 }
 
 /// Who may call a command.
@@ -294,7 +296,7 @@ pub enum Access {
 
 impl Command {
     /// Every command.
-    pub const ALL: [Command; 68] = [
+    pub const ALL: [Command; 69] = [
         Command::AppInfo,
         Command::AuthLogin,
         Command::AuthLogout,
@@ -363,6 +365,7 @@ impl Command {
         Command::CrewLanStatus,
         Command::CrewLanSignIn,
         Command::CrewLanSignOut,
+        Command::ConfigApplyRetention,
     ];
 
     /// The IPC command name.
@@ -436,6 +439,7 @@ impl Command {
             Command::CrewLanStatus => "crew_lan_status",
             Command::CrewLanSignIn => "crew_lan_sign_in",
             Command::CrewLanSignOut => "crew_lan_sign_out",
+            Command::ConfigApplyRetention => "config_apply_retention",
         }
     }
 
@@ -542,6 +546,7 @@ impl Command {
             Command::CrewLanStatus => Access::Public,
             Command::CrewLanSignIn => Access::Public,
             Command::CrewLanSignOut => Access::Public,
+            Command::ConfigApplyRetention => Access::Roles(&[Role::Administrator]),
         }
     }
 

@@ -308,7 +308,12 @@ fn alarm_view(crew: Option<&str>, priority: &str, category: &str) -> AlarmView {
 
 #[test]
 fn f_sys_05_alarms_go_to_the_lan_with_ops_fields_and_detail_kept_apart() {
-    let a = lan_alarm(&alarm_view(Some(CREW_A), "critical", "oxygenation")).unwrap();
+    let a = lan_alarm(&alarm_view(Some(CREW_A), "critical", "RESPIRATORY")).unwrap();
+    assert_eq!(
+        a.ops().category,
+        "respiratory",
+        "stored categories are upper case"
+    );
     let ops = a.ops();
     assert_eq!(ops.priority, AlarmPriority::Critical);
     assert_eq!((ops.state.as_str(), ops.stage), ("active", 2));

@@ -79,5 +79,5 @@ bundled IERS leap-second table that only signed configuration can update. CCSDS 
 the CCSDS epoch 1958-01-01 TAI. The MET epoch comes from signed mission configuration (R-OPS-05).
 
 ## 5. Retention and export
-Configurable per retention class. Exports: FHIR R4 Bundle, CSV (per parameter), EDF+ (waveforms),
+Configurable per retention class (CR-022): `Mission` data is never removed by retention; `Technical` parameters and raw waveform chunks are removed after the limits of the signed `retention` bundle, except within the alarm guard of the same crew member; without that bundle nothing is removed. Exports: FHIR R4 Bundle, CSV (per parameter), EDF+ (waveforms),
 DICOM (originals), de-identified research package (date-shifted, IDs pseudonymised, consent-checked).

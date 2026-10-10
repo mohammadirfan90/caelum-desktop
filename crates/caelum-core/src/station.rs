@@ -33,6 +33,7 @@ mod kit;
 pub mod mds_link;
 pub mod pathb;
 pub mod reads;
+pub mod retention;
 mod runtime;
 mod signal;
 pub mod uplink;
@@ -171,6 +172,8 @@ pub struct Station {
     models: caelum_ml::registry::Registry,
     /// Sensor-kit signal buffers per device (F-ACQ-05, F-SIG-03/04/07).
     kit: std::collections::HashMap<caelum_domain::ids::DeviceId, kit::KitDevice>,
+    /// When retention last ran (CR-022).
+    retention_at: Option<i64>,
     /// Running core-temperature estimates per crew member (F-SIG-05).
     core_temp: std::collections::HashMap<caelum_domain::ids::CrewMemberId, kit::CoreTrack>,
     /// Running ECG streams per device (F-SIG-01).
@@ -260,6 +263,7 @@ impl Station {
             ecg: std::collections::HashMap::new(),
             kit: std::collections::HashMap::new(),
             core_temp: std::collections::HashMap::new(),
+            retention_at: None,
             baselines: std::collections::HashMap::new(),
             baselines_at: None,
             acquisition: crate::acquisition::Acquisition::new()
@@ -617,6 +621,7 @@ impl Station {
         }
         self.apply_technical(changes, now)?;
         self.refresh_baselines(now)?;
+        self.retention_tick(now)?;
         let core = self.core_temp_tick(now)?;
         let mut out = self.alarms.tick(&self.db, now)?;
         out.events.extend(core.events);

@@ -617,7 +617,8 @@ pub fn lan_alarm(v: &AlarmView) -> Option<LanAlarm> {
         alarm_id: v.id.parse::<AlarmId>().ok()?,
         crew_id,
         priority: priority(&v.priority)?,
-        category: v.category.clone(),
+        // Stored categories are upper case (`CARDIO`); OPS identifiers are lower case.
+        category: v.category.to_lowercase(),
         state: v.state.clone(),
         stage: u8::try_from(v.escalation_stage.clamp(0, i64::from(u8::MAX))).ok()?,
         created_at_tai_ns: v.created_at_tai,

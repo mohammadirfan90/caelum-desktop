@@ -8,3 +8,4 @@ crates/caelum-alarms/rules/** -text
 crates/caelum-core/tests/fixtures/roster/** -text
 crates/caelum-core/tests/fixtures/protocols/** -text
 crates/caelum-core/tests/fixtures/cluster/** -text
+crates/caelum-core/tests/fixtures/retention/** -text

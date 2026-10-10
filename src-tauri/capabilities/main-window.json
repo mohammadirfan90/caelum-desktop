@@ -70,6 +70,7 @@
     "allow-config-apply-crew-station",
     "allow-crew-lan-status",
     "allow-crew-lan-sign-in",
-    "allow-crew-lan-sign-out"
+    "allow-crew-lan-sign-out",
+    "allow-config-apply-retention"
   ]
 }
