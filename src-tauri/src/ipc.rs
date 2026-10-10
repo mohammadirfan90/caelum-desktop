@@ -97,6 +97,8 @@ static BUILDER: LazyLock<Builder<Wry>> = LazyLock::new(|| {
             crate::clinical::fhir_import,
             crate::clinical::ecg_view,
             crate::clinical::dicom_view,
+            crate::cluster::config_apply_cluster,
+            crate::cluster::cluster_identity_set,
         ])
         .events(collect_events![
             crate::events::AlarmBusEvent,

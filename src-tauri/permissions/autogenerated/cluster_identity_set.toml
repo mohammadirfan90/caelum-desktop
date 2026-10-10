@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-cluster-identity-set"
+description = "Enables the cluster_identity_set command without any pre-configured scope."
+commands.allow = ["cluster_identity_set"]
+
+[[permission]]
+identifier = "deny-cluster-identity-set"
+description = "Denies the cluster_identity_set command without any pre-configured scope."
+commands.deny = ["cluster_identity_set"]

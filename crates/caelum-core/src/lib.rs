@@ -8,6 +8,7 @@
 
 pub mod acquisition;
 pub mod alarms;
+pub mod cluster;
 pub mod mds;
 pub mod station;
 

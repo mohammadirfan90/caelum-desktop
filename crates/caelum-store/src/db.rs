@@ -25,6 +25,9 @@ pub enum StoreError {
     /// SQLCipher is not compiled in (a plain SQLite build must never be used).
     #[error("SQLCipher is not available in this build")]
     NoEncryption,
+    /// A caller-supplied step inside a transaction refused the change (rolled back).
+    #[error("refused: {0}")]
+    Invalid(String),
 }
 
 /// An open, migrated, encrypted CAELUM database.

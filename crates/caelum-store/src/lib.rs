@@ -11,6 +11,7 @@ mod key;
 mod repo;
 mod repo_acquisition;
 mod repo_clinical;
+mod repo_cluster;
 mod repo_crew;
 mod repo_mds;
 mod repo_reads;
@@ -22,5 +23,6 @@ pub use repo_acquisition::{AlarmRecord, DeviceRecord, ObservationRecord, OpenAla
 pub use repo_clinical::{
     AttachmentRecord, CheckinRecord, ChecklistRunRecord, EncounterRecord, MedicationRecord,
 };
+pub use repo_cluster::ClusterLogRecord;
 pub use repo_crew::CrewMemberRecord;
 pub use repo_reads::{AlarmView, BaselineRecord, NotificationRecord, WaveformChunkRecord};

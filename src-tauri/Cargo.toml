@@ -21,6 +21,9 @@ caelum-core.workspace = true
 caelum-domain.workspace = true
 # Device runtime channels and timers (the runtime Tauri already uses).
 tokio = { version = "1", features = ["sync", "time"] }
+# Fail-over pair and crew LAN (CR-017).
+caelum-cluster.workspace = true
+tracing = "0.1.44"
 # Default features minus `common-controls-v6`: CAELUM has no predefined `about` menu, and that
 # feature makes Windows test binaries fail to load (STATUS_ENTRYPOINT_NOT_FOUND).
 tauri = { version = "2.12.2", default-features = false, features = ["wry", "compression", "dynamic-acl", "x11", "dbus"] }

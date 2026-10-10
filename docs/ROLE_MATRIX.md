@@ -105,6 +105,8 @@ lead (CR-003) until a licensed clinician advisor countersigns; it does not block
 | `fhir_import` | CMO, Flight Surgeon | Stored as imported and evaluated (SR-016); demonstration/test data refused (SR-017); audited |
 | `ecg_view` | CMO, Flight Surgeon | Read-only; leads in physical units |
 | `dicom_view` | CMO, Flight Surgeon | Read-only; uncompressed and pure-Rust codecs only (CR-014) |
+| `config_apply_cluster` | Admin | Signed bundle kind cluster (CR-017 §4); re-authentication (§4); audited; takes effect at the next start |
+| `cluster_identity_set` | Admin | PEM, kept in the encrypted records; re-authentication (§4); audited without the key; takes effect at the next start |
 
 ## 4. Sessions
 - Onboard: PIN plus device-bound key; auto-lock after 10 minutes (configurable). Ground: password

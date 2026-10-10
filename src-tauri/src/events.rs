@@ -10,11 +10,11 @@ use caelum_alarms::engine::{Alarm, Event};
 use caelum_alarms::escalation::{Notice, SoundOffReason, SoundPattern, SoundScope};
 use caelum_alarms::ruleset::Audience;
 use caelum_core::alarms::Output;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use specta::Type;
 
 /// One alarm-bus event.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type, tauri_specta::Event)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Type, tauri_specta::Event)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum AlarmBusEvent {
     /// An alarm appeared or changed state.

@@ -66,6 +66,8 @@ fn main() {
             "fhir_import",
             "ecg_view",
             "dicom_view",
+            "config_apply_cluster",
+            "cluster_identity_set",
         ]));
     if let Err(error) = tauri_build::try_build(attributes) {
         panic!("tauri-build failed: {error:#}");

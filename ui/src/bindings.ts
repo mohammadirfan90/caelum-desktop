@@ -143,6 +143,16 @@ export const commands = {
 	/**  Width. */
 	width: number | null,
 } | null) => typedError<DicomImage, CommandError>(__TAURI_INVOKE("dicom_view", { id, frame, window })),
+	/**
+	 *  Applies the signed cluster configuration (administrator, re-authentication). Takes effect at
+	 *  the next start.
+	 */
+	configApplyCluster: (bundle: string, signature: string) => typedError<string, CommandError>(__TAURI_INVOKE("config_apply_cluster", { bundle, signature })),
+	/**
+	 *  Sets this station's crew-LAN certificate chain and key (administrator, re-authentication).
+	 *  Takes effect at the next start.
+	 */
+	clusterIdentitySet: (chainPem: string, keyPem: string) => typedError<null, CommandError>(__TAURI_INVOKE("cluster_identity_set", { chainPem, keyPem })),
 };
 
 /** Events */
@@ -622,8 +632,9 @@ export type GroundStatus = {
 	/**  Vehicle bridge (inbound) health. */
 	vehicle: VehicleLink,
 	/**
-	 *  Fail-over role of this instance: `standalone` until a signed cluster configuration
-	 *  provisions a standby (F-SYS-04, docs/integration/M11.md).
+	 *  Fail-over role of this instance (F-SYS-04, docs/integration/M11.md): `standalone` without
+	 *  a signed cluster configuration, else `primary` / `promoting` / `standby`, or `unavailable`
+	 *  when the configured instance could not start (`technical.cluster` says why).
 	 */
 	instanceRole: string,
 };

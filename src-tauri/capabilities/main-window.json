@@ -64,6 +64,8 @@
     "allow-uplink-apply",
     "allow-fhir-import",
     "allow-ecg-view",
-    "allow-dicom-view"
+    "allow-dicom-view",
+    "allow-config-apply-cluster",
+    "allow-cluster-identity-set"
   ]
 }

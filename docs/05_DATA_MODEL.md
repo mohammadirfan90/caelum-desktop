@@ -54,6 +54,9 @@ OS keystore. Attachment file store: AES-256-GCM.
 | mds_outbox | client_id (idempotency), record JSON: resource, kind, priority, state (pending/in flight/acknowledged/held for review), attempts, next attempt, last error, server id (CR-016) |
 | mds_inbox_seen | source_id (SR-016 de-duplication), version |
 | mds_state | key, value: read-back high-water mark, summary watermark, client identity (CR-016 §10) |
+| cluster_log | seq, fence (epoch, node), kind, at_tai, payload, prev_hash, signature: the signed, hash-chained event log replicated to the standby (F-SYS-04, CR-017) |
+| cluster_quarantine | entries a fenced primary wrote that were never acknowledged, with diverted_at; kept for review, never re-applied |
+| cluster_state | key, value: highest fence seen, crew-LAN identity (certificate chain and key) |
 
 ## 3. Provenance and simulation guard
 `Observation.classification` is an enum with no "simulated" variant in release builds. In

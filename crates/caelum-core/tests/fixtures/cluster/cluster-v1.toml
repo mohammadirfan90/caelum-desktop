@@ -1,0 +1,30 @@
+# Test fixture (CR-017 §4): a fail-over pair configuration signed with the development key.
+# The CA is a throw-away test certificate; fingerprints and the peer key are test values that no
+# real station holds.
+[cluster]
+version = "1"
+node_id = "caelum-a"
+listen = "127.0.0.1:0"
+ca_pem = """
+-----BEGIN CERTIFICATE-----
+MIIBRzCB+qADAgECAhRdgAW5Ywdvy302Stj2IvhyuZ3o/zAFBgMrZXAwIjEgMB4G
+A1UEAwwXQ0FFTFVNIHRlc3QgY3Jldy1MQU4gQ0EwHhcNMjYxMDEwMTMyMjA5WhcN
+MzYxMDA3MTMyMjA5WjAiMSAwHgYDVQQDDBdDQUVMVU0gdGVzdCBjcmV3LUxBTiBD
+QTAqMAUGAytlcAMhAPU98omyMZbE2z8Vpd1v6D4BQLFlXrNAw71t6haIyPoYo0Iw
+QDAPBgNVHRMBAf8EBTADAQH/MA4GA1UdDwEB/wQEAwIBBjAdBgNVHQ4EFgQUafP7
+sA9ZLmNZrreo0NL85wTT3vswBQYDK2VwA0EAqVoLirv79iXaNPg/pGeXRV7V0uHD
+/jTZBhotNyUMrIgLZFfbclY3xDMax6QmiH7GbTE0cC4IeWu415g/zCvKDw==
+-----END CERTIFICATE-----
+"""
+
+[cluster.peer]
+node_id = "caelum-b"
+address = "127.0.0.1:47001"
+server_name = "localhost"
+fingerprint = "abababababababababababababababababababababababababababababababab"
+public_key = "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+
+[[cluster.stations]]
+station_id = "kiosk-1"
+kind = "kiosk"
+fingerprint = "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef"

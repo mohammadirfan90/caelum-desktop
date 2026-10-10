@@ -7,6 +7,7 @@ use serde::Serialize;
 use specta::Type;
 use tauri::State;
 
+use crate::cluster::ClusterState;
 use crate::commands::CommandError;
 use crate::state::AppState;
 use crate::vehicle::{VehicleLink, VehicleState};
@@ -25,8 +26,9 @@ pub struct GroundStatus {
     pub path_b_problem: Option<String>,
     /// Vehicle bridge (inbound) health.
     pub vehicle: VehicleLink,
-    /// Fail-over role of this instance: `standalone` until a signed cluster configuration
-    /// provisions a standby (F-SYS-04, docs/integration/M11.md).
+    /// Fail-over role of this instance (F-SYS-04, docs/integration/M11.md): `standalone` without
+    /// a signed cluster configuration, else `primary` / `promoting` / `standby`, or `unavailable`
+    /// when the configured instance could not start (`technical.cluster` says why).
     pub instance_role: String,
 }
 
@@ -36,6 +38,7 @@ pub struct GroundStatus {
 pub async fn ground_status(
     state: State<'_, AppState>,
     vehicle: State<'_, VehicleState>,
+    cluster: State<'_, ClusterState>,
 ) -> Result<GroundStatus, CommandError> {
     let p = state.with(|s| {
         s.ground_status_allowed()?;
@@ -48,7 +51,7 @@ pub async fn ground_status(
         path_b_waiting: u32::try_from(p.waiting).unwrap_or(u32::MAX),
         path_b_problem: p.problem,
         vehicle,
-        instance_role: "standalone".to_owned(),
+        instance_role: cluster.role(),
     })
 }
 

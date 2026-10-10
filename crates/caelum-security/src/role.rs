@@ -267,6 +267,10 @@ pub enum Command {
     EcgView,
     /// An imported DICOM image, decoded for the viewer (F-CLN-04).
     DicomView,
+    /// Apply the signed fail-over and crew-LAN configuration (CR-017 §4).
+    ConfigApplyCluster,
+    /// Set this station's crew-LAN certificate chain and key (CR-017 §4).
+    ClusterIdentitySet,
 }
 
 /// Who may call a command.
@@ -282,7 +286,7 @@ pub enum Access {
 
 impl Command {
     /// Every command.
-    pub const ALL: [Command; 62] = [
+    pub const ALL: [Command; 64] = [
         Command::AppInfo,
         Command::AuthLogin,
         Command::AuthLogout,
@@ -345,6 +349,8 @@ impl Command {
         Command::FhirImport,
         Command::EcgView,
         Command::DicomView,
+        Command::ConfigApplyCluster,
+        Command::ClusterIdentitySet,
     ];
 
     /// The IPC command name.
@@ -412,6 +418,8 @@ impl Command {
             Command::FhirImport => "fhir_import",
             Command::EcgView => "ecg_view",
             Command::DicomView => "dicom_view",
+            Command::ConfigApplyCluster => "config_apply_cluster",
+            Command::ClusterIdentitySet => "cluster_identity_set",
         }
     }
 
@@ -512,6 +520,8 @@ impl Command {
             Command::FhirImport => Access::Roles(&[Role::Cmo, Role::FlightSurgeon]),
             Command::EcgView => Access::Roles(&[Role::Cmo, Role::FlightSurgeon]),
             Command::DicomView => Access::Roles(&[Role::Cmo, Role::FlightSurgeon]),
+            Command::ConfigApplyCluster => Access::Roles(&[Role::Administrator]),
+            Command::ClusterIdentitySet => Access::Roles(&[Role::Administrator]),
         }
     }
 

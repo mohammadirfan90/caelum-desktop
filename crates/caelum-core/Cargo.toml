@@ -33,6 +33,9 @@ serde_json = "1.0.151"
 # Signed configuration bundles (crew roster, CR-012 §2); same parser as the ruleset.
 toml = "1"
 thiserror = "2.0.21"
+# Crew-LAN alarm bus (broadcast) for caelum-cluster (CR-017).
+tokio = { version = "1", features = ["sync"] }
+tracing = "0.1.44"
 uuid = { version = "1.28.0", features = ["v4"] }
 zeroize = "1.9.1"
 
@@ -46,5 +49,8 @@ workspace = true
 
 [dev-dependencies]
 cargo_metadata = "0.23.1"
+# Crew-LAN tests: a throw-away PKI and a runtime for the node (as caelum-cluster's own tests).
+rcgen = { version = "0.14", default-features = false, features = ["crypto", "pem", "ring"] }
+tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "time"] }
 caelum-test-equipment.workspace = true
 zeroize = "1.9.1"

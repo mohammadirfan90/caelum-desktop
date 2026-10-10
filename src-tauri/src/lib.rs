@@ -15,6 +15,7 @@ use tauri::Manager;
 
 pub mod admin;
 pub mod clinical;
+pub mod cluster;
 pub mod commands;
 pub mod devices;
 pub mod events;
@@ -51,6 +52,7 @@ pub fn run() -> tauri::Result<()> {
             devices::start_device_runtime(app.handle().clone());
             vehicle::start_vehicle_bridge(app.handle().clone());
             mds::start_mds(app.handle().clone(), state::open_mds_service(&data_dir));
+            cluster::start_cluster(app.handle().clone(), &data_dir);
             Ok(())
         })
         .invoke_handler(ipc::invoke_handler())

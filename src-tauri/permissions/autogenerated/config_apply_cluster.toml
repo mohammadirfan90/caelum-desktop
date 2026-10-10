@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-config-apply-cluster"
+description = "Enables the config_apply_cluster command without any pre-configured scope."
+commands.allow = ["config_apply_cluster"]
+
+[[permission]]
+identifier = "deny-config-apply-cluster"
+description = "Denies the config_apply_cluster command without any pre-configured scope."
+commands.deny = ["config_apply_cluster"]

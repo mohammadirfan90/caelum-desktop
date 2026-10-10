@@ -589,10 +589,13 @@ dependencies = [
  "cargo_metadata 0.23.1",
  "ed25519-dalek",
  "fs4",
+ "rcgen",
  "serde",
  "serde_json",
  "thiserror 2.0.21",
+ "tokio",
  "toml 1.1.8+spec-1.1.0",
+ "tracing",
  "uuid",
  "zeroize",
 ]
@@ -602,6 +605,7 @@ name = "caelum-desktop"
 version = "0.1.0"
 dependencies = [
  "caelum-alarms",
+ "caelum-cluster",
  "caelum-core",
  "caelum-domain",
  "serde",
@@ -612,6 +616,7 @@ dependencies = [
  "tauri-build",
  "tauri-specta",
  "tokio",
+ "tracing",
  "uuid",
  "zeroize",
 ]
