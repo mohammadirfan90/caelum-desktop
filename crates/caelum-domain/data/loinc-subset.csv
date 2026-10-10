@@ -1,0 +1,13 @@
+code,display,loinc_version,verified_via,verified_on
+8867-4,Heart rate,2.82,tx.fhir.org CodeSystem/$lookup,2026-10-10
+8889-8,Heart rate by Pulse oximetry,2.82,tx.fhir.org CodeSystem/$lookup,2026-10-10
+59408-5,Oxygen saturation in Arterial blood by Pulse oximetry,2.82,tx.fhir.org CodeSystem/$lookup,2026-10-10
+9279-1,Respiratory rate,2.82,tx.fhir.org CodeSystem/$lookup,2026-10-10
+8329-5,Body temperature - Core,2.82,tx.fhir.org CodeSystem/$lookup,2026-10-10
+8310-5,Body temperature,2.82,tx.fhir.org CodeSystem/$lookup,2026-10-10
+8480-6,Systolic blood pressure,2.82,tx.fhir.org CodeSystem/$lookup,2026-10-10
+8462-4,Diastolic blood pressure,2.82,tx.fhir.org CodeSystem/$lookup,2026-10-10
+29463-7,Body weight,2.82,tx.fhir.org CodeSystem/$lookup,2026-10-10
+41653-7,Glucose [Mass/volume] in Capillary blood by Glucometer,2.82,tx.fhir.org CodeSystem/$lookup,2026-10-10
+80404-7,R-R interval.standard deviation (Heart rate variability),2.82,tx.fhir.org CodeSystem/$lookup,2026-10-10
+39106-0,Temperature of Skin,2.82,tx.fhir.org CodeSystem/$lookup,2026-10-10

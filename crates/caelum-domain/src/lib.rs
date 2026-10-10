@@ -5,3 +5,9 @@
 //! parameters (CLAUDE.md rule 7).
 //!
 //! Implemented in M1: F-SYS-07, R-OPS-05, R-CLN-02, SR-018.
+
+pub mod ids;
+pub mod observation;
+pub mod parameters;
+pub mod time;
+pub mod units;

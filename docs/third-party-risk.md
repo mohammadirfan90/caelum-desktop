@@ -17,6 +17,9 @@ replacing a stack item or used in `caelum-alarms`, `caelum-ingest`, `caelum-secu
 | `cargo_metadata` | `0.23.1` (`Cargo.lock`) | Dev-dependency of `caelum-core`: architecture test reads the workspace layout (`cargo metadata --no-deps`, offline) | Test-only; low. MIT licence; actively maintained | Dev-dependency only, never in a release build; no network or native downloads at build time | M0 |
 | `cssparser`, `cssparser-macros`, `selectors`, `dtoa-short`, `option-ext` (via `tauri`, `dirs`) | `Cargo.lock` | HTML/CSS handling in Tauri's build tooling and config; user directories | Licensed MPL-2.0 (file-level copyleft), outside the permissive allow-list | Allowed per crate in `deny.toml` (any new MPL crate fails until reviewed); used unmodified; obligation: state where the MPL source is available, carried into NOTICE with the release SBOM | M0 |
 
+| `uuid` | `1.28` (`Cargo.lock`) | Typed identifiers in `caelum-domain` (parse and format only; generation happens in the storage and security crates) | Low. MIT/Apache-2.0; actively maintained; no network or native downloads | Used without random-generation features in the domain crate | M1 |
+| `proptest` | `1.11` (`Cargo.lock`) | Property tests (CLAUDE.md stack) for units and time conversions | Test-only; low | Dev-dependency only | M1 |
+
 ## Bundled runtime components
 | Name | Version | Purpose | Risk | Mitigation | Added |
 |---|---|---|---|---|---|

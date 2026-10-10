@@ -10,6 +10,12 @@ Outfit typeface (via @fontsource/outfit 5.3.0)
 Copyright 2021 The Outfit Project Authors (https://github.com/Outfitio/Outfit-Fonts)
 Licensed under the SIL Open Font License, Version 1.1 (OFL-1.1).
 
+LOINC (codes used in crates/caelum-domain/data/loinc-subset.csv)
+This material contains content from LOINC (https://loinc.org). LOINC is copyright © 1995-2026,
+Regenstrief Institute, Inc. and the Logical Observation Identifiers Names and Codes (LOINC)
+Committee and is available at no cost under the license at https://loinc.org/license. LOINC® is a
+registered United States trademark of Regenstrief Institute, Inc.
+
 Microsoft Edge WebView2 Runtime, Fixed Version 155.0.4283.45 (Windows builds)
 Copyright Microsoft Corporation. Redistributed unmodified under Microsoft's WebView2 Runtime
 distribution terms; it is not covered by the Apache License of this product.
