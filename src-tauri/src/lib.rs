@@ -36,18 +36,26 @@ pub mod windows;
 pub fn run() -> tauri::Result<()> {
     tauri::Builder::default()
         .setup(|app| {
+            eprintln!("[CAELUM-INIT] Setup started");
             ipc::mount_events(app);
-            // F-SYS-13: a wall-mounted crew display runs full screen.
-            if commands::kiosk_mode() {
-                if let Some(w) = app.get_webview_window("main") {
+            if let Some(w) = app.get_webview_window("main") {
+                eprintln!("[CAELUM-INIT] Found main window: visible={:?}", w.is_visible());
+                let _ = w.show();
+                let _ = w.set_focus();
+                if commands::kiosk_mode() {
                     let _ = w.set_fullscreen(true);
                 }
+            } else {
+                eprintln!("[CAELUM-INIT] WARNING: Main window not found by label 'main'");
             }
             let data_dir = app.path().app_local_data_dir()?;
+            eprintln!("[CAELUM-INIT] Data dir: {:?}", data_dir);
             // Test equipment only (CR-012 §8): the end-to-end test runs on its own records.
             #[cfg(feature = "test-equipment")]
             let data_dir = std::env::var_os("CAELUM_TE_DATA_DIR").map_or(data_dir, Into::into);
+            eprintln!("[CAELUM-INIT] Opening station AppState...");
             app.manage(state::AppState::open(&data_dir));
+            eprintln!("[CAELUM-INIT] AppState opened successfully");
             #[cfg(feature = "test-equipment")]
             state::inject_test_faults(&app.state::<state::AppState>());
             state::start_alarm_tick(app.handle().clone());
@@ -58,6 +66,7 @@ pub fn run() -> tauri::Result<()> {
             crewlan::start_crew_lan(app.handle().clone(), &data_dir);
             clinical::start_folder_watch(app.handle().clone());
             console::start_console(app.handle().clone());
+            eprintln!("[CAELUM-INIT] Setup completed successfully");
             Ok(())
         })
         .invoke_handler(ipc::invoke_handler())
