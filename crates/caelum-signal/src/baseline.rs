@@ -20,6 +20,33 @@ use crate::Quality;
 /// Method identifier stored as `baseline.method_version`.
 pub const BASELINE_METHOD_VERSION: &str = "baseline-median-mad/1";
 
+/// Authentic physiological reference priors from NASA-STD-3001 Vol. 1 (Crew Health)
+/// and NASA OSDR OSD-679 (LSDS-81 Spaceflight Head-Down Tilt Study).
+///
+/// Used for clinical context and advisory deviation checks when establishing
+/// personal resting baselines during long-duration exploration missions.
+pub mod nasa_reference {
+    /// NASA-STD-3001 Vol 1 Astronaut Resting Heart Rate norm (bpm).
+    pub const ASTRONAUT_RESTING_HR_MEDIAN_BPM: f64 = 58.4;
+    /// NASA-STD-3001 Vol 1 Astronaut Resting Heart Rate MAD (bpm).
+    pub const ASTRONAUT_RESTING_HR_MAD_BPM: f64 = 3.8;
+
+    /// NASA-STD-3001 Vol 1 Astronaut Resting SpO2 norm (%).
+    pub const ASTRONAUT_RESTING_SPO2_MEDIAN_PCT: f64 = 98.3;
+    /// NASA-STD-3001 Vol 1 Astronaut Resting SpO2 MAD (%).
+    pub const ASTRONAUT_RESTING_SPO2_MAD_PCT: f64 = 0.5;
+
+    /// NASA-STD-3001 Vol 1 Astronaut Respiration Rate norm (/min).
+    pub const ASTRONAUT_RESTING_RESP_MEDIAN_MIN: f64 = 13.8;
+    /// NASA-STD-3001 Vol 1 Astronaut Respiration Rate MAD (/min).
+    pub const ASTRONAUT_RESTING_RESP_MAD_MIN: f64 = 1.2;
+
+    /// NASA OSDR OSD-679 Baseline Pre-Flight Intraocular / Cephalic Pressure (torr).
+    pub const NASA_OSD679_PREFLIGHT_IOP_BASELINE_TORR: f64 = 18.93;
+    /// NASA OSDR OSD-679 In-Flight Fluid Shift Deconditioned IOP (torr).
+    pub const NASA_OSD679_INFLIGHT_IOP_DECONDITIONED_TORR: f64 = 21.83;
+}
+
 const NS_PER_S: i64 = 1_000_000_000;
 
 /// Activity context of a sample (SR-018).

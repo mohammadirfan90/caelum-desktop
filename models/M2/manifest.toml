@@ -89,18 +89,18 @@ id = "M2"
 name = "Cardiac Rhythm Advisory (AF)"
 version = "1.0.0"
 file = "model.onnx"
-sha256 = "03fbf217138f84e5edc94c3be2ad1de60bd5caddea86739ca89ec08c3dad149a"
+sha256 = "0273547496eb59f35291adea47e946bcbb37d38409a6d848125a0567b01cd284"
 
 [validation]
-status = "VALIDATED"
+status = "NOT_VALIDATED"
 gate = "AF F1 >= 0.80 subject-wise"
-evidence = "PhysioNet/CinC 2017 Challenge & Microgravity Vagal Analog; F1=1.0000"
+evidence = "PhysioNet MIT-BIH Arrhythmia Database cardiologists-annotated rhythm evaluation set; Subject-wise F1 = 0.8488"
 
 [card]
-intended_use = "Advisory rhythm classification; feeds parameter af_probability into rule af.observe."
-training_data = "PhysioNet/CinC 2017 + MIT-BIH AF Database"
-evaluation = "AF F1: 1.0000"
-limitations = "Requires SQI >= 0.60; observe notice only per SR-002."
+intended_use = "Advisory rhythm classification over 30s ECG windows; feeds af.observe rule."
+training_data = "PhysioNet MIT-BIH Arrhythmia Database (mitdb: records 100, 105, 232 for NSR; records 201, 119 for ventricular ectopy and Atrial Fibrillation episodes)"
+evaluation = "AF F1: 0.8488 across held-out clinical subjects (Gate >= 0.80)"
+limitations = "Requires SQI >= 0.60; ventricular ectopy may rarely elevate score."
 approver = "Provisional Clinical Lead"
 
 [runtime]

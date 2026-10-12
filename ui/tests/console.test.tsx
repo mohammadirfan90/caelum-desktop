@@ -1,6 +1,7 @@
 // Ground console profile (F-GND-08; CR-025): the flight surgeon sees downlinked summaries, event
 // packets and the private medical conference record; BME and MCC see OPS records only; nothing
 // received shows NO DATA.
+/* eslint-disable jsx-a11y/aria-role -- `role` is the Console component prop for the station user role, not an ARIA role */
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 

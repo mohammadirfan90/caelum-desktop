@@ -1,0 +1,19 @@
+Source name,Sample name,Space mission,Spaceflight,Dissection,HE file ID,ORO Positivity (%)
+CG1,Mmus_BAL-TAL_LVR_GC_Rep1_G1,RR-3,Ground,Frozen carcass,G1 GL1-3 HE,9.65
+CG2,Mmus_BAL-TAL_LVR_GC_Rep2_G2,RR-3,Ground,Frozen carcass,G1 GL1-3 HE,6.68
+CG3,Mmus_BAL-TAL_LVR_GC_Rep3_G3,RR-3,Ground,Frozen carcass,G1 GL1-3 HE,21.84
+CG7,Mmus_BAL-TAL_LVR_GC_Rep6_G7,RR-3,Ground,Frozen carcass,G1 GL4-6 HE,13.86
+CG5,Mmus_BAL-TAL_LVR_GC_Rep4_G5,RR-3,Ground,Frozen carcass,G1 GL4-6 HE,3.82
+CG6,Mmus_BAL-TAL_LVR_GC_Rep5_G6,RR-3,Ground,Frozen carcass,G1 GL4-6 HE,12.98
+CF1,Mmus_BAL-TAL_LVR_FLT_Rep1_F1,RR-3,Flight,Frozen carcass,G2 GL7-9 HE,21.68
+CF2,Mmus_BAL-TAL_LVR_FLT_Rep2_F2,RR-3,Flight,Frozen carcass,G2 GL7-9 HE,21.92
+CF3,Mmus_BAL-TAL_LVR_FLT_Rep3_F3,RR-3,Flight,Frozen carcass,G2 GL7-9 HE,21.94
+CF4,Mmus_BAL-TAL_LVR_FLT_Rep4_F4,RR-3,Flight,Frozen carcass,G2 GL10-12 HE,13.62
+CF5,Mmus_BAL-TAL_LVR_FLT_Rep5_F5,RR-3,Flight,Frozen carcass,G2 GL10-12 HE,13.52
+CF6,Mmus_BAL-TAL_LVR_FLT_Rep6_F6,RR-3,Flight,Frozen carcass,G2 GL10-12 HE,15.6
+CB1,"Mmus_BAL-TAL_LVR_BSL_Rep1_B1	",RR-3,Basal,Frozen carcass,G3 GL13-15 HE,22.18
+CB2,Mmus_BAL-TAL_LVR_BSL_Rep2_B2,RR-3,Basal,Frozen carcass,G3 GL13-15 HE,22.13
+CB3,Mmus_BAL-TAL_LVR_BSL_Rep3_B3,RR-3,Basal,Frozen carcass,G3 GL13-15 HE,15.03
+CB4,Mmus_BAL-TAL_LVR_BSL_Rep4_B4,RR-3,Basal,Frozen carcass,G3 GL16-18 HE,18.58
+CB6,Mmus_BAL-TAL_LVR_BSL_Rep5_B6,RR-3,Basal,Frozen carcass,G3 GL16-18 HE,7.61
+CB7,Mmus_BAL-TAL_LVR_BSL_Rep6_B7,RR-3,Basal,Frozen carcass,G3 GL16-18 HE,18.7

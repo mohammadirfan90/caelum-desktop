@@ -181,16 +181,21 @@ fn estimate(
             sqi,
         });
     }
-    let pattern = if longest_gap_s >= PAUSE_S {
+    let med_interval = median(&intervals);
+    let is_pause = longest_gap_s >= PAUSE_S
+        && (intervals.len() < 2 || med_interval.is_some_and(|m| longest_gap_s >= 1.5 * m));
+    let pattern = if is_pause {
         BreathingPattern::Pause
     } else {
-        match (std_dev(&intervals), median(&intervals)) {
+        match (std_dev(&intervals), med_interval) {
             (Some(sd), Some(m)) if m > 0.0 && sd / m > IRREGULAR_CV => BreathingPattern::Irregular,
             _ => BreathingPattern::Regular,
         }
     };
-    let rate = if intervals.len() >= 2 {
-        median(&intervals).filter(|m| *m > 0.0).map(|m| Derived {
+    let rate = if pattern == BreathingPattern::Pause {
+        None
+    } else if intervals.len() >= 2 {
+        med_interval.filter(|m| *m > 0.0).map(|m| Derived {
             value: 60.0 / m,
             quality,
             algorithm,
@@ -362,6 +367,7 @@ mod tests {
         );
         let e = respiration_from_rip(&x, fs, None).unwrap();
         assert_eq!(e.pattern.unwrap().value, BreathingPattern::Pause);
+        assert_eq!(e.rate, None, "An apnoea therefore shows as a pause pattern with no rate");
         assert!(e.longest_gap_s >= 18.0, "{}", e.longest_gap_s);
     }
 

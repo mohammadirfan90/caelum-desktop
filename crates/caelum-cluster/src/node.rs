@@ -588,27 +588,11 @@ async fn lead(shared: &Arc<Shared>, stream: LanStream, fence: Fence) -> Result<(
             if batch.is_empty() {
                 break;
             }
-            let entries = batch.iter().map(WireEntry::from).collect();
+            let entries: Vec<_> = batch.iter().map(WireEntry::from).collect();
             send_ts(&mut ws, &PeerMessage::Entries { entries }).await?;
         }
         tokio::select! {
-            changed = head_rx.changed() => {
-                if changed.is_err() {
-                    return Err(SessionEnd::Closed);
-                }
-            }
-            changed = heartbeat_rx.changed() => {
-                if changed.is_err() {
-                    return Err(SessionEnd::Closed);
-                }
-                let head_seq = shared.lock().head.seq;
-                send_ts(&mut ws, &PeerMessage::Heartbeat { fence: fence.clone(), head_seq }).await?;
-            }
-            changed = role_rx.changed() => {
-                if changed.is_err() || role_rx.borrow_and_update().as_ref() != Some(&fence) {
-                    return Err(SessionEnd::Fenced);
-                }
-            }
+            biased;
             message = recv_ts(&mut ws) => match message? {
                 PeerMessage::Ack { fence: f, seq } => {
                     let acked = session.on_ack(&f, seq)?;
@@ -620,6 +604,23 @@ async fn lead(shared: &Arc<Shared>, stream: LanStream, fence: Fence) -> Result<(
                 }
                 _ => return Err(SessionEnd::Refused("unexpected message from follower".into())),
             },
+            changed = role_rx.changed() => {
+                if changed.is_err() || role_rx.borrow_and_update().as_ref() != Some(&fence) {
+                    return Err(SessionEnd::Fenced);
+                }
+            }
+            changed = heartbeat_rx.changed() => {
+                if changed.is_err() {
+                    return Err(SessionEnd::Closed);
+                }
+                let head_seq = shared.lock().head.seq;
+                send_ts(&mut ws, &PeerMessage::Heartbeat { fence: fence.clone(), head_seq }).await?;
+            }
+            changed = head_rx.changed() => {
+                if changed.is_err() {
+                    return Err(SessionEnd::Closed);
+                }
+            }
         }
     }
 }

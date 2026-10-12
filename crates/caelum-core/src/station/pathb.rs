@@ -63,13 +63,14 @@ impl FileQueueStore {
     }
 
     fn write(&self, name: &str, text: &str) -> Result<(), QueueError> {
+        use std::io::Write;
         let path = self.dir.join(name);
         let tmp = path.with_extension("tmp");
         let io = |e: std::io::Error| QueueError::Store(e.to_string());
-        std::fs::write(&tmp, text).map_err(io)?;
-        std::fs::File::open(&tmp)
-            .and_then(|f| f.sync_all())
-            .map_err(io)?;
+        let mut file = std::fs::File::create(&tmp).map_err(io)?;
+        file.write_all(text.as_bytes()).map_err(io)?;
+        file.sync_all().map_err(io)?;
+        drop(file);
         std::fs::rename(&tmp, &path).map_err(io)
     }
 }

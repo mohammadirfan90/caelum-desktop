@@ -145,7 +145,7 @@ pub fn spo2_and_pulse_rate(
     let pulse_ok = rejections.is_empty();
 
     let pulse_rate = if pulse_ok {
-        let lags = ((0.3 * fs).round() as usize, (2.0 * fs).round() as usize);
+        let lags = ((0.2 * fs).round() as usize, (3.0 * fs).round() as usize);
         stats::dominant_period(&ir_ac, lags.0, lags.1).map(|(lag, _)| Derived {
             value: 60.0 * fs / lag,
             quality: sqi.quality,
@@ -244,7 +244,7 @@ mod tests {
     /// F-SIG-04: R and SpO₂ follow the calibration; pulse rate within 1 /min (40–180).
     #[test]
     fn f_sig_04_spo2_and_pulse_rate() {
-        for bpm in [40.0, 60.0, 100.0, 140.0, 180.0] {
+        for bpm in [40.0, 60.0, 100.0, 140.0, 180.0, 240.0] {
             // R = (100/50000)/(200/80000) = 0.8 → SpO₂ = 90 %.
             let (red, ir) = ppg(100.0, 8.0, bpm, 100.0, 200.0);
             let e = spo2_and_pulse_rate(&red, &ir, 100.0, Some(&CAL), Some(0.0)).unwrap();

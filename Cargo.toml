@@ -66,3 +66,10 @@ opt-level = 3
 
 [profile.dev.package.blake2]
 opt-level = 3
+
+[profile.dev]
+debug = 0
+
+[profile.test]
+debug = 0
+

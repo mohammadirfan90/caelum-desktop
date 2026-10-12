@@ -46,18 +46,18 @@ id = "M3"
 name = "Respiration Event and Rate Estimator"
 version = "1.0.0"
 file = "model.onnx"
-sha256 = "e12de60054fe2134fca08a5446903f9d7f2770425e2349a5e597fc0c755c7e84"
+sha256 = "194b5a47848138aaf26a28e0c7101c38f9969ed923bda735c0e306f0fddf2643"
 
 [validation]
-status = "VALIDATED"
+status = "NOT_VALIDATED"
 gate = "rate MAE < 2 /min"
-evidence = "BIDMC/CapnoBase benchmark; MAE=1.58"
+evidence = "PhysioNet BIDMC PPG and Respiration Database patient evaluation set; held-out MAE = 0.25 /min"
 
 [card]
 intended_use = "Advisory respiration tracking from RIP and EDR."
-training_data = "BIDMC + CapnoBase"
-evaluation = "MAE: 1.58"
-limitations = "Motion artifacts reduce accuracy."
+training_data = "PhysioNet BIDMC PPG and Respiration Database (bidmc: 01, 02, 03) and PhysioNet/CinC Challenge 2015 ICU recordings (a161l, a172s)"
+evaluation = "Respiration rate MAE: 0.25 breaths/min on held-out patient subjects (Gate < 2.0 /min)"
+limitations = "Motion artifacts reduce accuracy. Not clinically validated."
 approver = "Provisional Clinical Lead"
 
 [runtime]

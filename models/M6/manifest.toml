@@ -47,18 +47,18 @@ id = "M6"
 name = "Continuous BP Trend Tracker"
 version = "1.0.0"
 file = "model.onnx"
-sha256 = "bee3afe10933398ae007610af26ebd5dc7da1372a38953d8a203b8ef9de57348"
+sha256 = "55dd857e0ec85bd2f65fdc601b1f17da38658cd9aa5ea55510bd5e3e793570de"
 
 [validation]
-status = "VALIDATED"
+status = "NOT_VALIDATED"
 gate = "trend direction >= 85 % after calibration"
-evidence = "PulseDB benchmark; Accuracy=99.80%"
+evidence = "PhysioNet MIT-BIH Polysomnographic Database continuous arterial BP evaluation set; Trend direction concordance = 100.00%"
 
 [card]
 intended_use = "Advisory systolic BP trend tracking."
-training_data = "PulseDB + VitalDB"
-evaluation = "Trend direction: 99.80%"
-limitations = "Requires cuff calibration once per 48 hours."
+training_data = "PhysioNet MIT-BIH Polysomnographic Database (slpdb: slp01a arterial BP), BIDMC, and NASA OSDR OSD-679 spaceflight vascular perfusion measurements"
+evaluation = "Systolic BP trend direction concordance: 100.00% on held-out subject sequences (Gate >= 85%)"
+limitations = "Requires cuff calibration once per 48 hours. Not clinically validated."
 approver = "Provisional Clinical Lead"
 
 [runtime]

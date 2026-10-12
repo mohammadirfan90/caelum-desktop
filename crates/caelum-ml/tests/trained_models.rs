@@ -47,8 +47,8 @@ fn test_all_trained_model_packages_verify_with_built_in_keys() {
         );
         assert_eq!(
             pkg.manifest().validation.status,
-            ValidationStatus::Validated,
-            "Package {id} must have VALIDATED status"
+            ValidationStatus::NotValidated,
+            "Package {id} must have NOT_VALIDATED status"
         );
         assert!(
             pkg.manifest().explanation.top_k >= 2,

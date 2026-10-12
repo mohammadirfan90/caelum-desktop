@@ -138,11 +138,22 @@ impl CoreTempFilter {
             if !(hr.is_finite() && (20.0..=250.0).contains(&hr)) {
                 return Err(SignalError::Invalid("heart rate"));
             }
-            let m = 2.0 * self.hr.c2 * self.ct + self.hr.c1;
-            let predicted = self.hr.c2 * self.ct * self.ct + self.hr.c1 * self.ct + self.hr.c0;
+            // Buller quadratic model: HR = c2*CT^2 + c1*CT + c0
+            // The vertex is at -c1 / (2*c2) ≈ 42.0469 °C. Beyond 40.0 °C, linearize
+            // using the tangent slope at 40.0 °C to maintain C1 continuity, strictly
+            // positive monotonicity (m > 0), and prevent negative Kalman gain inversion.
+            let (m, predicted) = if self.ct >= 40.0 {
+                let m_clamp = 2.0 * self.hr.c2 * 40.0 + self.hr.c1;
+                let pred_40 = self.hr.c2 * 40.0 * 40.0 + self.hr.c1 * 40.0 + self.hr.c0;
+                (m_clamp, pred_40 + m_clamp * (self.ct - 40.0))
+            } else {
+                let m = 2.0 * self.hr.c2 * self.ct + self.hr.c1;
+                let pred = self.hr.c2 * self.ct * self.ct + self.hr.c1 * self.ct + self.hr.c0;
+                (m, pred)
+            };
             let k = self.var * m / (m * m * self.var + self.hr.variance);
             self.ct += k * (hr - predicted);
-            self.var *= 1.0 - k * m;
+            self.var *= (1.0 - k * m).max(0.0);
         }
         if let (Some(model), Some(skin), Some(q)) = (self.hf, input.skin_temp, input.heat_flux) {
             if !(skin.is_finite() && q.is_finite()) {
@@ -285,5 +296,27 @@ mod tests {
                 }
             )
             .is_err());
+    }
+
+    /// Verification of AUDIT-004: above 42.0 °C, high heart rate increases estimated core temperature.
+    #[test]
+    fn f_sig_05_ekf_monotonic_above_42_degrees() {
+        let mut f = CoreTempFilter::start(BULLER_2013, None, 42.1, 0.04).unwrap();
+        let initial = f.estimate().value;
+        // Step with tachycardia (220 bpm)
+        let updated = f
+            .step(
+                1.0,
+                CoreTempInput {
+                    heart_rate: Some(220.0),
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        assert!(
+            updated.value > initial,
+            "EKF must monotonically increase core temp on tachycardia: initial {initial}, updated {}",
+            updated.value
+        );
     }
 }

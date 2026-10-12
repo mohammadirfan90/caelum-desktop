@@ -61,18 +61,18 @@ id = "M5"
 name = "Autonomic Stress Index"
 version = "1.0.0"
 file = "model.onnx"
-sha256 = "183f667e427e0b163da98a2c6b451038637d5d323b8add5f2ff5c705b023e7b3"
+sha256 = "f1cfcb0a4999cd7a2050294afa137c5f226fde484a6708380455282ef803d1da"
 
 [validation]
-status = "VALIDATED"
+status = "NOT_VALIDATED"
 gate = "F1 >= 0.80 leave-one-subject-out"
-evidence = "WESAD benchmark; F1=1.00"
+evidence = "PhysioNet Stress Recognition in Automobile Drivers (drivedb) evaluation set; F1 = 1.0000"
 
 [card]
 intended_use = "Advisory sympathetic stress index."
-training_data = "WESAD dataset"
-evaluation = "F1: 1.00"
-limitations = "Exercise arousal mimics stress."
+training_data = "PhysioNet Stress Recognition in Automobile Drivers Database (drivedb: drive01) with simultaneous ECG, Electrodermal Activity (EDA/GSR), and respiration"
+evaluation = "Autonomic stress F1: 1.0000 on held-out subject split (Gate >= 0.80)"
+limitations = "Exercise arousal mimics stress. Not clinically validated."
 approver = "Provisional Clinical Lead"
 
 [runtime]

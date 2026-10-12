@@ -2,3 +2,6 @@
 # Private key kept outside the repository (tools/ruleset-signer keygen).
 7d8a8728c8477a9f3d69cca8b8358b1e110e99e40e2eac0906b3c70c27fcabd5  # key id 5811d4225220dff7
 ea4a6c63e29c520abef5507b132ec5f9954776aebebe7b92421eea691446d22c  # key id fe812c12f3ab4ce6 (development models)
+271e2e58d8230376516f19d3065944568ecf62b27625717651ae88667c75bb42  # key id df915698b7c5813b (development models re-sign)
+ab3a27189966cd847e79ea7c55d9feefea625cd0066512de5911103e2496936b  # key id c1752df393136a98 (clinical real-data models)
+

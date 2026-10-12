@@ -214,6 +214,11 @@ impl LeaderSession {
         self.synced
     }
 
+    /// Whether more entries can be sent within the in-flight window.
+    pub fn can_send(&self) -> bool {
+        self.synced && (self.next_send.saturating_sub(1).saturating_sub(self.acked) < self.window)
+    }
+
     /// Handles the follower's checkpoints (the first list, or the answer to a probe). Returns the
     /// exact resume point, or the range to probe next; each probe narrows the range by a factor
     /// of [`PROBE_POINTS`], so only entries the leader really lacks are ever diverted.

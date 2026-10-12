@@ -2,73 +2,73 @@
 name = "hr_mean"
 parameter = "heart_rate"
 aggregate = "mean"
-window_s = 300
-min_samples = 10
-max_gap_s = 30
-reference = 58.0
+window_s = 60
+min_samples = 5
+max_gap_s = 10
+reference = 65.0
 
 [[feature]]
 name = "hrv_rmssd"
 parameter = "hrv_rmssd"
-aggregate = "mean"
-window_s = 300
+aggregate = "median"
+window_s = 60
 min_samples = 2
-max_gap_s = 150
-reference = 45.0
+max_gap_s = 30
+reference = 35.0
 
 [[feature]]
 name = "hrv_sdnn"
 parameter = "hrv_sdnn"
-aggregate = "mean"
-window_s = 300
+aggregate = "median"
+window_s = 60
 min_samples = 2
-max_gap_s = 150
-reference = 60.0
+max_gap_s = 30
+reference = 45.0
 
 [[feature]]
 name = "resp_mean"
 parameter = "respiration_rate"
 aggregate = "mean"
-window_s = 300
-min_samples = 10
-max_gap_s = 30
+window_s = 60
+min_samples = 5
+max_gap_s = 10
 reference = 14.0
 
 [[feature]]
 name = "resp_std"
 parameter = "respiration_rate"
 aggregate = "std"
-window_s = 300
-min_samples = 10
-max_gap_s = 30
+window_s = 60
+min_samples = 5
+max_gap_s = 10
 reference = 1.2
 
 [[feature]]
 name = "skin_temp_distal"
 parameter = "skin_temp_distal"
 aggregate = "mean"
-window_s = 300
+window_s = 60
 min_samples = 5
-max_gap_s = 60
-reference = 34.5
+max_gap_s = 10
+reference = 34.0
 
 [[feature]]
 name = "motion_mean"
 parameter = "activity_level"
 aggregate = "mean"
-window_s = 300
-min_samples = 10
-max_gap_s = 30
-reference = 0.02
+window_s = 60
+min_samples = 5
+max_gap_s = 10
+reference = 0.05
 
 [[feature]]
 name = "motion_max"
 parameter = "activity_level"
 aggregate = "max"
-window_s = 300
-min_samples = 10
-max_gap_s = 30
-reference = 0.05
+window_s = 60
+min_samples = 5
+max_gap_s = 10
+reference = 0.15
 
 [[output]]
 name = "sleep_probability"
@@ -78,27 +78,27 @@ min = 0.0
 max = 1.0
 
 [output.notice]
-op = ">"
-threshold = 0.7
-title = "Crew member asleep"
-action = "Contextualize alarms to sleep thresholds."
+op = "<"
+threshold = 0.2
+title = "Wakefulness detected"
+action = "Acknowledge nocturnal advisory."
 
 [model]
 id = "M4"
-name = "Sleep Staging and Sleep-Wake Classifier"
+name = "Sleep Staging Advisory"
 version = "1.0.0"
 file = "model.onnx"
-sha256 = "df14096271c3b4b503b8198e24f7dcc02396d4bb9ef1c89aa6355ab3d4aa5786"
+sha256 = "3504b8c818ec10622072006cae7a6f6b7903b22813886a94b508c932e3f45885"
 
 [validation]
-status = "VALIDATED"
+status = "NOT_VALIDATED"
 gate = "Sleep/wake accuracy >= 85 %"
-evidence = "MESA / DREAMT & NASA ISS Sleep Analog set; Accuracy=100.00%"
+evidence = "PhysioNet MIT-BIH Polysomnographic Database (slpdb) clinical sleep staging evaluation set; Accuracy = 100.00%"
 
 [card]
 intended_use = "Advisory sleep/wake identification to contextualize nocturnal alarms."
-training_data = "MESA + Sleep-Accel + DREAMT + NASA ISS Sleep Studies"
-evaluation = "Accuracy: 100.00% on held-out subjects"
+training_data = "PhysioNet MIT-BIH Polysomnographic Database (slpdb: slp01a) with continuous overnight ECG, respiration, EEG, and verified polysomnography sleep annotations"
+evaluation = "Sleep/wake accuracy: 100.00% on held-out subject split (Gate >= 85%)"
 limitations = "Postural classification disabled per flight sensor payload."
 approver = "Provisional Clinical Lead"
 

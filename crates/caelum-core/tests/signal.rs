@@ -168,6 +168,43 @@ fn f_sig_02_asystole_fires_on_a_pause_with_good_signal() {
 }
 
 #[test]
+fn f_sig_02b_asystole_fires_on_an_isoelectric_flatline() {
+    let (_d, clock, mut s, device) = setup();
+    for i in 0..30 {
+        let samples = if i < 15 {
+            second(i, 70.0)
+        } else {
+            vec![0.0; FS as usize] // Isoelectric flatline (AUDIT-001 / CR-013 §3)
+        };
+        let c = Waveform {
+            signal: WaveformSignal::Ecg(EcgLead::II),
+            start: Some(TaiNs(T0 + i as i64 * 1_000_000_000)),
+            sample_rate_hz: FS,
+            unit: WaveformUnit::Millivolt,
+            samples,
+            quality: Quality::Good,
+            flags: DeviceFlags::default(),
+            source_code: None,
+        };
+        clock
+            .0
+            .tai
+            .store(T0 + (i as i64 + 1) * 1_000_000_000, Ordering::SeqCst);
+        s.ingest_waveforms(device, vec![(crew(), c)])
+            .unwrap();
+        s.tick().unwrap();
+    }
+    let rules = alarm_rules(&s);
+    assert!(
+        rules
+            .iter()
+            .any(|(r, st)| r == "asystole.critical" && st == "active"),
+        "{rules:?}"
+    );
+}
+
+
+#[test]
 fn sr_005_an_unusable_ecg_restarts_the_stream_and_raises_no_asystole() {
     let (_d, clock, mut s, device) = setup();
     for i in 0..30 {

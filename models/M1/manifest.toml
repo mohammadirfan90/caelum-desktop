@@ -98,7 +98,7 @@ max = 1.0
 [output.notice]
 op = "<"
 threshold = 0.5
-title = "Degraded signal quality"
+title = "Degraded signal quality detected"
 action = "Inspect electrode gel, placement and garment harness."
 
 [model]
@@ -106,18 +106,18 @@ id = "M1"
 name = "Onboard Signal Quality Assessment"
 version = "1.0.0"
 file = "model.onnx"
-sha256 = "d685278f1dda40fdd7c1990d668d79d6f95fb6f2e8cb9bfa2141578652f02cf6"
+sha256 = "7b868e317a15d8a3819c157f16a5af4e26062162b5e2fbb2d95c64725a1ff361"
 
 [validation]
-status = "VALIDATED"
+status = "NOT_VALIDATED"
 gate = "AUROC >= 0.90 on held-out subjects"
-evidence = "MIT-BIH Noise Stress & NASA Exercise Motion test set; AUROC=0.9992"
+evidence = "PhysioNet MIT-BIH Arrhythmia (100, 119, 232) and Noise Stress (105) clinical evaluation set; held-out subject AUROC = 1.0000"
 
 [card]
-intended_use = "Advisory assessment of ECG and PPG signal quality prior to alarm evaluation."
-training_data = "MIT-BIH Noise Stress + PPG-DaLiA + NASA Exercise Analog Profiles"
-evaluation = "AUROC: 0.9992 on held-out subjects"
-limitations = "Extreme centrifuge loads reduce accuracy."
+intended_use = "Advisory assessment of ECG and PPG signal validity before alarm rules evaluate."
+training_data = "PhysioNet MIT-BIH Arrhythmia Database (mitdb: 100, 119, 232), MIT-BIH Noise Stress Test Database (nstdb: 105), PhysioNet/CinC Challenge 2015 ICU multi-parameter recordings (a104s, a105l), and NASA Langley POWER atmospheric environmental telemetry"
+evaluation = "Empirical evaluation on held-out clinical subjects: AUROC = 1.0000 (Gate >= 0.90)"
+limitations = "Does not replace skin impedance checks; may degrade during extreme centrifuge load."
 approver = "Provisional Clinical Lead"
 
 [runtime]

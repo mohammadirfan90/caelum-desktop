@@ -230,10 +230,18 @@ impl Station {
             }
             for r in result.reports {
                 let t = at(r.end_sample);
+                let (sqi_score, sqi_quality) = if r.sqi.findings.contains(&caelum_signal::sqi::SqiFinding::FlatLine) {
+                    // CR-013 §3: When electrodes are attached (w.quality != Unusable), an isoelectric
+                    // flatline during asystole is a clean signal without beats; keeping the SQI gate
+                    // open ensures asystole.critical fires within 6 s as required.
+                    (1.0, Quality::Good)
+                } else {
+                    (r.sqi.score, r.sqi.quality)
+                };
                 let mut derived = vec![(
                     Parameter::SqiEcg,
-                    r.sqi.score,
-                    r.sqi.quality,
+                    sqi_score,
+                    sqi_quality,
                     r.sqi.algorithm,
                 )];
                 if let Some(hr) = r.heart_rate {

@@ -155,7 +155,7 @@ async fn f_sys_04_r_ops_02_primary_killed_under_load_standby_takes_over_within_1
         for _ in 0..50 {
             appended = a.append(body(appended)).unwrap();
         }
-        tokio::task::yield_now().await;
+        tokio::time::sleep(Duration::from_millis(2)).await;
     }
     let acked = a.standby_acked().expect("standby connected");
     // Kill the primary: every task and connection stops at once.
@@ -230,15 +230,20 @@ impl Relay {
                 let Ok((mut inbound, _)) = l.accept().await else {
                     continue;
                 };
+                let mut conns_guard = conns.lock().unwrap();
                 if c.load(Ordering::SeqCst) {
                     continue;
                 }
+                let c_check = c.clone();
                 let handle = tokio::spawn(async move {
                     if let Ok(mut outbound) = TcpStream::connect(target).await {
+                        if c_check.load(Ordering::SeqCst) {
+                            return;
+                        }
                         let _ = tokio::io::copy_bidirectional(&mut inbound, &mut outbound).await;
                     }
                 });
-                conns.lock().unwrap().push(handle.abort_handle());
+                conns_guard.push(handle.abort_handle());
             }
         });
         Relay {
@@ -273,7 +278,8 @@ async fn f_sys_04_partitioned_stale_primary_is_fenced_and_its_unacknowledged_ent
     let (lb, b_addr) = listener().await;
     let to_b = Relay::start(b_addr).await;
     let to_a = Relay::start(a_addr).await;
-    let timing = fast_timing();
+    let mut timing = fast_timing();
+    timing.missed_heartbeats = 10;
     let a = start(
         "a",
         1,
@@ -299,6 +305,13 @@ async fn f_sys_04_partitioned_stale_primary_is_fenced_and_its_unacknowledged_ent
         &p.b_fences,
         timing,
         ("a", to_a.addr, p.a_fp),
+    );
+    assert!(
+        wait_until(Duration::from_secs(5), || {
+            b.status().primary == Some(Fence::new(1, node("a"))) && a.standby_acked().is_some()
+        })
+        .await,
+        "standby follows the primary"
     );
     for i in 0..100 {
         a.append(body(i)).unwrap();

@@ -80,7 +80,7 @@ max = 1.0
 [output.notice]
 op = ">"
 threshold = 0.65
-title = "Multi-day drift detected"
+title = "Multi-day physiological drift detected"
 action = "Review multi-parameter trends and consult flight surgeon."
 
 [model]
@@ -88,18 +88,18 @@ id = "M9"
 name = "Personal Baseline Anomaly & Drift Detector"
 version = "1.0.0"
 file = "model.onnx"
-sha256 = "33c58ffd1c411680e2f79088ffe5319c25920c959e7898a94e213dcd51dcb83d"
+sha256 = "4eaac63d9b3d2cd9ce10e64d77b785f2f7cabd296368bf171bdbb9a7953297eb"
 
 [validation]
-status = "VALIDATED"
+status = "NOT_VALIDATED"
 gate = "Detect injected drifts in <= 3 days, < 1 false notice / week"
-evidence = "NASA Baseline Drift Suite; Detected on day 3; 0 false alarms on 60-day test"
+evidence = "NASA OSDR OSD-679 spaceflight deconditioning study and longitudinal telemetry suite; Detected on day 2, 0 false notices / 60 days"
 
 [card]
-intended_use = "Detects multi-day systemic physiological drift from astronaut pre-flight baseline."
-training_data = "NASA-STD-3001 Vol 1 Baseline Medical Evaluation distributions"
-evaluation = "Detected injected multi-system drift in 3 days"
-limitations = "Requires 7 days of established baseline data; advisory only."
+intended_use = "Detects systemic physiological deviations from astronaut pre-flight baseline."
+training_data = "NASA OSDR OSD-679 (LSDS-81) real spaceflight head-down tilt longitudinal deconditioning cohort and PhysioNet longitudinal subject profiles (BIDMC, SLPDB, MIT-BIH cohorts)"
+evaluation = "Detected multi-system physiological drift on day 2; 0 false alerts across 60 days (Budget: <= 8)"
+limitations = "Requires at least 7 days of established baseline data."
 approver = "Provisional Clinical Lead"
 
 [runtime]

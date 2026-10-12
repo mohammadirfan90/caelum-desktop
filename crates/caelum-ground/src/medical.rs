@@ -314,7 +314,7 @@ mod tests {
         assert!(s.validate().is_err());
         let sleep = MedicalSummary {
             parameter: Parameter::SleepStage,
-            value: SummaryValue::State { last: 4, count: 1 },
+            value: SummaryValue::State { last: 5, count: 1 },
             ..hr()
         };
         assert!(sleep.validate().is_err());

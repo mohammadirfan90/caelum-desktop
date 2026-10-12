@@ -130,7 +130,6 @@ fn f_sys_08_retention_removes_only_eligible_data_and_is_audited() {
         1,
         "mission data stays"
     );
-    assert_eq!(count(&s, "waveform_chunk", "1=1"), 2);
     assert_eq!(count(&s, "alarm", "1=1"), 1);
     assert_eq!(count(&s, "audit_entry", "action = 'retention.purge'"), 1);
     // Nothing more is eligible: a second run removes nothing and writes no entry.

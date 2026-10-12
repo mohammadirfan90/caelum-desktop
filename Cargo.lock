@@ -801,6 +801,7 @@ dependencies = [
  "caelum-test-equipment",
  "proptest",
  "serde",
+ "serde_json",
  "thiserror 2.0.21",
  "tokio",
  "toml 1.1.8+spec-1.1.0",
