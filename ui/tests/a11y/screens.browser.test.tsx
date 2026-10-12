@@ -224,7 +224,7 @@ const SCREENS: Record<string, () => ReactElement> = {
 };
 
 const VARIANTS: Record<string, Prefs> = {
-  light: DEFAULT_PREFS,
+  light: { ...DEFAULT_PREFS, theme: "light" },
   dark: { ...DEFAULT_PREFS, theme: "dark" },
   "high-contrast": { ...DEFAULT_PREFS, theme: "high-contrast" },
   "200-glove": { ...DEFAULT_PREFS, textScale: 200, glove: true },

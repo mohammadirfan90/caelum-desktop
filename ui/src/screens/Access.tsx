@@ -66,17 +66,20 @@ function SecretForm({
     });
   };
   return (
-    <form onSubmit={send} className="card flex w-full max-w-[28rem] flex-col gap-4 p-6" aria-label={title}>
-      <h2 className="text-xl font-semibold">{title}</h2>
-      {help === undefined ? null : <p className="text-sm text-ink-3">{help}</p>}
+    <form onSubmit={send} className="card relative flex w-full max-w-[32rem] flex-col gap-5 p-8" aria-label={title}>
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight text-ink">{title}</h2>
+        {help === undefined ? null : <p className="mt-2 text-sm leading-relaxed text-ink-3">{help}</p>}
+      </div>
+
       {withUsername ? (
-        <div className="flex flex-col gap-1">
-          <label htmlFor={userId} className="text-sm font-semibold">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor={userId} className="text-sm font-semibold text-ink-2">
             {strings.username}
           </label>
           <input
             id={userId}
-            className="min-h-12 rounded-lg border border-ink-3 bg-surface px-3"
+            className="min-h-12 w-full rounded-xl border border-border bg-inset/40 px-4 py-3 font-mono text-sm text-ink transition-all duration-200 focus:border-signal focus:bg-surface focus:ring-2 focus:ring-signal/25 focus:outline-none"
             autoComplete="username"
             value={username}
             onChange={(e) => {
@@ -85,14 +88,15 @@ function SecretForm({
           />
         </div>
       ) : null}
-      <div className="flex flex-col gap-1">
-        <label htmlFor={secretId} className="text-sm font-semibold">
+
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={secretId} className="text-sm font-semibold text-ink-2">
           {strings.secret}
         </label>
         <input
           id={secretId}
           type="password"
-          className="min-h-12 rounded-lg border border-ink-3 bg-surface px-3"
+          className="min-h-12 w-full rounded-xl border border-border bg-inset/40 px-4 py-3 font-mono text-sm text-ink transition-all duration-200 focus:border-signal focus:bg-surface focus:ring-2 focus:ring-signal/25 focus:outline-none"
           autoComplete="current-password"
           value={secret}
           onChange={(e) => {
@@ -100,9 +104,22 @@ function SecretForm({
           }}
         />
       </div>
+
       <ErrorLine error={error} />
-      <button type="submit" className="btn btn-ink" disabled={busy}>
-        {busy ? strings.signingIn : submit}
+
+      <button
+        type="submit"
+        className="btn btn-ink mt-2 w-full rounded-xl py-3 text-base font-semibold shadow-lg transition-all"
+        disabled={busy}
+      >
+        {busy ? (
+          <span className="flex items-center gap-2">
+            <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            {strings.signingIn}
+          </span>
+        ) : (
+          submit
+        )}
       </button>
     </form>
   );
@@ -121,7 +138,7 @@ export function SignIn({
   readonly onEmergency: () => void;
 }) {
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="flex w-full flex-col items-center gap-6">
       {needsSetup ? (
         <SecretForm title={strings.setupTitle} help={strings.setupHelp} withUsername submit={strings.setupCreate} onSubmit={onCreateAdministrator} />
       ) : (
@@ -135,8 +152,14 @@ export function SignIn({
 /** SR-014: the emergency view never needs a sign-in. */
 export function EmergencyButton({ onEmergency }: { readonly onEmergency: () => void }) {
   return (
-    <button type="button" className="btn btn-lg btn-soft" aria-describedby="emergency-help" onClick={onEmergency}>
-      {strings.emergency}
+    <button
+      type="button"
+      className="btn btn-lg btn-soft w-full max-w-[32rem] border-2 border-alarm-medium/40 font-semibold tracking-wide text-alarm-medium hover:bg-alarm-medium hover:text-on-alarm transition-all shadow-sm"
+      aria-describedby="emergency-help"
+      onClick={onEmergency}
+    >
+      <span aria-hidden="true">⚠️</span>
+      <span>{strings.emergency}</span>
       <span id="emergency-help" className="sr-only">
         {strings.emergencyHelp}
       </span>
@@ -157,7 +180,7 @@ export function Locked({
   readonly onEmergency: () => void;
 }) {
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="flex w-full flex-col items-center gap-6">
       <SecretForm
         title={strings.lockedTitle}
         help={strings.lockedHelp(name)}
@@ -165,12 +188,12 @@ export function Locked({
         submit={strings.unlock}
         onSubmit={(_u, secret) => onUnlock(secret)}
       />
-      <div className="flex gap-3">
-        <button type="button" className="btn btn-soft" onClick={onSignOut}>
+      <div className="flex w-full max-w-[32rem] gap-3">
+        <button type="button" className="btn btn-soft flex-1 rounded-xl" onClick={onSignOut}>
           {strings.signOut}
         </button>
-        <EmergencyButton onEmergency={onEmergency} />
       </div>
+      <EmergencyButton onEmergency={onEmergency} />
     </div>
   );
 }

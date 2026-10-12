@@ -247,13 +247,15 @@ export function App({ api: overrides = {}, subscribeAlarms = listenAlarms, makeA
   }
 
   return (
-    <div className="flex min-h-full flex-col bg-canvas text-ink">
+    <div className="hud-canvas flex min-h-full flex-col text-ink">
       <a href="#content" className="skip-link">
         {strings.skipToContent}
       </a>
       <RulesetBanner load={api.rulesetStatus} />
       <AlarmBar
         alarms={list}
+        prefs={prefs}
+        onPrefs={onPrefs}
         onAcknowledge={(id) => {
           act(api.alarmAcknowledge(id));
         }}
@@ -262,10 +264,12 @@ export function App({ api: overrides = {}, subscribeAlarms = listenAlarms, makeA
         }}
       />
       {actionError === null ? null : (
-        <p role="alert" className="flex items-center gap-2 px-4 py-2 text-sm font-semibold">
-          <TechnicalGlyph />
-          {actionError}
-        </p>
+        <div role="alert" className="border-b border-alarm-high/30 bg-alarm-high/10 px-4 py-2.5 text-sm font-semibold text-ink">
+          <div className="mx-auto flex max-w-7xl items-center gap-2">
+            <TechnicalGlyph />
+            <span>{actionError}</span>
+          </div>
+        </div>
       )}
       {load.state === "ready" && load.info.kiosk ? (
         <main id="content" tabIndex={-1} className="flex flex-1 flex-col">
@@ -284,27 +288,60 @@ export function App({ api: overrides = {}, subscribeAlarms = listenAlarms, makeA
           }}
         />
       ) : (
-        <main id="content" tabIndex={-1} className="flex flex-1 flex-col items-center justify-center gap-6 p-6">
-          <section aria-labelledby="app-title" className="card w-full max-w-[34rem] p-8">
-            <p className="label">{strings.tagline}</p>
-            <h1 id="app-title" className="mt-2 text-[2.75rem] leading-tight font-semibold tracking-[-0.03em]">
-              {strings.productName}
-            </h1>
-            {load.state === "failed" ? (
-              <div role="alert" className="mt-6 flex items-start gap-3">
-                <TechnicalGlyph />
-                <div>
-                  <p className="text-base font-semibold">{strings.versionUnavailable}</p>
-                  <p className="mt-1 text-sm text-ink-3">{strings.coreNoResponse(load.reason)}</p>
+        <main id="content" tabIndex={-1} className="relative flex flex-1 flex-col items-center justify-center p-6 md:p-10">
+          <div className="relative z-10 flex w-full max-w-[32rem] flex-col items-stretch gap-6">
+            <section aria-labelledby="app-title" className="card group relative overflow-hidden p-8 backdrop-blur-xl">
+              <div className="pointer-events-none absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-signal to-transparent opacity-80" />
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex size-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-signal opacity-75" />
+                      <span className="relative inline-flex size-2 rounded-full bg-signal" />
+                    </span>
+                    <p className="label font-mono tracking-widest text-[0.7rem] text-signal font-medium uppercase">
+                      {strings.tagline}
+                    </p>
+                  </div>
+                  <h1 id="app-title" className="mt-2 text-4xl sm:text-5xl font-bold tracking-tight text-ink">
+                    {strings.productName}
+                  </h1>
+                </div>
+
+                <div className="hidden sm:flex size-14 items-center justify-center rounded-2xl border border-signal/25 bg-signal-soft/40 text-signal shadow-inner">
+                  <svg className="size-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+                    <circle cx="12" cy="12" r="9" strokeOpacity="0.4" strokeDasharray="3 3" />
+                    <circle cx="12" cy="12" r="5" />
+                    <line x1="12" y1="2" x2="12" y2="7" />
+                    <line x1="12" y1="17" x2="12" y2="22" />
+                    <line x1="2" y1="12" x2="7" y2="12" />
+                    <line x1="17" y1="12" x2="22" y2="12" />
+                    <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+                  </svg>
                 </div>
               </div>
-            ) : (
-              <p role="status" aria-live="polite" className="mt-6 text-base text-ink-3 tabular-nums">
-                {load.state === "ready" ? strings.version(load.info.version) : strings.loading}
-              </p>
-            )}
-          </section>
-          {body}
+
+              {load.state === "failed" ? (
+                <div role="alert" className="mt-6 flex items-start gap-3 rounded-lg border border-alarm-high/30 bg-alarm-high/10 p-4">
+                  <TechnicalGlyph />
+                  <div>
+                    <p className="text-base font-semibold text-ink">{strings.versionUnavailable}</p>
+                    <p className="mt-1 text-sm text-ink-3">{strings.coreNoResponse(load.reason)}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-6 flex items-center justify-between border-t border-border/60 pt-4 text-xs font-mono">
+                  <p role="status" aria-live="polite" className="text-ink-3 tracking-wide">
+                    {load.state === "ready" ? strings.version(load.info.version) : strings.loading}
+                  </p>
+                  <span aria-hidden="true" className="flex items-center gap-1.5 text-signal">
+                    <span className="size-2 rounded-full bg-signal animate-pulse" />
+                  </span>
+                </div>
+              )}
+            </section>
+            {body}
+          </div>
         </main>
       )}
     </div>

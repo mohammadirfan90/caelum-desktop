@@ -1,4 +1,7 @@
+import { useEffect, useState } from "react";
+
 import type { AlarmView } from "../alarmStore";
+import type { Prefs } from "../settings";
 import { strings } from "../strings";
 import { type Level, LevelGlyph } from "./LevelGlyph";
 
@@ -36,49 +39,117 @@ export function AlarmBar({
   alarms,
   onAcknowledge,
   onSilence,
+  prefs,
+  onPrefs,
 }: {
   readonly alarms: readonly AlarmView[];
   readonly onAcknowledge: (alarm: string) => void;
   readonly onSilence: (alarm: string) => void;
+  readonly prefs?: Prefs;
+  readonly onPrefs?: (p: Prefs) => void;
 }) {
   const top = alarms[0];
+  const [time, setTime] = useState(() => new Date().toISOString().substring(11, 19));
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime(new Date().toISOString().substring(11, 19));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
-    <section aria-label={strings.alarmBarLabel} className="flex min-h-16 flex-wrap items-center gap-4 border-b border-border bg-surface px-4 py-2">
-      {top === undefined ? (
-        <p className="flex items-center gap-2 text-sm text-ink-3">
-          <LevelGlyph level="normal" size={16} />
-          {strings.noActiveAlarms}
-        </p>
-      ) : (
-        <>
-          <div aria-live="assertive" className="flex min-w-[16rem] flex-1 items-center gap-3">
-            <LevelGlyph level={level(top.priority)} size={28} />
-            <div className="min-w-0">
-              <p className="text-base font-semibold break-words">
-                {`${strings.level[level(top.priority)]}: ${top.title}`}
-              </p>
-              <p className="text-sm text-ink-3">
-                {stateText(top.state)}
-                {top.silenced ? ` · ${strings.silenced}` : null}
-              </p>
+    <section
+      aria-label={strings.alarmBarLabel}
+      className="flex min-h-14 flex-wrap items-center justify-between gap-4 border-b border-border bg-surface/90 px-4 sm:px-6 py-2 backdrop-blur-md"
+    >
+      <div className="flex flex-wrap items-center gap-4 min-w-0">
+        {top === undefined ? (
+          <p className="flex items-center gap-2 text-sm text-ink-3">
+            <LevelGlyph level="normal" size={16} />
+            <span className="font-medium tracking-wide">{strings.noActiveAlarms}</span>
+          </p>
+        ) : (
+          <>
+            <div aria-live="assertive" className="flex min-w-[16rem] flex-1 items-center gap-3">
+              <LevelGlyph level={level(top.priority)} size={28} />
+              <div className="min-w-0">
+                <p className="text-base font-semibold break-words">
+                  {`${strings.level[level(top.priority)]}: ${top.title}`}
+                </p>
+                <p className="text-sm text-ink-3">
+                  {stateText(top.state)}
+                  {top.silenced ? ` · ${strings.silenced}` : null}
+                </p>
+              </div>
+              {alarms.length > 1 ? <span className="text-sm font-semibold">{strings.moreAlarms(alarms.length - 1)}</span> : null}
             </div>
-            {alarms.length > 1 ? <span className="text-sm font-semibold">{strings.moreAlarms(alarms.length - 1)}</span> : null}
-          </div>
-          <EscalationTracker alarm={top} />
-          <button type="button" className="btn btn-ink" onClick={() => {
-              onAcknowledge(top.alarm);
-            }}>
-            {strings.acknowledge}
-          </button>
-          {top.priority === "observe" ? null : (
-            <button type="button" className="btn btn-soft" onClick={() => {
-                onSilence(top.alarm);
-              }}>
-              {strings.silence}
+            <EscalationTracker alarm={top} />
+            <button
+              type="button"
+              className="btn btn-ink min-h-[38px] px-3.5 py-1 text-xs"
+              onClick={() => {
+                onAcknowledge(top.alarm);
+              }}
+            >
+              {strings.acknowledge}
             </button>
-          )}
-        </>
-      )}
+            {top.priority === "observe" ? null : (
+              <button
+                type="button"
+                className="btn btn-soft min-h-[38px] px-3.5 py-1 text-xs"
+                onClick={() => {
+                  onSilence(top.alarm);
+                }}
+              >
+                {strings.silence}
+              </button>
+            )}
+          </>
+        )}
+      </div>
+
+      <div className="flex items-center gap-3 ml-auto">
+        <div className="hidden sm:flex items-center gap-1.5 font-mono text-xs text-ink-3">
+          <span aria-hidden="true" className="size-2 rounded-full bg-signal animate-pulse" />
+          <span className="tabular-nums font-semibold text-ink">{time}</span>
+        </div>
+
+        {prefs && onPrefs ? (
+          <div className="flex items-center rounded-lg border border-border bg-inset/60 p-0.5 text-xs font-medium">
+            <button
+              type="button"
+              title={strings.themes.dark}
+              className={`rounded-md px-2.5 py-1 transition-all ${
+                prefs.theme === "dark" ? "bg-surface text-ink font-semibold shadow-xs" : "text-ink-3 hover:text-ink"
+              }`}
+              onClick={() => onPrefs({ ...prefs, theme: "dark" })}
+            >
+              {strings.themes.dark}
+            </button>
+            <button
+              type="button"
+              title={strings.themes.light}
+              className={`rounded-md px-2.5 py-1 transition-all ${
+                prefs.theme === "light" ? "bg-surface text-ink font-semibold shadow-xs" : "text-ink-3 hover:text-ink"
+              }`}
+              onClick={() => onPrefs({ ...prefs, theme: "light" })}
+            >
+              {strings.themes.light}
+            </button>
+            <button
+              type="button"
+              title={strings.themes["high-contrast"]}
+              className={`rounded-md px-2.5 py-1 transition-all ${
+                prefs.theme === "high-contrast" ? "bg-surface text-ink font-semibold shadow-xs" : "text-ink-3 hover:text-ink"
+              }`}
+              onClick={() => onPrefs({ ...prefs, theme: "high-contrast" })}
+            >
+              {strings.themes["high-contrast"]}
+            </button>
+          </div>
+        ) : null}
+      </div>
     </section>
   );
 }

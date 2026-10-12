@@ -15,7 +15,7 @@ export interface Prefs {
 
 export const TEXT_SCALES = [100, 125, 150, 175, 200] as const;
 
-export const DEFAULT_PREFS: Prefs = { theme: "light", textScale: 100, glove: false, reducedMotion: false };
+export const DEFAULT_PREFS: Prefs = { theme: "dark", textScale: 100, glove: false, reducedMotion: false };
 
 const KEY = "caelum.prefs";
 
@@ -34,6 +34,12 @@ function valid(p: unknown): p is Prefs {
 export function loadPrefs(): Prefs {
   try {
     const raw = window.localStorage.getItem(KEY);
+    const v2 = window.localStorage.getItem("caelum.prefs.v2");
+    if (!v2) {
+      window.localStorage.setItem("caelum.prefs.v2", "true");
+      savePrefs(DEFAULT_PREFS);
+      return DEFAULT_PREFS;
+    }
     const parsed: unknown = raw === null ? null : JSON.parse(raw);
     return valid(parsed) ? parsed : DEFAULT_PREFS;
   } catch {

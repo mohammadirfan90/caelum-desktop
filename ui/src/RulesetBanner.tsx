@@ -51,11 +51,16 @@ export function RulesetBanner({ load }: { readonly load: () => Promise<RulesetRe
     return <Alert title={strings.rulesetSafeState} detail={info.reason ?? ""} />;
   }
   const development = info.development ? (
-    <aside aria-label={strings.rulesetLabel} className="card mb-4 w-full max-w-[34rem] px-4 py-3">
-      <p className="flex items-center gap-3 text-base font-semibold">
-        <TechnicalGlyph />
-        {strings.developmentRuleset(info.version ?? "")}
-      </p>
+    <aside
+      aria-label={strings.rulesetLabel}
+      className="w-full border-b border-warning/40 bg-warning/10 px-4 sm:px-6 py-2 backdrop-blur-md"
+    >
+      <div className="flex items-center justify-between gap-4">
+        <p className="flex items-center gap-2.5 text-xs sm:text-sm font-semibold tracking-wide text-warning-ink">
+          <TechnicalGlyph />
+          <span>{strings.developmentRuleset(info.version ?? "")}</span>
+        </p>
+      </div>
     </aside>
   ) : null;
   if (info.state === "fallback") {
@@ -71,11 +76,17 @@ export function RulesetBanner({ load }: { readonly load: () => Promise<RulesetRe
 
 function Alert({ title, detail }: { readonly title: string; readonly detail: string }) {
   return (
-    <div role="alert" aria-label={strings.rulesetLabel} className="card mb-4 flex w-full max-w-[34rem] items-start gap-3 px-4 py-3">
-      <TechnicalGlyph />
-      <div>
-        <p className="text-base font-semibold">{title}</p>
-        {detail.length > 0 ? <p className="mt-1 text-sm text-ink-3">{detail}</p> : null}
+    <div
+      role="alert"
+      aria-label={strings.rulesetLabel}
+      className="w-full border-b border-alarm-high/40 bg-alarm-high/15 px-4 sm:px-6 py-2.5 backdrop-blur-md"
+    >
+      <div className="flex items-start gap-3">
+        <TechnicalGlyph />
+        <div>
+          <p className="text-sm font-semibold text-ink">{title}</p>
+          {detail.length > 0 ? <p className="mt-0.5 text-xs text-ink-3">{detail}</p> : null}
+        </div>
       </div>
     </div>
   );
@@ -86,7 +97,7 @@ export function TechnicalGlyph() {
   return (
     <span
       aria-hidden="true"
-      className="inline-flex size-7 shrink-0 items-center justify-center rounded-[4px] border-2 border-ink text-sm font-semibold"
+      className="inline-flex size-6 shrink-0 items-center justify-center rounded border border-warning bg-warning/20 text-xs font-bold text-warning-ink shadow-xs"
     >
       !
     </span>
